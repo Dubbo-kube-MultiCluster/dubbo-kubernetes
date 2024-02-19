@@ -22,8 +22,6 @@ import (
 )
 
 import (
-	dubbogo "dubbo.apache.org/dubbo-go/v3/config"
-
 	"github.com/pkg/errors"
 
 	"go.uber.org/multierr"
@@ -31,8 +29,6 @@ import (
 
 import (
 	"github.com/apache/dubbo-kubernetes/pkg/config"
-	"github.com/apache/dubbo-kubernetes/pkg/config/admin"
-	"github.com/apache/dubbo-kubernetes/pkg/config/bufman"
 	"github.com/apache/dubbo-kubernetes/pkg/config/core"
 	"github.com/apache/dubbo-kubernetes/pkg/config/core/resources/store"
 	"github.com/apache/dubbo-kubernetes/pkg/config/diagnostics"
@@ -105,9 +101,6 @@ type Config struct {
 	EventBus eventbus.Config `json:"eventBus"`
 	// Intercommunication CP configuration
 	InterCp intercp.InterCpConfig `json:"interCp"`
-	Bufman  bufman.Bufman         `json:"bufman"`
-	Admin   admin.Admin           `json:"admin"`
-	Dubbo   dubbogo.RootConfig    `json:"dubbo"`
 }
 
 func (c Config) IsFederatedZoneCP() bool {
