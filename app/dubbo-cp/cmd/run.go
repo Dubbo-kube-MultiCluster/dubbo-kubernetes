@@ -19,6 +19,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/apache/dubbo-kubernetes/pkg/clusterid"
 	"time"
 )
 
@@ -133,6 +134,10 @@ func newRunCmdWithOpts(opts dubbo_cmd.RunCmdOpts) *cobra.Command {
 			}
 			if err := dds_global.Setup(rt); err != nil {
 				runLog.Error(err, "unable to set up Global DDS")
+				return err
+			}
+			if err := clusterid.Setup(rt); err != nil {
+				runLog.Error(err, "unable to set up clusterID")
 				return err
 			}
 			if err := diagnostics.SetupServer(rt); err != nil {
