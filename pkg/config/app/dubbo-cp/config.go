@@ -100,7 +100,17 @@ type Config struct {
 	// EventBus is a configuration of the event bus which is local to one instance of CP.
 	EventBus eventbus.Config `json:"eventBus"`
 	// Intercommunication CP configuration
-	InterCp intercp.InterCpConfig `json:"interCp"`
+	InterCp               intercp.InterCpConfig `json:"interCp"`
+	DDSEventBasedWatchdog DDSEventBasedWatchdog `json:"dds_event_based_watchdog"`
+}
+
+type DDSEventBasedWatchdog struct {
+	// How often we flush changes when experimental event based watchdog is used.
+	FlushInterval config_types.Duration `json:"flushInterval" envconfig:"DUBBO_EXPERIMENTAL_KDS_EVENT_BASED_WATCHDOG_FLUSH_INTERVAL"`
+	// How often we schedule full KDS resync when experimental event based watchdog is used.
+	FullResyncInterval config_types.Duration `json:"fullResyncInterval" envconfig:"DUBBO_EXPERIMENTAL_KDS_EVENT_BASED_WATCHDOG_FULL_RESYNC_INTERVAL"`
+	// If true, then initial full resync is going to be delayed by 0 to FullResyncInterval.
+	DelayFullResync bool `json:"delayFullResync" envconfig:"DUBBO_EXPERIMENTAL_KDS_EVENT_BASED_WATCHDOG_DELAY_FULL_RESYNC"`
 }
 
 func (c Config) IsFederatedZoneCP() bool {

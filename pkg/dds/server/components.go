@@ -19,6 +19,9 @@ package server
 
 import (
 	"context"
+	dubbo_cp "github.com/apache/dubbo-kubernetes/pkg/config/app/dubbo-cp"
+	dubbo_log "github.com/apache/dubbo-kubernetes/pkg/log"
+	"math/rand"
 	"time"
 )
 
@@ -59,6 +62,7 @@ func New(
 		refresh,
 		providedTypes,
 		rt.EventBus(),
+		rt.Config().DDSEventBasedWatchdog,
 		rt.Extensions(),
 	)
 	if err != nil {
@@ -81,6 +85,7 @@ func newSyncTracker(
 	refresh time.Duration,
 	providedTypes []model.ResourceType,
 	eventBus events.EventBus,
+	watchdogCfg dubbo_cp.DDSEventBasedWatchdog,
 	extensions context.Context,
 ) (envoy_xds.Callbacks, error) {
 	changedTypes := map[model.ResourceType]struct{}{}
@@ -88,21 +93,34 @@ func newSyncTracker(
 		changedTypes[typ] = struct{}{}
 	}
 	return util_xds_v3.NewWatchdogCallbacks(func(ctx context.Context, node *envoy_core.Node, streamId int64) (util_watchdog.Watchdog, error) {
-		return &util_watchdog.SimpleWatchdog{
-			NewTicker: func() *time.Ticker {
-				return time.NewTicker(refresh)
+		log := log.WithValues("streamID", streamId, "nodeID", node.Id)
+		log = dubbo_log.AddFieldsFromCtx(log, ctx, extensions)
+		return &EventBasedWatchdog{
+			Ctx:           ctx,
+			Node:          node,
+			EventBus:      eventBus,
+			Reconciler:    reconciler,
+			ProvidedTypes: changedTypes,
+			Log:           log,
+			NewFlushTicker: func() *time.Ticker {
+				return time.NewTicker(watchdogCfg.FlushInterval.Duration)
 			},
-			OnTick: func(ctx context.Context) error {
-				log.V(1).Info("on tick")
-				err, _ := reconciler.Reconcile(ctx, node, changedTypes, log)
-				return err
-			},
-			OnError: func(err error) {
-				log.Error(err, "OnTick() failed")
-			},
-			OnStop: func() {
-				if err := reconciler.Clear(ctx, node); err != nil {
-					log.Error(err, "OnStop() failed")
+			NewFullResyncTicker: func() *time.Ticker {
+				if watchdogCfg.DelayFullResync {
+					// To ensure an even distribution of connections over time, we introduce a random delay within
+					// the full resync interval. This prevents clustering connections within a short timeframe
+					// and spreads them evenly across the entire interval. After the initial trigger, we reset
+					// the ticker, returning it to its full resync interval.
+					// #nosec G404 - math rand is enough
+					delay := time.Duration(watchdogCfg.FullResyncInterval.Duration.Seconds()*rand.Float64()) * time.Second
+					ticker := time.NewTicker(watchdogCfg.FullResyncInterval.Duration + delay)
+					go func() {
+						<-time.After(delay)
+						ticker.Reset(watchdogCfg.FullResyncInterval.Duration)
+					}()
+					return ticker
+				} else {
+					return time.NewTicker(watchdogCfg.FullResyncInterval.Duration)
 				}
 			},
 		}, nil
