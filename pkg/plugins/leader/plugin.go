@@ -18,6 +18,8 @@
 package leader
 
 import (
+	common_zookeeper "github.com/apache/dubbo-kubernetes/pkg/plugins/common/zookeeper"
+	"github.com/dubbogo/go-zookeeper/zk"
 	"github.com/pkg/errors"
 )
 
@@ -35,7 +37,13 @@ func NewLeaderElector(b *core_runtime.Builder) (component.LeaderElector, error) 
 	case store.MemoryStore:
 		return leader_memory.NewAlwaysLeaderElector(), nil
 	case store.ZookeeperStore:
-		return leader_zookeeper.NewZookeeperLeaderElector(), nil
+		cfg := *b.Config().Store.Zookeeper
+		connect, err := common_zookeeper.ConnectToZK(cfg)
+		if err != nil {
+			return nil, errors.Wrap(err, "cloud not connect to zookeeper")
+		}
+		client := zk.NewLock(connect, "", zk.WorldACL(zk.PermAll))
+		return leader_zookeeper.NewZookeeperLeaderElector(client), nil
 	case store.NacosStore:
 		return leader_nacos.NewNacosLeaderElector(), nil
 	// In case of Kubernetes, Leader Elector is embedded in a Kubernetes ComponentManager

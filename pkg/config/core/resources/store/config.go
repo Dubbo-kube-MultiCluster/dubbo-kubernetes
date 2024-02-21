@@ -18,6 +18,7 @@
 package store
 
 import (
+	"github.com/apache/dubbo-kubernetes/pkg/config/plugins/resources/zookeeper"
 	"time"
 )
 
@@ -50,6 +51,8 @@ type StoreConfig struct {
 	Type StoreType `json:"type" envconfig:"dubbo_store_type"`
 	// Kubernetes Store configuration
 	Kubernetes *k8s.KubernetesStoreConfig `json:"kubernetes"`
+	// Zookeeper Store configuration
+	Zookeeper *zookeeper.ZookeeperStoreConfig `json:"zookeeper"`
 	// Cache configuration
 	Cache CacheStoreConfig `json:"cache"`
 	// Upsert configuration

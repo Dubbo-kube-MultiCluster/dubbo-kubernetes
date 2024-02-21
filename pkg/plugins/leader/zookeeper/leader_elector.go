@@ -19,15 +19,20 @@ package zookeeper
 
 import (
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
+	"github.com/apex/log"
+	"github.com/dubbogo/go-zookeeper/zk"
 )
 
 type zookeeperLeaderElector struct {
 	alwaysLeader bool
+	lockClient   *zk.Lock
 	callbacks    []component.LeaderCallbacks
 }
 
-func NewZookeeperLeaderElector() component.LeaderElector {
-	return &zookeeperLeaderElector{}
+func NewZookeeperLeaderElector(lockClient *zk.Lock) component.LeaderElector {
+	return &zookeeperLeaderElector{
+		lockClient: lockClient,
+	}
 }
 
 func (n *zookeeperLeaderElector) AddCallbacks(callbacks component.LeaderCallbacks) {
@@ -39,6 +44,10 @@ func (n *zookeeperLeaderElector) IsLeader() bool {
 }
 
 func (n *zookeeperLeaderElector) Start(stop <-chan struct{}) {
+	for {
+		log.Info("waiting for lock")
+		n.lockClient.Lock()
+	}
 	if n.alwaysLeader {
 		for _, callback := range n.callbacks {
 			callback.OnStartedLeading()
