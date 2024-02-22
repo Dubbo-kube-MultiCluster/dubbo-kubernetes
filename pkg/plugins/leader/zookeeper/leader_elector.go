@@ -18,10 +18,17 @@
 package zookeeper
 
 import (
+	"github.com/apache/dubbo-kubernetes/pkg/core"
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
-	"github.com/apex/log"
+	util_channels "github.com/apache/dubbo-kubernetes/pkg/util/channels"
 	"github.com/dubbogo/go-zookeeper/zk"
+	"time"
 )
+
+const dubboLockName = "/dubbo/cp-lock"
+const backoffTime = 5 * time.Second
+
+var log = core.Log.WithName("zookeeper-leader")
 
 type zookeeperLeaderElector struct {
 	alwaysLeader bool
@@ -29,7 +36,8 @@ type zookeeperLeaderElector struct {
 	callbacks    []component.LeaderCallbacks
 }
 
-func NewZookeeperLeaderElector(lockClient *zk.Lock) component.LeaderElector {
+func NewZookeeperLeaderElector(connect *zk.Conn) component.LeaderElector {
+	lockClient := zk.NewLock(connect, dubboLockName, zk.WorldACL(zk.PermAll))
 	return &zookeeperLeaderElector{
 		lockClient: lockClient,
 	}
@@ -44,13 +52,39 @@ func (n *zookeeperLeaderElector) IsLeader() bool {
 }
 
 func (n *zookeeperLeaderElector) Start(stop <-chan struct{}) {
+	retries := 0
 	for {
 		log.Info("waiting for lock")
-		n.lockClient.Lock()
+		err := n.lockClient.Lock()
+		if err != nil {
+			if retries >= 3 {
+				log.Error(err, "error waiting for lock", "retries", retries)
+			} else {
+				log.V(1).Info("error waiting for lock", "err", err, "retries", retries)
+			}
+			retries += 1
+		} else {
+			retries = 0
+		}
+		n.leaderAcquired()
+		n.lockClient.Unlock()
+		n.leaderLost()
+
+		if util_channels.IsClosed(stop) {
+			break
+		}
+		time.Sleep(backoffTime)
 	}
+
 	if n.alwaysLeader {
 		for _, callback := range n.callbacks {
 			callback.OnStartedLeading()
 		}
 	}
+}
+func (n *zookeeperLeaderElector) leaderAcquired() {
+
+}
+func (n *zookeeperLeaderElector) leaderLost() {
+
 }

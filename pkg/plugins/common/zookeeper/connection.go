@@ -14,6 +14,3 @@ func ConnectToZK(cfg config.ZookeeperStoreConfig) (*zk.Conn, error) {
 	}
 	return connect, nil
 }
-
-type connOption func(c *zk.Conn)
-\
