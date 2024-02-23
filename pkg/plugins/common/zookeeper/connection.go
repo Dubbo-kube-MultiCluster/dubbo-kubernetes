@@ -6,9 +6,7 @@ import (
 )
 
 func ConnectToZK(cfg config.ZookeeperStoreConfig) (*zk.Conn, error) {
-
 	connect, _, err := zk.Connect(cfg.Servers, cfg.SessionTimeout)
-	zk.Connect(cfg.Servers, cfg.SessionTimeout)
 	if err != nil {
 		return nil, err
 	}

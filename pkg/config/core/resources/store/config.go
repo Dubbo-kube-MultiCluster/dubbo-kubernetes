@@ -53,7 +53,7 @@ type StoreConfig struct {
 	Kubernetes *k8s.KubernetesStoreConfig `json:"kubernetes"`
 	// Zookeeper Store configuration
 	Zookeeper *zookeeper.ZookeeperStoreConfig `json:"zookeeper"`
-	Nacos     *zookeeper.ZookeeperStoreConfig `json:"zookeeper"`
+	Nacos     *zookeeper.ZookeeperStoreConfig `json:"nacos"`
 	// Cache configuration
 	Cache CacheStoreConfig `json:"cache"`
 	// Upsert configuration
