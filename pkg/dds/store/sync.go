@@ -298,7 +298,6 @@ func ZoneSyncCallback(ctx context.Context, configToSync map[string]bool, syncer 
 				return syncer.Sync(ctx, upstream, PrefilterBy(func(r core_model.Resource) bool {
 					return configToSync[r.GetMeta().GetName()]
 				}))
-
 			}
 
 			return syncer.Sync(ctx, upstream, PrefilterBy(func(r core_model.Resource) bool {
