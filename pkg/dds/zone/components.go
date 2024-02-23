@@ -38,9 +38,7 @@ import (
 	resources_k8s "github.com/apache/dubbo-kubernetes/pkg/plugins/resources/k8s"
 )
 
-var (
-	ddsDeltaZoneLog = core.Log.WithName("dds-delta-zone")
-)
+var ddsDeltaZoneLog = core.Log.WithName("dds-delta-zone")
 
 func Setup(rt core_runtime.Runtime) error {
 	if !rt.Config().IsFederatedZoneCP() {
