@@ -19,7 +19,7 @@ package dds
 
 import (
 	"context"
-	"slices"
+	"golang.org/x/exp/slices"
 )
 
 import (

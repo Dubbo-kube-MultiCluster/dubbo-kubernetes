@@ -84,9 +84,9 @@ func (p *plugin) BeforeBootstrap(b *core_runtime.Builder, cfg core_plugins.Plugi
 			},
 			// Admission WebHook Server
 			WebhookServer: kube_webhook.NewServer(kube_webhook.Options{
-				Host: b.Config().Runtime.Kubernetes.AdmissionServer.Address,
-				Port: int(b.Config().Runtime.Kubernetes.AdmissionServer.Port),
-				//CertDir: b.Config().Runtime.Kubernetes.AdmissionServer.CertDir,
+				Host:    b.Config().Runtime.Kubernetes.AdmissionServer.Address,
+				Port:    int(b.Config().Runtime.Kubernetes.AdmissionServer.Port),
+				CertDir: b.Config().Runtime.Kubernetes.AdmissionServer.CertDir,
 			}),
 			LeaderElection:          true,
 			LeaderElectionID:        "cp-leader-lease",
