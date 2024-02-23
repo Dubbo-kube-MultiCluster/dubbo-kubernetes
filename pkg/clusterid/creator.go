@@ -19,12 +19,18 @@ package clusterid
 
 import (
 	"context"
+)
+
+import (
+	"github.com/pkg/errors"
+)
+
+import (
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	config_manager "github.com/apache/dubbo-kubernetes/pkg/core/config/manager"
 	config_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/system"
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
-	"github.com/pkg/errors"
 )
 
 type clusterIDCreator struct {

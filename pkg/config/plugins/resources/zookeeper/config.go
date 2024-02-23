@@ -1,8 +1,11 @@
 package zookeeper
 
 import (
-	"github.com/apache/dubbo-kubernetes/pkg/config"
 	"time"
+)
+
+import (
+	"github.com/apache/dubbo-kubernetes/pkg/config"
 )
 
 type ZookeeperStoreConfig struct {

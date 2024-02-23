@@ -27,8 +27,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/events"
 )
 
-type zookeeperStore struct {
-}
+type zookeeperStore struct{}
 
 func NewStore() store.ResourceStore {
 	return &zookeeperStore{}

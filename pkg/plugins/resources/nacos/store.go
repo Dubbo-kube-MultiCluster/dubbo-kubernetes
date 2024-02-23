@@ -27,8 +27,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/events"
 )
 
-type nacosStore struct {
-}
+type nacosStore struct{}
 
 func NewStore() store.ResourceStore {
 	return &nacosStore{}

@@ -19,13 +19,16 @@ package clusterid
 
 import (
 	"context"
+	"time"
+)
+
+import (
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	config_manager "github.com/apache/dubbo-kubernetes/pkg/core/config/manager"
 	config_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/system"
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
 	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
-	"time"
 )
 
 var log = core.Log.WithName("clusterID")

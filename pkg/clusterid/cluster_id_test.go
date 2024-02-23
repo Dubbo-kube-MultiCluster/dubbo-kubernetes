@@ -19,13 +19,18 @@ package clusterid_test
 
 import (
 	"context"
-	"github.com/apache/dubbo-kubernetes/pkg/clusterid"
-	"github.com/apache/dubbo-kubernetes/pkg/test/runtime"
+)
 
-	dubbo_cp "github.com/apache/dubbo-kubernetes/pkg/config/app/dubbo-cp"
-
+import (
 	. "github.com/onsi/ginkgo/v2"
+
 	. "github.com/onsi/gomega"
+)
+
+import (
+	"github.com/apache/dubbo-kubernetes/pkg/clusterid"
+	dubbo_cp "github.com/apache/dubbo-kubernetes/pkg/config/app/dubbo-cp"
+	"github.com/apache/dubbo-kubernetes/pkg/test/runtime"
 )
 
 var _ = Describe("Cluster ID", func() {

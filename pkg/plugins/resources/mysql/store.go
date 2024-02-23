@@ -27,8 +27,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/events"
 )
 
-type mySqlStore struct {
-}
+type mySqlStore struct{}
 
 func NewStore() store.ResourceStore {
 	return &mySqlStore{}

@@ -19,9 +19,15 @@ package validators_test
 
 import (
 	"fmt"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
+)
 
+import (
+	. "github.com/onsi/ginkgo/v2"
+
+	. "github.com/onsi/gomega"
+)
+
+import (
 	"github.com/apache/dubbo-kubernetes/pkg/core/validators"
 )
 

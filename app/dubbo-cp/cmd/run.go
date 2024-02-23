@@ -19,7 +19,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/apache/dubbo-kubernetes/pkg/clusterid"
 	"time"
 )
 
@@ -28,6 +27,7 @@ import (
 )
 
 import (
+	"github.com/apache/dubbo-kubernetes/pkg/clusterid"
 	"github.com/apache/dubbo-kubernetes/pkg/config"
 	dubbo_cp "github.com/apache/dubbo-kubernetes/pkg/config/app/dubbo-cp"
 	config_core "github.com/apache/dubbo-kubernetes/pkg/config/core"

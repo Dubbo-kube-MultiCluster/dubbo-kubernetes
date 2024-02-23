@@ -71,7 +71,6 @@ func NewDeltaDDSStream(s DDSSyncServiceStream, clientId string, runtimeInfo core
 }
 
 func (s *stream) DeltaDiscoveryRequest(resourceType core_model.ResourceType) error {
-
 	req := &envoy_sd.DeltaDiscoveryRequest{
 		ResponseNonce: "",
 		Node: &envoy_core.Node{

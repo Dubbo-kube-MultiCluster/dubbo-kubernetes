@@ -68,7 +68,6 @@ type DDSSyncServiceServer struct {
 }
 
 func (g *DDSSyncServiceServer) mustEmbedUnimplementedDDSSyncServiceServer() {
-	//TODO implement me
 	panic("implement me")
 }
 
@@ -152,7 +151,6 @@ func (g *DDSSyncServiceServer) ZoneToGlobalSync(stream mesh_proto.DDSSyncService
 }
 
 func (g *DDSSyncServiceServer) watchZoneHealthCheck(streamContext context.Context, zone string) events.Listener {
-
 	shouldDisconnectStream := events.NewNeverListener()
 
 	if dds.ContextHasFeature(streamContext, dds.FeatureZonePingHealth) {

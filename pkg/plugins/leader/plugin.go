@@ -18,7 +18,6 @@
 package leader
 
 import (
-	common_zookeeper "github.com/apache/dubbo-kubernetes/pkg/plugins/common/zookeeper"
 	"github.com/pkg/errors"
 )
 
@@ -26,6 +25,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/core/resources/store"
 	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
+	common_zookeeper "github.com/apache/dubbo-kubernetes/pkg/plugins/common/zookeeper"
 	leader_memory "github.com/apache/dubbo-kubernetes/pkg/plugins/leader/memory"
 	leader_nacos "github.com/apache/dubbo-kubernetes/pkg/plugins/leader/nacos"
 	leader_zookeeper "github.com/apache/dubbo-kubernetes/pkg/plugins/leader/zookeeper"

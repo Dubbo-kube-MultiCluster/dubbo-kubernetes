@@ -15,16 +15,18 @@
  * limitations under the License.
  */
 
-package clusterid_test
+package dataplane
 
 import (
-	"testing"
+	"context"
 )
 
 import (
-	"github.com/apache/dubbo-kubernetes/pkg/test"
+	core_mesh "github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
+	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 )
 
-func TestClusterID(t *testing.T) {
-	test.RunSpecs(t, "Cluster ID Suite")
+type Validator interface {
+	ValidateCreate(ctx context.Context, key model.ResourceKey, newDp *core_mesh.DataplaneResource, mesh *core_mesh.MeshResource) error
+	ValidateUpdate(ctx context.Context, newDp *core_mesh.DataplaneResource, mesh *core_mesh.MeshResource) error
 }

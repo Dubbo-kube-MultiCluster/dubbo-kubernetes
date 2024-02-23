@@ -106,6 +106,15 @@ func addPodReconciler(mgr kube_ctrl.Manager, rt core_runtime.Runtime, converter 
 }
 
 func addValidators(mgr kube_ctrl.Manager, rt core_runtime.Runtime, converter k8s_common.Converter) error {
+	composite, ok := k8s_extensions.FromCompositeValidatorContext(rt.Extensions())
+	if !ok {
+		return errors.Errorf("could not find composite validator in the extensions context")
+	}
+	handler := k8s_webhooks.NewValidatingWebhook(converter, core_registry.Global(), k8s_registry.Global(), rt.Config().Mode, rt.Config().IsFederatedZoneCP(), rt.Config().Multizone.Zone.DisableOriginLabelValidation)
+	composite.AddValidator(handler)
+
+	mgr.GetWebhookServer().Register("/validate-dubbo-io-v1alpha1", composite.IntoWebhook(mgr.GetScheme()))
+
 	return nil
 }
 

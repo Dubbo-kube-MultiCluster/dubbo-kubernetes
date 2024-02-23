@@ -27,6 +27,8 @@ import (
 	dubbo_cp "github.com/apache/dubbo-kubernetes/pkg/config/app/dubbo-cp"
 	"github.com/apache/dubbo-kubernetes/pkg/config/core"
 	config_manager "github.com/apache/dubbo-kubernetes/pkg/core/config/manager"
+	managers_dataplane "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/dataplane"
+	managers_mesh "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/mesh"
 	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
@@ -73,6 +75,8 @@ type RuntimeContext interface {
 }
 
 type ResourceValidators struct {
+	Dataplane managers_dataplane.Validator
+	Mesh      managers_mesh.MeshValidator
 }
 
 type ExtraReportsFn func(Runtime) (map[string]string, error)

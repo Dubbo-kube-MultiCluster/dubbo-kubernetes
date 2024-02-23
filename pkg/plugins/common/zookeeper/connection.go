@@ -1,8 +1,11 @@
 package zookeeper
 
 import (
-	config "github.com/apache/dubbo-kubernetes/pkg/config/plugins/resources/zookeeper"
 	"github.com/dubbogo/go-zookeeper/zk"
+)
+
+import (
+	config "github.com/apache/dubbo-kubernetes/pkg/config/plugins/resources/zookeeper"
 )
 
 func ConnectToZK(cfg config.ZookeeperStoreConfig) (*zk.Conn, error) {

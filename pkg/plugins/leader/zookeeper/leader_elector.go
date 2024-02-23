@@ -18,15 +18,23 @@
 package zookeeper
 
 import (
-	"github.com/apache/dubbo-kubernetes/pkg/core"
-	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
-	util_channels "github.com/apache/dubbo-kubernetes/pkg/util/channels"
-	"github.com/dubbogo/go-zookeeper/zk"
 	"time"
 )
 
-const dubboLockName = "/dubbo/cp-lock"
-const backoffTime = 5 * time.Second
+import (
+	"github.com/dubbogo/go-zookeeper/zk"
+)
+
+import (
+	"github.com/apache/dubbo-kubernetes/pkg/core"
+	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
+	util_channels "github.com/apache/dubbo-kubernetes/pkg/util/channels"
+)
+
+const (
+	dubboLockName = "/dubbo/cp-lock"
+	backoffTime   = 5 * time.Second
+)
 
 var log = core.Log.WithName("zookeeper-leader")
 
@@ -82,9 +90,7 @@ func (n *zookeeperLeaderElector) Start(stop <-chan struct{}) {
 		}
 	}
 }
-func (n *zookeeperLeaderElector) leaderAcquired() {
 
-}
-func (n *zookeeperLeaderElector) leaderLost() {
+func (n *zookeeperLeaderElector) leaderAcquired() {}
 
-}
+func (n *zookeeperLeaderElector) leaderLost() {}

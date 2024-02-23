@@ -15,16 +15,18 @@
  * limitations under the License.
  */
 
-package clusterid_test
+package mesh
 
 import (
-	"testing"
+	"context"
 )
 
 import (
-	"github.com/apache/dubbo-kubernetes/pkg/test"
+	core_mesh "github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
 )
 
-func TestClusterID(t *testing.T) {
-	test.RunSpecs(t, "Cluster ID Suite")
+type MeshValidator interface {
+	ValidateCreate(ctx context.Context, name string, resource *core_mesh.MeshResource) error
+	ValidateUpdate(ctx context.Context, previousMesh *core_mesh.MeshResource, newMesh *core_mesh.MeshResource) error
+	ValidateDelete(ctx context.Context, name string) error
 }

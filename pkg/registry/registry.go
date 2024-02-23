@@ -17,8 +17,7 @@
 
 package registry
 
-type RegistryCache struct {
-}
+type RegistryCache struct{}
 
 func NewRegistryCache() *RegistryCache {
 	return nil

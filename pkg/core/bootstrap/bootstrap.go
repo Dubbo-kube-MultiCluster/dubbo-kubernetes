@@ -78,6 +78,8 @@ func buildRuntime(appCtx context.Context, cfg dubbo_cp.Config) (core_runtime.Run
 
 	initializeConfigManager(builder)
 
+	builder.WithResourceValidators(core_runtime.ResourceValidators{})
+
 	if err := initializeResourceManager(cfg, builder); err != nil { //nolint:contextcheck
 		return nil, err
 	}

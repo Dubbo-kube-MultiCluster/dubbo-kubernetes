@@ -19,8 +19,6 @@ package server
 
 import (
 	"context"
-	dubbo_cp "github.com/apache/dubbo-kubernetes/pkg/config/app/dubbo-cp"
-	dubbo_log "github.com/apache/dubbo-kubernetes/pkg/log"
 	"math/rand"
 	"time"
 )
@@ -34,10 +32,12 @@ import (
 )
 
 import (
+	dubbo_cp "github.com/apache/dubbo-kubernetes/pkg/config/app/dubbo-cp"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
 	"github.com/apache/dubbo-kubernetes/pkg/dds/reconcile"
 	"github.com/apache/dubbo-kubernetes/pkg/events"
+	dubbo_log "github.com/apache/dubbo-kubernetes/pkg/log"
 	util_watchdog "github.com/apache/dubbo-kubernetes/pkg/util/watchdog"
 	util_xds "github.com/apache/dubbo-kubernetes/pkg/util/xds"
 	util_xds_v3 "github.com/apache/dubbo-kubernetes/pkg/util/xds/v3"

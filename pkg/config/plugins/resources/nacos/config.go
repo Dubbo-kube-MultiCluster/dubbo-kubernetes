@@ -2,9 +2,13 @@ package nacos
 
 import (
 	"github.com/nacos-group/nacos-sdk-go/common/logger"
+
 	"gopkg.in/natefinch/lumberjack.v2"
 )
-import "github.com/apache/dubbo-kubernetes/pkg/config"
+
+import (
+	"github.com/apache/dubbo-kubernetes/pkg/config"
+)
 
 type NacosStoreConfig struct {
 	config.BaseConfig
