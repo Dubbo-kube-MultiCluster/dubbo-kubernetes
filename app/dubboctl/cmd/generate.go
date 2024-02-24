@@ -15,7 +15,9 @@
 
 package cmd
 
-import "github.com/spf13/cobra"
+import (
+	"github.com/spf13/cobra"
+)
 
 func addGenerate(rootCmd *cobra.Command) {
 	generateCmd := &cobra.Command{

@@ -559,6 +559,115 @@ func init() {
 }
 
 const (
+	MetaDataType model.ResourceType = "MetaData"
+)
+
+var _ model.Resource = &MetaDataResource{}
+
+type MetaDataResource struct {
+	Meta model.ResourceMeta
+	Spec *mesh_proto.MetaData
+}
+
+func NewMetaDataResource() *MetaDataResource {
+	return &MetaDataResource{
+		Spec: &mesh_proto.MetaData{},
+	}
+}
+
+func (t *MetaDataResource) GetMeta() model.ResourceMeta {
+	return t.Meta
+}
+
+func (t *MetaDataResource) SetMeta(m model.ResourceMeta) {
+	t.Meta = m
+}
+
+func (t *MetaDataResource) GetSpec() model.ResourceSpec {
+	return t.Spec
+}
+
+func (t *MetaDataResource) SetSpec(spec model.ResourceSpec) error {
+	protoType, ok := spec.(*mesh_proto.MetaData)
+	if !ok {
+		return fmt.Errorf("invalid type %T for Spec", spec)
+	} else {
+		if protoType == nil {
+			t.Spec = &mesh_proto.MetaData{}
+		} else {
+			t.Spec = protoType
+		}
+		return nil
+	}
+}
+
+func (t *MetaDataResource) Descriptor() model.ResourceTypeDescriptor {
+	return MetaDataResourceTypeDescriptor
+}
+
+var _ model.ResourceList = &MetaDataResourceList{}
+
+type MetaDataResourceList struct {
+	Items      []*MetaDataResource
+	Pagination model.Pagination
+}
+
+func (l *MetaDataResourceList) GetItems() []model.Resource {
+	res := make([]model.Resource, len(l.Items))
+	for i, elem := range l.Items {
+		res[i] = elem
+	}
+	return res
+}
+
+func (l *MetaDataResourceList) GetItemType() model.ResourceType {
+	return MetaDataType
+}
+
+func (l *MetaDataResourceList) NewItem() model.Resource {
+	return NewMetaDataResource()
+}
+
+func (l *MetaDataResourceList) AddItem(r model.Resource) error {
+	if trr, ok := r.(*MetaDataResource); ok {
+		l.Items = append(l.Items, trr)
+		return nil
+	} else {
+		return model.ErrorInvalidItemType((*MetaDataResource)(nil), r)
+	}
+}
+
+func (l *MetaDataResourceList) GetPagination() *model.Pagination {
+	return &l.Pagination
+}
+
+func (l *MetaDataResourceList) SetPagination(p model.Pagination) {
+	l.Pagination = p
+}
+
+var MetaDataResourceTypeDescriptor = model.ResourceTypeDescriptor{
+	Name:                MetaDataType,
+	Resource:            NewMetaDataResource(),
+	ResourceList:        &MetaDataResourceList{},
+	ReadOnly:            false,
+	AdminOnly:           false,
+	Scope:               model.ScopeMesh,
+	DDSFlags:            model.GlobalToAllZonesFlag,
+	WsPath:              "metadatas",
+	DubboctlArg:         "metadata",
+	DubboctlListArg:     "metadatas",
+	AllowToInspect:      true,
+	IsPolicy:            true,
+	SingularDisplayName: "Meta Data",
+	PluralDisplayName:   "Meta Datas",
+	IsExperimental:      false,
+}
+
+func init() {
+	registry.RegisterType(MetaDataResourceTypeDescriptor)
+}
+
+const (
 	ZoneEgressType model.ResourceType = "ZoneEgress"
 )
 

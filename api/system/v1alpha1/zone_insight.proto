@@ -61,7 +61,6 @@ message DDSSubscription {
   // Status of the KDS subscription.
   DDSSubscriptionStatus status = 5;
 
-
   // Generation is an integer number which is periodically increased by the
   // status sink
   uint32 generation = 7;
@@ -72,7 +71,8 @@ message DDSSubscription {
   // Indicates if subscription provided auth token
   bool auth_token_provided = 9;
 
-  // Zone CP instance that handled the given subscription (This is the leader at time of connection).
+  // Zone CP instance that handled the given subscription (This is the leader at
+  // time of connection).
   string zone_instance_id = 10;
 }
 
@@ -100,7 +100,6 @@ message DDSServiceStats {
   // Number of xDS responses NACKed by the Dataplane.
   uint64 responses_rejected = 3;
 }
-
 
 // HealthCheck holds information about the received zone health check
 message HealthCheck {

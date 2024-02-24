@@ -17,11 +17,18 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+)
+
+import (
+	"github.com/pkg/errors"
+
+	"github.com/spf13/cobra"
+)
+
+import (
 	dubbo_cmd "github.com/apache/dubbo-kubernetes/pkg/core/cmd"
 	"github.com/apache/dubbo-kubernetes/pkg/tls"
-	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
-	"os"
 )
 
 var NewSelfSignedCert = tls.NewSelfSignedCert

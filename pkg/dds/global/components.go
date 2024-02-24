@@ -53,9 +53,7 @@ import (
 	util_proto "github.com/apache/dubbo-kubernetes/pkg/util/proto"
 )
 
-var (
-	ddsDeltaGlobalLog = core.Log.WithName("dds-delta-global")
-)
+var ddsDeltaGlobalLog = core.Log.WithName("dds-delta-global")
 
 func Setup(rt runtime.Runtime) error {
 	if rt.Config().Mode != config_core.Global {
