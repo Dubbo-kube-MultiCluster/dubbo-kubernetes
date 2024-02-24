@@ -18,6 +18,7 @@
 package zookeeper
 
 import (
+	"sync/atomic"
 	"time"
 )
 
@@ -39,9 +40,9 @@ const (
 var log = core.Log.WithName("zookeeper-leader")
 
 type zookeeperLeaderElector struct {
-	alwaysLeader bool
-	lockClient   *zk.Lock
-	callbacks    []component.LeaderCallbacks
+	leader     int32
+	lockClient *zk.Lock
+	callbacks  []component.LeaderCallbacks
 }
 
 func NewZookeeperLeaderElector(connect *zk.Conn) component.LeaderElector {
@@ -49,14 +50,6 @@ func NewZookeeperLeaderElector(connect *zk.Conn) component.LeaderElector {
 	return &zookeeperLeaderElector{
 		lockClient: lockClient,
 	}
-}
-
-func (n *zookeeperLeaderElector) AddCallbacks(callbacks component.LeaderCallbacks) {
-	n.callbacks = append(n.callbacks, callbacks)
-}
-
-func (n *zookeeperLeaderElector) IsLeader() bool {
-	return n.alwaysLeader
 }
 
 func (n *zookeeperLeaderElector) Start(stop <-chan struct{}) {
@@ -75,7 +68,7 @@ func (n *zookeeperLeaderElector) Start(stop <-chan struct{}) {
 			retries = 0
 		}
 		n.leaderAcquired()
-		n.lockClient.Unlock()
+		_ = n.lockClient.Unlock()
 		n.leaderLost()
 
 		if util_channels.IsClosed(stop) {
@@ -83,14 +76,35 @@ func (n *zookeeperLeaderElector) Start(stop <-chan struct{}) {
 		}
 		time.Sleep(backoffTime)
 	}
+	log.Info("Leader Elector stopped")
+}
 
-	if n.alwaysLeader {
-		for _, callback := range n.callbacks {
-			callback.OnStartedLeading()
-		}
+func (n *zookeeperLeaderElector) AddCallbacks(callbacks component.LeaderCallbacks) {
+	n.callbacks = append(n.callbacks, callbacks)
+}
+
+func (n *zookeeperLeaderElector) leaderAcquired() {
+	n.setLeader(true)
+	for _, callback := range n.callbacks {
+		callback.OnStartedLeading()
 	}
 }
 
-func (n *zookeeperLeaderElector) leaderAcquired() {}
+func (n *zookeeperLeaderElector) leaderLost() {
+	n.setLeader(false)
+	for _, callback := range n.callbacks {
+		callback.OnStoppedLeading()
+	}
+}
 
-func (n *zookeeperLeaderElector) leaderLost() {}
+func (n *zookeeperLeaderElector) setLeader(leader bool) {
+	var value int32 = 0
+	if leader {
+		value = 1
+	}
+	atomic.StoreInt32(&n.leader, value)
+}
+
+func (n *zookeeperLeaderElector) IsLeader() bool {
+	return atomic.LoadInt32(&(n.leader)) == 1
+}
