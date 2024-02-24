@@ -36,22 +36,22 @@ func NewStore() store.ResourceStore {
 func (c *mySqlStore) SetEventWriter(writer events.Emitter) {
 }
 
-func (c *mySqlStore) Create(_ context.Context, r core_model.Resource, fs ...store.CreateOptionsFunc) error {
+func (c *mySqlStore) Create(_ context.Context, resource core_model.Resource, fs ...store.CreateOptionsFunc) error {
 	return nil
 }
 
-func (c *mySqlStore) Update(_ context.Context, r core_model.Resource, fs ...store.UpdateOptionsFunc) error {
+func (c *mySqlStore) Update(_ context.Context, resource core_model.Resource, fs ...store.UpdateOptionsFunc) error {
 	return nil
 }
 
-func (c *mySqlStore) Delete(ctx context.Context, r core_model.Resource, fs ...store.DeleteOptionsFunc) error {
+func (c *mySqlStore) Delete(ctx context.Context, resource core_model.Resource, fs ...store.DeleteOptionsFunc) error {
 	return nil
 }
 
-func (c *mySqlStore) Get(_ context.Context, r core_model.Resource, fs ...store.GetOptionsFunc) error {
+func (c *mySqlStore) Get(_ context.Context, resource core_model.Resource, fs ...store.GetOptionsFunc) error {
 	return nil
 }
 
-func (c *mySqlStore) List(_ context.Context, rs core_model.ResourceList, fs ...store.ListOptionsFunc) error {
+func (c *mySqlStore) List(_ context.Context, resource core_model.ResourceList, fs ...store.ListOptionsFunc) error {
 	return nil
 }

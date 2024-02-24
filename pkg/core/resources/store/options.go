@@ -19,11 +19,28 @@ package store
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 )
 
 import (
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
+)
+
+const (
+	Group = "group"
+	Key   = "key"
+
+	Protocol  = "protocol"
+	Address   = "address"
+	DataId    = "data-id"
+	Cluster   = "cluster"
+	Username  = "username"
+	Password  = "password"
+	Namespace = "namespace"
+	AppID     = "dubbo"
+	Timeout   = "timeout"
 )
 
 type CreateOptions struct {
@@ -42,6 +59,15 @@ func NewCreateOptions(fs ...CreateOptionsFunc) *CreateOptions {
 		f(opts)
 	}
 	return opts
+}
+
+func CreateByGroupAndKey(group string, key string) CreateOptionsFunc {
+	return func(opts *CreateOptions) {
+		opts.Labels = map[string]string{
+			Group: group,
+			Key:   key,
+		}
+	}
 }
 
 func CreateBy(key core_model.ResourceKey) CreateOptionsFunc {
@@ -100,9 +126,19 @@ func NewUpdateOptions(fs ...UpdateOptionsFunc) *UpdateOptions {
 	return opts
 }
 
+func UpdateGroupAndKey(group string, key string) UpdateOptionsFunc {
+	return func(opts *UpdateOptions) {
+		opts.Labels = map[string]string{
+			Group: group,
+			Key:   key,
+		}
+	}
+}
+
 type DeleteOptions struct {
-	Name string
-	Mesh string
+	Name   string
+	Mesh   string
+	Labels map[string]string
 }
 
 type DeleteOptionsFunc func(*DeleteOptions)
@@ -113,6 +149,15 @@ func NewDeleteOptions(fs ...DeleteOptionsFunc) *DeleteOptions {
 		f(opts)
 	}
 	return opts
+}
+
+func DeleteByGroupAndKey(group string, key string) DeleteOptionsFunc {
+	return func(opts *DeleteOptions) {
+		opts.Labels = map[string]string{
+			Group: group,
+			Key:   key,
+		}
+	}
 }
 
 func DeleteBy(key core_model.ResourceKey) DeleteOptionsFunc {
@@ -151,6 +196,7 @@ type GetOptions struct {
 	Mesh       string
 	Version    string
 	Consistent bool
+	Labels     map[string]string
 }
 
 type GetOptionsFunc func(*GetOptions)
@@ -161,6 +207,77 @@ func NewGetOptions(fs ...GetOptionsFunc) *GetOptions {
 		f(opts)
 	}
 	return opts
+}
+
+func (g *GetOptions) HashCode() string {
+	return fmt.Sprintf("%s:%s", g.Name, g.Mesh)
+}
+
+func GetByAddress(address string) GetOptionsFunc {
+	return func(options *GetOptions) {
+		if i := strings.Index(address, "://"); i > 0 {
+			options.Labels = map[string]string{
+				Protocol: address[0:i],
+			}
+			options.Labels = map[string]string{
+				Address: address,
+			}
+		}
+	}
+}
+
+func GetByTimeout(timeout time.Duration) GetOptionsFunc {
+	return func(options *GetOptions) {
+		options.Labels = map[string]string{
+			Timeout: strconv.Itoa(int(timeout.Milliseconds())),
+		}
+	}
+}
+
+func GetByUsername(username string) GetOptionsFunc {
+	return func(options *GetOptions) {
+		options.Labels = map[string]string{
+			Username: username,
+		}
+	}
+}
+
+func GetByPassword(password string) GetOptionsFunc {
+	return func(options *GetOptions) {
+		options.Labels = map[string]string{
+			Password: password,
+		}
+	}
+}
+
+func GetByDataID(id string) GetOptionsFunc {
+	return func(options *GetOptions) {
+		options.Labels = map[string]string{}
+	}
+}
+
+func GetByCluster(cluster string) GetOptionsFunc {
+	return func(options *GetOptions) {
+		options.Labels = map[string]string{
+			Cluster: cluster,
+		}
+	}
+}
+
+func GetByNamespace(namespace string) GetOptionsFunc {
+	return func(options *GetOptions) {
+		options.Labels = map[string]string{
+			Namespace: namespace,
+		}
+	}
+}
+
+func GetByAppID(id string) GetOptionsFunc {
+	return func(options *GetOptions) {
+		options.Labels = map[string]string{
+			AppID: id,
+		}
+	}
 }
 
 func GetBy(key core_model.ResourceKey) GetOptionsFunc {

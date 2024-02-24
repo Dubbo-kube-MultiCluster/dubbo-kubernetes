@@ -15,43 +15,48 @@
  * limitations under the License.
  */
 
-package nacos
-
-import (
-	"context"
-)
+package zookeeper
 
 import (
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
-	"github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
-	"github.com/apache/dubbo-kubernetes/pkg/events"
+	"time"
 )
 
-type nacosStore struct{}
-
-func NewStore() store.ResourceStore {
-	return &nacosStore{}
+type resourceMetaObject struct {
+	Name             string
+	Version          string
+	Mesh             string
+	CreationTime     time.Time
+	ModificationTime time.Time
+	Labels           map[string]string
 }
 
-func (c *nacosStore) SetEventWriter(writer events.Emitter) {
+var _ core_model.ResourceMeta = &resourceMetaObject{}
+
+func (r *resourceMetaObject) GetName() string {
+	return r.Name
 }
 
-func (c *nacosStore) Create(_ context.Context, r core_model.Resource, fs ...store.CreateOptionsFunc) error {
-	return nil
+func (r *resourceMetaObject) GetNameExtensions() core_model.ResourceNameExtensions {
+	return core_model.ResourceNameExtensionsUnsupported
 }
 
-func (c *nacosStore) Update(_ context.Context, r core_model.Resource, fs ...store.UpdateOptionsFunc) error {
-	return nil
+func (r *resourceMetaObject) GetVersion() string {
+	return r.Version
 }
 
-func (c *nacosStore) Delete(ctx context.Context, r core_model.Resource, fs ...store.DeleteOptionsFunc) error {
-	return nil
+func (r *resourceMetaObject) GetMesh() string {
+	return r.Mesh
 }
 
-func (c *nacosStore) Get(_ context.Context, r core_model.Resource, fs ...store.GetOptionsFunc) error {
-	return nil
+func (r *resourceMetaObject) GetCreationTime() time.Time {
+	return r.CreationTime
 }
 
-func (c *nacosStore) List(_ context.Context, rs core_model.ResourceList, fs ...store.ListOptionsFunc) error {
-	return nil
+func (r *resourceMetaObject) GetModificationTime() time.Time {
+	return r.ModificationTime
+}
+
+func (r *resourceMetaObject) GetLabels() map[string]string {
+	return r.Labels
 }
