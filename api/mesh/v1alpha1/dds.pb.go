@@ -509,7 +509,8 @@ type StatsResponse_Error struct {
 }
 
 type StatsResponse_Stats struct {
-	// The stats content that is a successful result of dubbo-dp stats execution.
+	// The stats content that is a successful result of dubbo-dp stats
+	// execution.
 	Stats []byte `protobuf:"bytes,3,opt,name=stats,proto3,oneof"`
 }
 
