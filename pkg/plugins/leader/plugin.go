@@ -27,7 +27,6 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
 	common_zookeeper "github.com/apache/dubbo-kubernetes/pkg/plugins/common/zookeeper"
 	leader_memory "github.com/apache/dubbo-kubernetes/pkg/plugins/leader/memory"
-	leader_nacos "github.com/apache/dubbo-kubernetes/pkg/plugins/leader/nacos"
 	leader_zookeeper "github.com/apache/dubbo-kubernetes/pkg/plugins/leader/zookeeper"
 )
 
@@ -42,8 +41,6 @@ func NewLeaderElector(b *core_runtime.Builder) (component.LeaderElector, error) 
 			return nil, errors.Wrap(err, "cloud not connect to zookeeper")
 		}
 		return leader_zookeeper.NewZookeeperLeaderElector(connect), nil
-	case store.NacosStore:
-		return leader_nacos.NewNacosLeaderElector(), nil
 	// In case of Kubernetes, Leader Elector is embedded in a Kubernetes ComponentManager
 	default:
 		return nil, errors.Errorf("no election leader for storage of type %s", b.Config().Store.Type)

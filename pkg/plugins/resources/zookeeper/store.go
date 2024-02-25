@@ -19,10 +19,16 @@ package zookeeper
 
 import (
 	"context"
-	"dubbo.apache.org/dubbo-go/v3/common"
 	"encoding/base64"
+)
+
+import (
+	"dubbo.apache.org/dubbo-go/v3/common"
+
 	"github.com/dubbogo/go-zookeeper/zk"
+
 	gxzookeeper "github.com/dubbogo/gost/database/kv/zk"
+
 	"github.com/pkg/errors"
 )
 
