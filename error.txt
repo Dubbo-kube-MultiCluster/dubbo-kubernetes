@@ -1,0 +1,31 @@
+runtime error: invalid memory address or nil pointer dereference
+==> goroutine 6 [running]:
+gologic/core.(*Core).Check.func1()
+	/opt/tiger/compile_path/src/code.byted.org/sast/mini-gologic/core/core.go:365 +0x107
+panic({0x1340b40, 0x15f1d90})
+	/usr/local/go/src/runtime/panic.go:838 +0x207
+gologic/core.(*V).VisitStarExpr(0x1349b20?, 0xc001edcbb8?, 0xc001edcbb8?)
+	/opt/tiger/compile_path/src/code.byted.org/sast/mini-gologic/core/visitor.go:1833 +0x41
+gologic/core.(*V).V(0x13596a0?, {0x1349b20?, 0xc001edcbb8?}, 0x15?)
+	/opt/tiger/compile_path/src/code.byted.org/sast/mini-gologic/core/visitor.go:241 +0x9cd
+gologic/core.(*V).VisitFuncDecl(0x1349020?, 0xc001ee3ad0, 0xc001ee3ad0?)
+	/opt/tiger/compile_path/src/code.byted.org/sast/mini-gologic/core/visitor.go:757 +0x3b6
+gologic/core.(*V).V(0xc003d71c28?, {0x1349020?, 0xc001ee3ad0?}, 0x14239a8?)
+	/opt/tiger/compile_path/src/code.byted.org/sast/mini-gologic/core/visitor.go:203 +0x8bd
+gologic/core.(*V).VisitAstFile(0x13427c0?, 0xc001ebf280, 0xc001ebf280?)
+	/opt/tiger/compile_path/src/code.byted.org/sast/mini-gologic/core/visitor.go:380 +0x1452
+gologic/core.(*V).V(0xc0006215f0?, {0x13427c0?, 0xc001ebf280?}, 0x14239a8?)
+	/opt/tiger/compile_path/src/code.byted.org/sast/mini-gologic/core/visitor.go:199 +0x2e5
+gologic/core.(*Core).VisitModelBody(0x16008e0, {0x14239a8, 0xc005d4d180})
+	/opt/tiger/compile_path/src/code.byted.org/sast/mini-gologic/core/core.go:868 +0x8a
+gologic/core.(*Core).scan(0x16008e0, {0xc000aea000?, 0x22a, 0x1?})
+	/opt/tiger/compile_path/src/code.byted.org/sast/mini-gologic/core/core.go:761 +0x158
+gologic/core.(*Core).Check(0x16008e0, {0x2059e38fd, 0x6f}, 0x0?)
+	/opt/tiger/compile_path/src/code.byted.org/sast/mini-gologic/core/core.go:462 +0x52f
+main.work()
+	/opt/tiger/compile_path/src/code.byted.org/sast/mini-gologic/main.go:93 +0x95
+main.main.func1()
+	/opt/tiger/compile_path/src/code.byted.org/sast/mini-gologic/main.go:78 +0x25
+created by main.main
+	/opt/tiger/compile_path/src/code.byted.org/sast/mini-gologic/main.go:77 +0x245
+

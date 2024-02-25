@@ -15,30 +15,14 @@
  * limitations under the License.
  */
 
-package zookeeper
+package mysql
 
-import (
-	"time"
-)
+import "time"
 
-import (
-	"github.com/apache/dubbo-kubernetes/pkg/config"
-)
-
-func DefaultZookeeperStoreConfig() *ZookeeperStoreConfig {
-	return &ZookeeperStoreConfig{
-		Servers: []string{
-			"127.0.0.1:2181",
-		},
-	}
-}
-
-type ZookeeperStoreConfig struct {
-	config.BaseConfig
-	Servers        []string      `json:"servers" envconfig:"dubbo_store_zookeeper_servers"`
-	SessionTimeout time.Duration `json:"sessionTimeout" envconfig:"dubbo_store_zookeeper_session_timeout"`
-}
-
-func (z *ZookeeperStoreConfig) Validate() error {
-	return nil
+type MysqlStoreConfig struct {
+	MysqlDsn           string        `json:"mysql_dsn"`
+	MaxOpenConnections int           `json:"max_open_connections"`
+	MaxIdleConnections int           `json:"max_idle_connections"`
+	MaxLifeTime        time.Duration `json:"max_life_time"`
+	MaxIdleTime        time.Duration `json:"max_idle_time"`
 }

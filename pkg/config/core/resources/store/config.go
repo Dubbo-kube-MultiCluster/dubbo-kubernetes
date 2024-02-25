@@ -42,7 +42,7 @@ const (
 	KubernetesStore StoreType = "kubernetes"
 	MemoryStore     StoreType = "memory"
 	ZookeeperStore  StoreType = "zookeeper"
-	NacosStore      StoreType = "nacos"
+	MyStore         StoreType = "mysql"
 )
 
 // StoreConfig defines Resource Store configuration
@@ -53,7 +53,6 @@ type StoreConfig struct {
 	Kubernetes *k8s.KubernetesStoreConfig `json:"kubernetes"`
 	// Zookeeper Store configuration
 	Zookeeper *zookeeper.ZookeeperStoreConfig `json:"zookeeper"`
-	Nacos     *zookeeper.ZookeeperStoreConfig `json:"nacos"`
 	// Cache configuration
 	Cache CacheStoreConfig `json:"cache"`
 	// Upsert configuration
@@ -90,9 +89,10 @@ func (s *StoreConfig) Validate() error {
 		if err := s.Kubernetes.Validate(); err != nil {
 			return errors.Wrap(err, "Kubernetes validation failed")
 		}
-		return nil
 	case MemoryStore:
 		return nil
+	case MyStore:
+
 	default:
 		return errors.Errorf("Type should be either %s or %s", KubernetesStore, MemoryStore)
 	}

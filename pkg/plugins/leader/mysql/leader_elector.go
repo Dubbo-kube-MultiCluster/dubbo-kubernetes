@@ -15,28 +15,21 @@
  * limitations under the License.
  */
 
-package events
+package mysql
 
 import (
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
-	"github.com/apache/dubbo-kubernetes/pkg/events"
 )
 
-var log = core.Log.WithName("mysql-event-listener")
+var log = core.Log.WithName("mysql-leader")
 
-type listener struct {
-	out events.Emitter
+type DistributedLock struct {
+	Id         string `gorm:"primary_key"`
+	ExpireTime int64
 }
 
-func NewListener(out events.Emitter) component.Component {
-	return &listener{out: out}
-}
-
-func (k *listener) Start(stop <-chan struct{}) error {
-	return nil
-}
-
-func (k *listener) NeedLeaderElection() bool {
-	return false
+type mysqlLeaderElector struct {
+	leader    int32
+	callbacks []component.LeaderCallbacks
 }
