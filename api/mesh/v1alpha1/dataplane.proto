@@ -204,4 +204,6 @@ message Dataplane {
   // orchestration system (e.g. Kubernetes) can still health check the
   // application.
   Probes probes = 3;
+
+  map<string, string> extensions = 4;
 }

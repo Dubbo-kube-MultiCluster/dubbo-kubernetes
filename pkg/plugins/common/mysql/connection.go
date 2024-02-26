@@ -18,12 +18,18 @@
 package mysql
 
 import (
+	"github.com/pkg/errors"
+
+	mysql_driver "gorm.io/driver/mysql"
+
+	sqlite_driver "gorm.io/driver/sqlite"
+
+	"gorm.io/gorm"
+)
+
+import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/plugins/resources/mysql"
 	leader_mysql "github.com/apache/dubbo-kubernetes/pkg/plugins/leader/mysql"
-	"github.com/pkg/errors"
-	mysql_driver "gorm.io/driver/mysql"
-	sqlite_driver "gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
 func ConnectToDb(cfg mysql.MysqlStoreConfig) (*gorm.DB, error) {
