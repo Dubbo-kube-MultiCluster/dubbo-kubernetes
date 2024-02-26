@@ -33,7 +33,7 @@ const backoffTime = 5 * time.Second
 
 type mysqlLeaderElector struct {
 	leader     int32
-	lockClient *mysqlLock
+	lockClient *MysqlLock
 	callbacks  []component.LeaderCallbacks
 }
 

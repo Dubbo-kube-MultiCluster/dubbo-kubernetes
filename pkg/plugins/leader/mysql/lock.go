@@ -26,24 +26,26 @@ import (
 
 const TIMEOUT int64 = 10 * 60
 
-type mysqlLock struct {
+type MysqlLock struct {
 	id         string
 	expireTime int64
 	db         *gorm.DB
 }
+
 type DistributedLock struct {
 	Id         string `gorm:"primary_key"`
 	ExpireTime int64
 }
 
-func NewLock(id string, db *gorm.DB) *mysqlLock {
-	return &mysqlLock{
+func NewLock(id string, db *gorm.DB) *MysqlLock {
+	return &MysqlLock{
 		id:         id,
 		expireTime: time.Now().Unix() + TIMEOUT,
 		db:         db,
 	}
 }
-func (lock *mysqlLock) TryLock() (bool, error) {
+
+func (lock *MysqlLock) TryLock() (bool, error) {
 	// clean timeout lock
 	lock.unLock()
 	var newLock = DistributedLock{
@@ -64,7 +66,7 @@ func (lock *mysqlLock) TryLock() (bool, error) {
 	return true, nil
 }
 
-func (lock *mysqlLock) KeepLock(ctx context.Context) {
+func (lock *MysqlLock) KeepLock(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -80,7 +82,7 @@ func (lock *mysqlLock) KeepLock(ctx context.Context) {
 	}
 }
 
-func (lock *mysqlLock) unLock() {
+func (lock *MysqlLock) unLock() {
 	var now = time.Now().Unix()
 	lock.db.Table("distributed_lock").Where("id = ? AND expire_time < ?", lock.id, now).Delete(DistributedLock{})
 }
