@@ -18,6 +18,7 @@
 package store
 
 import (
+	"github.com/apache/dubbo-kubernetes/pkg/config/plugins/resources/mysql"
 	"time"
 )
 
@@ -53,6 +54,8 @@ type StoreConfig struct {
 	Kubernetes *k8s.KubernetesStoreConfig `json:"kubernetes"`
 	// Zookeeper Store configuration
 	Zookeeper *zookeeper.ZookeeperStoreConfig `json:"zookeeper"`
+	// Mysql Store configuration
+	Mysql *mysql.MysqlStoreConfig `json:"mysql"`
 	// Cache configuration
 	Cache CacheStoreConfig `json:"cache"`
 	// Upsert configuration

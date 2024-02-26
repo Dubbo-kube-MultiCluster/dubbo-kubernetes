@@ -20,16 +20,82 @@ package mysql
 import (
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
+	util_channels "github.com/apache/dubbo-kubernetes/pkg/util/channels"
+	"gorm.io/gorm"
+	"sync/atomic"
+	"time"
 )
 
 var log = core.Log.WithName("mysql-leader")
 
-type DistributedLock struct {
-	Id         string `gorm:"primary_key"`
-	ExpireTime int64
-}
+const dubboLockName = "dubbo-cp-lock"
+const backoffTime = 5 * time.Second
 
 type mysqlLeaderElector struct {
-	leader    int32
-	callbacks []component.LeaderCallbacks
+	leader     int32
+	lockClient *mysqlLock
+	callbacks  []component.LeaderCallbacks
+}
+
+func (n *mysqlLeaderElector) IsLeader() bool {
+	return atomic.LoadInt32(&(n.leader)) == 1
+}
+func (n *mysqlLeaderElector) AddCallbacks(callbacks component.LeaderCallbacks) {
+	n.callbacks = append(n.callbacks, callbacks)
+}
+func (n *mysqlLeaderElector) Start(stop <-chan struct{}) {
+	log.Info("waiting for lock")
+	retries := 0
+	for {
+		acquiredLock, err := n.lockClient.TryLock()
+		if err != nil {
+			if retries >= 3 {
+				log.Error(err, "error waiting for lock", "retries", retries)
+			} else {
+				log.V(1).Info("error waiting for lock", "err", err, "retries", retries)
+			}
+			retries += 1
+		} else {
+			retries = 0
+			if acquiredLock {
+				n.leaderAcquired()
+				n.lockClient.unLock()
+				n.leaderLost()
+			}
+		}
+		if util_channels.IsClosed(stop) {
+			break
+		}
+		time.Sleep(backoffTime)
+	}
+	log.Info("Leader Elector stopped")
+}
+
+func NewMysqlLeaderElector(connect *gorm.DB) component.LeaderElector {
+	lock := NewLock(dubboLockName, connect)
+	return &mysqlLeaderElector{
+		lockClient: lock,
+	}
+}
+
+func (n *mysqlLeaderElector) setLeader(leader bool) {
+	var value int32 = 0
+	if leader {
+		value = 1
+	}
+	atomic.StoreInt32(&n.leader, value)
+}
+
+func (n *mysqlLeaderElector) leaderAcquired() {
+	n.setLeader(true)
+	for _, callback := range n.callbacks {
+		callback.OnStartedLeading()
+	}
+}
+
+func (n *mysqlLeaderElector) leaderLost() {
+	n.setLeader(false)
+	for _, callback := range n.callbacks {
+		callback.OnStoppedLeading()
+	}
 }
