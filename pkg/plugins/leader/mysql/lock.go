@@ -19,9 +19,13 @@ package mysql
 
 import (
 	"context"
-	"github.com/go-sql-driver/mysql"
-	"gorm.io/gorm"
 	"time"
+)
+
+import (
+	"github.com/go-sql-driver/mysql"
+
+	"gorm.io/gorm"
 )
 
 const TIMEOUT int64 = 10 * 60
@@ -48,7 +52,7 @@ func NewLock(id string, db *gorm.DB) *MysqlLock {
 func (lock *MysqlLock) TryLock() (bool, error) {
 	// clean timeout lock
 	lock.unLock()
-	var newLock = DistributedLock{
+	newLock := DistributedLock{
 		Id:         lock.id,
 		ExpireTime: lock.expireTime,
 	}
@@ -61,7 +65,6 @@ func (lock *MysqlLock) TryLock() (bool, error) {
 		} else {
 			return false, err
 		}
-
 	}
 	return true, nil
 }
@@ -72,7 +75,7 @@ func (lock *MysqlLock) KeepLock(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		default:
-			var oldLock = DistributedLock{
+			oldLock := DistributedLock{
 				Id: lock.id,
 			}
 			lock.db.Table("distributed_lock").Model(&oldLock).Update("expire_time", time.Now().Unix()+TIMEOUT)
@@ -83,6 +86,6 @@ func (lock *MysqlLock) KeepLock(ctx context.Context) {
 }
 
 func (lock *MysqlLock) unLock() {
-	var now = time.Now().Unix()
+	now := time.Now().Unix()
 	lock.db.Table("distributed_lock").Where("id = ? AND expire_time < ?", lock.id, now).Delete(DistributedLock{})
 }

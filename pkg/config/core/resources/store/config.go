@@ -18,7 +18,6 @@
 package store
 
 import (
-	"github.com/apache/dubbo-kubernetes/pkg/config/plugins/resources/mysql"
 	"time"
 )
 
@@ -31,6 +30,7 @@ import (
 import (
 	"github.com/apache/dubbo-kubernetes/pkg/config"
 	"github.com/apache/dubbo-kubernetes/pkg/config/plugins/resources/k8s"
+	"github.com/apache/dubbo-kubernetes/pkg/config/plugins/resources/mysql"
 	"github.com/apache/dubbo-kubernetes/pkg/config/plugins/resources/zookeeper"
 	config_types "github.com/apache/dubbo-kubernetes/pkg/config/types"
 )

@@ -96,6 +96,12 @@ type Dataplane struct {
 	// Networking describes inbound and outbound interfaces of the data plane
 	// proxy.
 	Networking *Dataplane_Networking `protobuf:"bytes,1,opt,name=networking,proto3" json:"networking,omitempty"`
+	// Configuration for metrics that should be collected and exposed by the
+	// data plane proxy.
+	//
+	// Settings defined here will override their respective defaults
+	// defined at a Mesh level.
+	Metrics *MetricsBackend `protobuf:"bytes,2,opt,name=metrics,proto3" json:"metrics,omitempty"`
 	// Probes describe a list of endpoints that will be exposed without mTLS.
 	// This is useful to expose the health endpoints of the application so the
 	// orchestration system (e.g. Kubernetes) can still health check the
@@ -139,6 +145,13 @@ func (*Dataplane) Descriptor() ([]byte, []int) {
 func (x *Dataplane) GetNetworking() *Dataplane_Networking {
 	if x != nil {
 		return x.Networking
+	}
+	return nil
+}
+
+func (x *Dataplane) GetMetrics() *MetricsBackend {
+	if x != nil {
+		return x.Metrics
 	}
 	return nil
 }
@@ -790,16 +803,22 @@ var file_api_mesh_v1alpha1_dataplane_proto_rawDesc = []byte{
 	0x66, 0x2f, 0x64, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x1a, 0x1e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75,
 	0x66, 0x2f, 0x77, 0x72, 0x61, 0x70, 0x70, 0x65, 0x72, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x1a, 0x23, 0x61, 0x70, 0x69, 0x2f, 0x6d, 0x65, 0x73, 0x68, 0x2f, 0x76, 0x31, 0x61, 0x6c, 0x70,
-	0x68, 0x61, 0x31, 0x2f, 0x65, 0x6e, 0x76, 0x6f, 0x79, 0x5f, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x2e,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x17, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x65, 0x2f,
-	0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xbf,
-	0x10, 0x0a, 0x09, 0x44, 0x61, 0x74, 0x61, 0x70, 0x6c, 0x61, 0x6e, 0x65, 0x12, 0x49, 0x0a, 0x0a,
-	0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x69, 0x6e, 0x67, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x29, 0x2e, 0x64, 0x75, 0x62, 0x62, 0x6f, 0x2e, 0x6d, 0x65, 0x73, 0x68, 0x2e, 0x76, 0x31,
-	0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x44, 0x61, 0x74, 0x61, 0x70, 0x6c, 0x61, 0x6e, 0x65,
-	0x2e, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x0a, 0x6e, 0x65, 0x74,
-	0x77, 0x6f, 0x72, 0x6b, 0x69, 0x6e, 0x67, 0x12, 0x3d, 0x0a, 0x06, 0x70, 0x72, 0x6f, 0x62, 0x65,
+	0x1a, 0x1f, 0x61, 0x70, 0x69, 0x2f, 0x6d, 0x65, 0x73, 0x68, 0x2f, 0x76, 0x31, 0x61, 0x6c, 0x70,
+	0x68, 0x61, 0x31, 0x2f, 0x6d, 0x65, 0x74, 0x72, 0x69, 0x63, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x1a, 0x23, 0x61, 0x70, 0x69, 0x2f, 0x6d, 0x65, 0x73, 0x68, 0x2f, 0x76, 0x31, 0x61, 0x6c,
+	0x70, 0x68, 0x61, 0x31, 0x2f, 0x65, 0x6e, 0x76, 0x6f, 0x79, 0x5f, 0x61, 0x64, 0x6d, 0x69, 0x6e,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x17, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x65,
+	0x2f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22,
+	0xfe, 0x10, 0x0a, 0x09, 0x44, 0x61, 0x74, 0x61, 0x70, 0x6c, 0x61, 0x6e, 0x65, 0x12, 0x49, 0x0a,
+	0x0a, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x69, 0x6e, 0x67, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x29, 0x2e, 0x64, 0x75, 0x62, 0x62, 0x6f, 0x2e, 0x6d, 0x65, 0x73, 0x68, 0x2e, 0x76,
+	0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x44, 0x61, 0x74, 0x61, 0x70, 0x6c, 0x61, 0x6e,
+	0x65, 0x2e, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x0a, 0x6e, 0x65,
+	0x74, 0x77, 0x6f, 0x72, 0x6b, 0x69, 0x6e, 0x67, 0x12, 0x3d, 0x0a, 0x07, 0x6d, 0x65, 0x74, 0x72,
+	0x69, 0x63, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x23, 0x2e, 0x64, 0x75, 0x62, 0x62,
+	0x6f, 0x2e, 0x6d, 0x65, 0x73, 0x68, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e,
+	0x4d, 0x65, 0x74, 0x72, 0x69, 0x63, 0x73, 0x42, 0x61, 0x63, 0x6b, 0x65, 0x6e, 0x64, 0x52, 0x07,
+	0x6d, 0x65, 0x74, 0x72, 0x69, 0x63, 0x73, 0x12, 0x3d, 0x0a, 0x06, 0x70, 0x72, 0x6f, 0x62, 0x65,
 	0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x64, 0x75, 0x62, 0x62, 0x6f, 0x2e,
 	0x6d, 0x65, 0x73, 0x68, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x44, 0x61,
 	0x74, 0x61, 0x70, 0x6c, 0x61, 0x6e, 0x65, 0x2e, 0x50, 0x72, 0x6f, 0x62, 0x65, 0x73, 0x52, 0x06,
@@ -960,33 +979,35 @@ var file_api_mesh_v1alpha1_dataplane_proto_goTypes = []interface{}{
 	(*Dataplane_Networking_Inbound_ServiceProbe_Tcp)(nil), // 10: dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.ServiceProbe.Tcp
 	nil,                               // 11: dubbo.mesh.v1alpha1.Dataplane.Networking.Outbound.TagsEntry
 	(*Dataplane_Probes_Endpoint)(nil), // 12: dubbo.mesh.v1alpha1.Dataplane.Probes.Endpoint
-	(*EnvoyAdmin)(nil),                // 13: dubbo.mesh.v1alpha1.EnvoyAdmin
-	(*durationpb.Duration)(nil),       // 14: google.protobuf.Duration
-	(*wrapperspb.UInt32Value)(nil),    // 15: google.protobuf.UInt32Value
+	(*MetricsBackend)(nil),            // 13: dubbo.mesh.v1alpha1.MetricsBackend
+	(*EnvoyAdmin)(nil),                // 14: dubbo.mesh.v1alpha1.EnvoyAdmin
+	(*durationpb.Duration)(nil),       // 15: google.protobuf.Duration
+	(*wrapperspb.UInt32Value)(nil),    // 16: google.protobuf.UInt32Value
 }
 var file_api_mesh_v1alpha1_dataplane_proto_depIdxs = []int32{
 	2,  // 0: dubbo.mesh.v1alpha1.Dataplane.networking:type_name -> dubbo.mesh.v1alpha1.Dataplane.Networking
-	3,  // 1: dubbo.mesh.v1alpha1.Dataplane.probes:type_name -> dubbo.mesh.v1alpha1.Dataplane.Probes
-	4,  // 2: dubbo.mesh.v1alpha1.Dataplane.extensions:type_name -> dubbo.mesh.v1alpha1.Dataplane.ExtensionsEntry
-	5,  // 3: dubbo.mesh.v1alpha1.Dataplane.Networking.inbound:type_name -> dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound
-	6,  // 4: dubbo.mesh.v1alpha1.Dataplane.Networking.outbound:type_name -> dubbo.mesh.v1alpha1.Dataplane.Networking.Outbound
-	13, // 5: dubbo.mesh.v1alpha1.Dataplane.Networking.admin:type_name -> dubbo.mesh.v1alpha1.EnvoyAdmin
-	12, // 6: dubbo.mesh.v1alpha1.Dataplane.Probes.endpoints:type_name -> dubbo.mesh.v1alpha1.Dataplane.Probes.Endpoint
-	7,  // 7: dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.tags:type_name -> dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.TagsEntry
-	8,  // 8: dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.health:type_name -> dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.Health
-	9,  // 9: dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.serviceProbe:type_name -> dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.ServiceProbe
-	0,  // 10: dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.state:type_name -> dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.State
-	11, // 11: dubbo.mesh.v1alpha1.Dataplane.Networking.Outbound.tags:type_name -> dubbo.mesh.v1alpha1.Dataplane.Networking.Outbound.TagsEntry
-	14, // 12: dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.ServiceProbe.interval:type_name -> google.protobuf.Duration
-	14, // 13: dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.ServiceProbe.timeout:type_name -> google.protobuf.Duration
-	15, // 14: dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.ServiceProbe.unhealthy_threshold:type_name -> google.protobuf.UInt32Value
-	15, // 15: dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.ServiceProbe.healthy_threshold:type_name -> google.protobuf.UInt32Value
-	10, // 16: dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.ServiceProbe.tcp:type_name -> dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.ServiceProbe.Tcp
-	17, // [17:17] is the sub-list for method output_type
-	17, // [17:17] is the sub-list for method input_type
-	17, // [17:17] is the sub-list for extension type_name
-	17, // [17:17] is the sub-list for extension extendee
-	0,  // [0:17] is the sub-list for field type_name
+	13, // 1: dubbo.mesh.v1alpha1.Dataplane.metrics:type_name -> dubbo.mesh.v1alpha1.MetricsBackend
+	3,  // 2: dubbo.mesh.v1alpha1.Dataplane.probes:type_name -> dubbo.mesh.v1alpha1.Dataplane.Probes
+	4,  // 3: dubbo.mesh.v1alpha1.Dataplane.extensions:type_name -> dubbo.mesh.v1alpha1.Dataplane.ExtensionsEntry
+	5,  // 4: dubbo.mesh.v1alpha1.Dataplane.Networking.inbound:type_name -> dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound
+	6,  // 5: dubbo.mesh.v1alpha1.Dataplane.Networking.outbound:type_name -> dubbo.mesh.v1alpha1.Dataplane.Networking.Outbound
+	14, // 6: dubbo.mesh.v1alpha1.Dataplane.Networking.admin:type_name -> dubbo.mesh.v1alpha1.EnvoyAdmin
+	12, // 7: dubbo.mesh.v1alpha1.Dataplane.Probes.endpoints:type_name -> dubbo.mesh.v1alpha1.Dataplane.Probes.Endpoint
+	7,  // 8: dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.tags:type_name -> dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.TagsEntry
+	8,  // 9: dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.health:type_name -> dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.Health
+	9,  // 10: dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.serviceProbe:type_name -> dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.ServiceProbe
+	0,  // 11: dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.state:type_name -> dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.State
+	11, // 12: dubbo.mesh.v1alpha1.Dataplane.Networking.Outbound.tags:type_name -> dubbo.mesh.v1alpha1.Dataplane.Networking.Outbound.TagsEntry
+	15, // 13: dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.ServiceProbe.interval:type_name -> google.protobuf.Duration
+	15, // 14: dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.ServiceProbe.timeout:type_name -> google.protobuf.Duration
+	16, // 15: dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.ServiceProbe.unhealthy_threshold:type_name -> google.protobuf.UInt32Value
+	16, // 16: dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.ServiceProbe.healthy_threshold:type_name -> google.protobuf.UInt32Value
+	10, // 17: dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.ServiceProbe.tcp:type_name -> dubbo.mesh.v1alpha1.Dataplane.Networking.Inbound.ServiceProbe.Tcp
+	18, // [18:18] is the sub-list for method output_type
+	18, // [18:18] is the sub-list for method input_type
+	18, // [18:18] is the sub-list for extension type_name
+	18, // [18:18] is the sub-list for extension extendee
+	0,  // [0:18] is the sub-list for field type_name
 }
 
 func init() { file_api_mesh_v1alpha1_dataplane_proto_init() }
@@ -994,6 +1015,7 @@ func file_api_mesh_v1alpha1_dataplane_proto_init() {
 	if File_api_mesh_v1alpha1_dataplane_proto != nil {
 		return
 	}
+	file_api_mesh_v1alpha1_metrics_proto_init()
 	file_api_mesh_v1alpha1_envoy_admin_proto_init()
 	if !protoimpl.UnsafeEnabled {
 		file_api_mesh_v1alpha1_dataplane_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {

@@ -18,7 +18,6 @@
 package leader
 
 import (
-	leader_zookeeper "github.com/apache/dubbo-kubernetes/pkg/plugins/leader/zookeeper"
 	"github.com/pkg/errors"
 )
 
@@ -30,6 +29,7 @@ import (
 	common_zookeeper "github.com/apache/dubbo-kubernetes/pkg/plugins/common/zookeeper"
 	leader_memory "github.com/apache/dubbo-kubernetes/pkg/plugins/leader/memory"
 	leader_mysql "github.com/apache/dubbo-kubernetes/pkg/plugins/leader/mysql"
+	leader_zookeeper "github.com/apache/dubbo-kubernetes/pkg/plugins/leader/zookeeper"
 )
 
 func NewLeaderElector(b *core_runtime.Builder) (component.LeaderElector, error) {

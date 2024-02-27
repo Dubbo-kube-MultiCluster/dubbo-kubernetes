@@ -18,18 +18,26 @@
 package mysql
 
 import (
-	"github.com/apache/dubbo-kubernetes/pkg/core"
-	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
-	util_channels "github.com/apache/dubbo-kubernetes/pkg/util/channels"
-	"gorm.io/gorm"
 	"sync/atomic"
 	"time"
 )
 
+import (
+	"gorm.io/gorm"
+)
+
+import (
+	"github.com/apache/dubbo-kubernetes/pkg/core"
+	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
+	util_channels "github.com/apache/dubbo-kubernetes/pkg/util/channels"
+)
+
 var log = core.Log.WithName("mysql-leader")
 
-const dubboLockName = "dubbo-cp-lock"
-const backoffTime = 5 * time.Second
+const (
+	dubboLockName = "dubbo-cp-lock"
+	backoffTime   = 5 * time.Second
+)
 
 type mysqlLeaderElector struct {
 	leader     int32
@@ -40,9 +48,11 @@ type mysqlLeaderElector struct {
 func (n *mysqlLeaderElector) IsLeader() bool {
 	return atomic.LoadInt32(&(n.leader)) == 1
 }
+
 func (n *mysqlLeaderElector) AddCallbacks(callbacks component.LeaderCallbacks) {
 	n.callbacks = append(n.callbacks, callbacks)
 }
+
 func (n *mysqlLeaderElector) Start(stop <-chan struct{}) {
 	log.Info("waiting for lock")
 	retries := 0
