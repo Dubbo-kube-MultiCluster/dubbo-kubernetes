@@ -18,9 +18,31 @@
 package snp
 
 import (
+	mesh_proto "github.com/apache/dubbo-kubernetes/api/mesh/v1alpha1"
+	"github.com/apache/dubbo-kubernetes/pkg/core"
 	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
+	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
+	snp_server "github.com/apache/dubbo-kubernetes/pkg/snp/server"
+	"github.com/apache/dubbo-kubernetes/pkg/snp/servicemapping"
 )
 
+var log = core.Log.WithName("snp")
+
 func Setup(rt core_runtime.Runtime) error {
-	return nil
+	cfg := rt.Config().ServiceNameMapping
+
+	snpComponent := component.ComponentFunc(func(stop <-chan struct{}) error {
+		server := snp_server.NewServer(cfg.Server)
+
+		// register ServiceNameMappingService
+		serviceMapping := servicemapping.NewSnpServer(rt.AppContext(), cfg.ServiceMapping, rt.ResourceStore(), rt.Transactions(), rt.EventBus())
+		mesh_proto.RegisterServiceNameMappingServiceServer(server.GrpcServer(), serviceMapping)
+
+		return rt.Add(server, serviceMapping)
+	})
+
+	return rt.Add(component.NewResilientComponent(
+		log,
+		snpComponent,
+	))
 }
