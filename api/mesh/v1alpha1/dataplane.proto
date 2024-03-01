@@ -7,6 +7,7 @@ option go_package = "github.com/apache/dubbo-kubernetes/api/mesh/v1alpha1";
 import "api/mesh/options.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/wrappers.proto";
+import "api/mesh/v1alpha1/metrics.proto";
 import "api/mesh/v1alpha1/envoy_admin.proto";
 import "validate/validate.proto";
 
@@ -179,6 +180,13 @@ message Dataplane {
   // proxy.
   Networking networking = 1;
 
+  // Configuration for metrics that should be collected and exposed by the
+  // data plane proxy.
+  //
+  // Settings defined here will override their respective defaults
+  // defined at a Mesh level.
+  MetricsBackend metrics = 2;
+
   message Probes {
     // Port on which the probe endpoints will be exposed. This cannot overlap
     // with any other ports.
@@ -204,4 +212,6 @@ message Dataplane {
   // orchestration system (e.g. Kubernetes) can still health check the
   // application.
   Probes probes = 3;
+
+  map<string, string> extensions = 4;
 }

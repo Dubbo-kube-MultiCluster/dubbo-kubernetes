@@ -55,6 +55,11 @@ const (
 	ResourceOriginLabel = "dubbo.io/origin"
 )
 
+// extensions
+const (
+	ApplicationName = "applicationName"
+)
+
 type ResourceOrigin string
 
 const (

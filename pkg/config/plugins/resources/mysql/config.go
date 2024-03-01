@@ -17,7 +17,9 @@
 
 package mysql
 
-import "time"
+import (
+	"time"
+)
 
 type MysqlStoreConfig struct {
 	MysqlDsn           string        `json:"mysql_dsn"`

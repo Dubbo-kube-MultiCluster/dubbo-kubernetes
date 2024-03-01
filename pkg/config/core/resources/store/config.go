@@ -30,6 +30,7 @@ import (
 import (
 	"github.com/apache/dubbo-kubernetes/pkg/config"
 	"github.com/apache/dubbo-kubernetes/pkg/config/plugins/resources/k8s"
+	"github.com/apache/dubbo-kubernetes/pkg/config/plugins/resources/mysql"
 	"github.com/apache/dubbo-kubernetes/pkg/config/plugins/resources/zookeeper"
 	config_types "github.com/apache/dubbo-kubernetes/pkg/config/types"
 )
@@ -53,6 +54,8 @@ type StoreConfig struct {
 	Kubernetes *k8s.KubernetesStoreConfig `json:"kubernetes"`
 	// Zookeeper Store configuration
 	Zookeeper *zookeeper.ZookeeperStoreConfig `json:"zookeeper"`
+	// Mysql Store configuration
+	Mysql *mysql.MysqlStoreConfig `json:"mysql"`
 	// Cache configuration
 	Cache CacheStoreConfig `json:"cache"`
 	// Upsert configuration
