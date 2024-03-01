@@ -19,10 +19,15 @@ package client
 
 import (
 	"io"
+)
 
+import (
 	"github.com/go-logr/logr"
-	"github.com/pkg/errors"
 
+	"github.com/pkg/errors"
+)
+
+import (
 	mesh_proto "github.com/apache/dubbo-kubernetes/api/mesh/v1alpha1"
 	core_mesh "github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
 )
@@ -51,7 +56,6 @@ func NewMappingSyncClient(log logr.Logger, syncStream MappingSyncStream, cb *Cal
 }
 
 func (s *mappingSyncClient) HandleReceive() error {
-
 	for {
 		received, err := s.syncStream.Recv()
 		if err != nil {
@@ -95,5 +99,4 @@ func (s *mappingSyncClient) HandleReceive() error {
 		}
 
 	}
-
 }

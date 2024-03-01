@@ -15,44 +15,51 @@
  * limitations under the License.
  */
 
-package servicemapping
+package mysql
 
 import (
-	"fmt"
+	"time"
 )
 
 import (
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 )
 
-type RegisterRequest struct {
-	ConfigsUpdated map[core_model.ResourceKey]map[string]struct{}
+type resourceMetaObject struct {
+	Name             string
+	Version          string
+	Mesh             string
+	CreationTime     time.Time
+	ModificationTime time.Time
+	Labels           map[string]string
 }
 
-func (q *RegisterRequest) Merge(req *RegisterRequest) *RegisterRequest {
-	if q == nil {
-		return req
-	}
-	for key, newApps := range req.ConfigsUpdated {
-		if _, ok := q.ConfigsUpdated[key]; !ok {
-			q.ConfigsUpdated[key] = make(map[string]struct{})
-		}
-		for app := range newApps {
-			q.ConfigsUpdated[key][app] = struct{}{}
-		}
-	}
-	return q
+var _ core_model.ResourceMeta = &resourceMetaObject{}
+
+func (r *resourceMetaObject) GetName() string {
+	return r.Name
 }
 
-func configsUpdated(req *RegisterRequest) string {
-	configs := ""
-	for key := range req.ConfigsUpdated {
-		configs += key.Name + "." + key.Mesh
-		break
-	}
-	if len(req.ConfigsUpdated) > 1 {
-		more := fmt.Sprintf(" and %d more configs", len(req.ConfigsUpdated)-1)
-		configs += more
-	}
-	return configs
+func (r *resourceMetaObject) GetNameExtensions() core_model.ResourceNameExtensions {
+	return core_model.ResourceNameExtensionsUnsupported
+}
+
+func (r *resourceMetaObject) GetVersion() string {
+	return r.Version
+}
+
+func (r *resourceMetaObject) GetMesh() string {
+	return r.Mesh
+}
+
+func (r *resourceMetaObject) GetCreationTime() time.Time {
+	return r.CreationTime
+}
+
+func (r *resourceMetaObject) GetModificationTime() time.Time {
+	return r.ModificationTime
+}
+
+func (r *resourceMetaObject) GetLabels() map[string]string {
+	return r.Labels
 }

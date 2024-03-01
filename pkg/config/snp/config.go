@@ -19,11 +19,16 @@ package snp
 
 import (
 	"time"
+)
 
-	config_types "github.com/apache/dubbo-kubernetes/pkg/config/types"
-
+import (
 	"github.com/pkg/errors"
+
 	"go.uber.org/multierr"
+)
+
+import (
+	config_types "github.com/apache/dubbo-kubernetes/pkg/config/types"
 )
 
 func DefaultServiceNameMappingConfig() SNPConfig {

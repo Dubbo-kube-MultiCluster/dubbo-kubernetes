@@ -22,13 +22,17 @@ import (
 	"net"
 	"net/http"
 	"time"
+)
 
+import (
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
+)
+
+import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/snp"
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
-
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/keepalive"
 )
 
 var log = core.Log.WithName("snp").WithName("server")
