@@ -18,6 +18,8 @@
 package zookeeper
 
 import (
+	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
+	zk_events "github.com/apache/dubbo-kubernetes/pkg/plugins/resources/zookeeper/events"
 	"github.com/pkg/errors"
 )
 
@@ -48,7 +50,7 @@ func (p *plugin) Migrate(pc core_plugins.PluginContext, config core_plugins.Plug
 	return 0, errors.New("migrations are not supported for Memory resource store")
 }
 
-func (p *plugin) EventListener(context core_plugins.PluginContext, writer events.Emitter) error {
-	context.ResourceStore().DefaultResourceStore().(*zookeeperStore).SetEventWriter(writer)
-	return nil
+func (p *plugin) EventListener(pc core_plugins.PluginContext, out events.Emitter) error {
+	zkListener := zk_events.NewListener(*pc.Config().Store.Zookeeper, out)
+	return pc.ComponentManager().Add(component.NewResilientComponent(core.Log.WithName("zk-event-listener-component"), zkListener))
 }

@@ -15,27 +15,40 @@
  * limitations under the License.
  */
 
-package universal
+package zookeeper
 
 import (
-	config_core "github.com/apache/dubbo-kubernetes/pkg/config/core"
-	"github.com/apache/dubbo-kubernetes/pkg/core"
-	core_plugins "github.com/apache/dubbo-kubernetes/pkg/core/plugins"
-	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
+	"github.com/apache/dubbo-kubernetes/pkg/config/plugins/resources/zookeeper"
+	gxzookeeper "github.com/dubbogo/gost/database/kv/zk"
+	"github.com/go-logr/logr"
+	"go.uber.org/atomic"
+	"sync"
 )
 
-var log = core.Log.WithName("plugin").WithName("runtime").WithName("universal")
-
-type plugin struct{}
-
-func init() {
-	core_plugins.Register(core_plugins.Universal, &plugin{})
+type zkListener struct {
+	Client        *gxzookeeper.ZookeeperClient
+	pathMapLock   sync.Mutex
+	pathMap       map[string]*atomic.Int32
+	wg            sync.WaitGroup
+	err           chan error
+	notifications chan *Notification
+	stop          chan struct{}
 }
 
-func (p *plugin) Customize(rt core_runtime.Runtime) error {
-	if rt.Config().Environment != config_core.UniversalEnvironment {
-		return nil
-	}
+func NewListener(cfg zookeeper.ZookeeperStoreConfig, log logr.Logger) (Listener, error) {
+	return nil, nil
+}
 
+func (z *zkListener) Error() <-chan error {
+	return z.err
+}
+
+func (z *zkListener) Notify() chan *Notification {
+	return z.notifications
+}
+
+func (z *zkListener) Close() error {
+	close(z.stop)
+	z.wg.Wait()
 	return nil
 }

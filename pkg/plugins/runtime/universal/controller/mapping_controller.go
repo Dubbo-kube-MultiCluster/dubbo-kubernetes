@@ -15,27 +15,13 @@
  * limitations under the License.
  */
 
-package universal
+package controller
 
-import (
-	config_core "github.com/apache/dubbo-kubernetes/pkg/config/core"
-	"github.com/apache/dubbo-kubernetes/pkg/core"
-	core_plugins "github.com/apache/dubbo-kubernetes/pkg/core/plugins"
-	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
-)
+import "context"
 
-var log = core.Log.WithName("plugin").WithName("runtime").WithName("universal")
-
-type plugin struct{}
-
-func init() {
-	core_plugins.Register(core_plugins.Universal, &plugin{})
+type MappingReconciler struct {
 }
 
-func (p *plugin) Customize(rt core_runtime.Runtime) error {
-	if rt.Config().Environment != config_core.UniversalEnvironment {
-		return nil
-	}
-
+func (d *MappingReconciler) Reconcile(ctx context.Context) error {
 	return nil
 }

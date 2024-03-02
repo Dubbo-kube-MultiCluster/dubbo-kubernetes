@@ -24,8 +24,8 @@ import (
 type EnvironmentType = string
 
 const (
-	KubernetesEnvironment EnvironmentType = "kubernetes"
-	UniversalEnvironment  EnvironmentType = "universal"
+	KubernetesEnvironment EnvironmentType = "kubernetes" // 全托管
+	UniversalEnvironment  EnvironmentType = "universal"  // 半托管 + 传统注册中心模式
 )
 
 // Control Plane mode

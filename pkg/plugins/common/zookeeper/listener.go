@@ -15,27 +15,16 @@
  * limitations under the License.
  */
 
-package universal
+package zookeeper
 
-import (
-	config_core "github.com/apache/dubbo-kubernetes/pkg/config/core"
-	"github.com/apache/dubbo-kubernetes/pkg/core"
-	core_plugins "github.com/apache/dubbo-kubernetes/pkg/core/plugins"
-	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
-)
-
-var log = core.Log.WithName("plugin").WithName("runtime").WithName("universal")
-
-type plugin struct{}
-
-func init() {
-	core_plugins.Register(core_plugins.Universal, &plugin{})
+type Listener interface {
+	Notify() chan *Notification
+	Error() <-chan error
+	Close() error
 }
 
-func (p *plugin) Customize(rt core_runtime.Runtime) error {
-	if rt.Config().Environment != config_core.UniversalEnvironment {
-		return nil
-	}
-
-	return nil
+// Notification represents a single notification from the database.
+type Notification struct {
+	// Payload, or the empty string if unspecified.
+	Payload string
 }
