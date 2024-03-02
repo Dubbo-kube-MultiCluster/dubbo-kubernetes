@@ -19,13 +19,19 @@ package events
 
 import (
 	"encoding/json"
+)
+
+import (
+	"github.com/pkg/errors"
+)
+
+import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/plugins/resources/zookeeper"
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
 	"github.com/apache/dubbo-kubernetes/pkg/events"
 	common_zookeeper "github.com/apache/dubbo-kubernetes/pkg/plugins/common/zookeeper"
-	"github.com/pkg/errors"
 )
 
 var log = core.Log.WithName("zookeeper-event-listener")

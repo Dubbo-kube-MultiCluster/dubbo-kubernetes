@@ -18,8 +18,6 @@
 package zookeeper
 
 import (
-	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
-	zk_events "github.com/apache/dubbo-kubernetes/pkg/plugins/resources/zookeeper/events"
 	"github.com/pkg/errors"
 )
 
@@ -27,7 +25,9 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	core_plugins "github.com/apache/dubbo-kubernetes/pkg/core/plugins"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
+	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
 	"github.com/apache/dubbo-kubernetes/pkg/events"
+	zk_events "github.com/apache/dubbo-kubernetes/pkg/plugins/resources/zookeeper/events"
 )
 
 var (

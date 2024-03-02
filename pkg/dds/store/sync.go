@@ -20,6 +20,7 @@ package store
 import (
 	"context"
 	"fmt"
+	"maps"
 	"strings"
 	"time"
 )
@@ -30,8 +31,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/prometheus/client_golang/prometheus"
-
-	"golang.org/x/exp/maps"
 )
 
 import (

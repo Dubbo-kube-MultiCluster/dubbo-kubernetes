@@ -18,11 +18,19 @@
 package zookeeper
 
 import (
-	"github.com/apache/dubbo-kubernetes/pkg/config/plugins/resources/zookeeper"
-	gxzookeeper "github.com/dubbogo/gost/database/kv/zk"
-	"github.com/go-logr/logr"
-	"go.uber.org/atomic"
 	"sync"
+)
+
+import (
+	gxzookeeper "github.com/dubbogo/gost/database/kv/zk"
+
+	"github.com/go-logr/logr"
+
+	"go.uber.org/atomic"
+)
+
+import (
+	"github.com/apache/dubbo-kubernetes/pkg/config/plugins/resources/zookeeper"
 )
 
 type zkListener struct {

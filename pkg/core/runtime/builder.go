@@ -33,7 +33,6 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	config_manager "github.com/apache/dubbo-kubernetes/pkg/core/config/manager"
 	"github.com/apache/dubbo-kubernetes/pkg/core/datasource"
-	"github.com/apache/dubbo-kubernetes/pkg/core/dns/lookup"
 	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
@@ -75,7 +74,6 @@ type Builder struct {
 	rm  core_manager.CustomizableResourceManager
 	rom core_manager.ReadOnlyResourceManager
 
-	lif         lookup.LookupIPFunc
 	eac         dubbo.EnvoyAdminClient
 	ext         context.Context
 	meshCache   *mesh.Cache
@@ -156,11 +154,6 @@ func (b *Builder) WithConfigManager(configm config_manager.ConfigManager) *Build
 
 func (b *Builder) WithLeaderInfo(leadInfo component.LeaderInfo) *Builder {
 	b.leadInfo = leadInfo
-	return b
-}
-
-func (b *Builder) WithLookupIP(lif lookup.LookupIPFunc) *Builder {
-	b.lif = lif
 	return b
 }
 
@@ -275,10 +268,6 @@ func (b *Builder) ReadOnlyResourceManager() core_manager.ReadOnlyResourceManager
 
 func (b *Builder) InterCPClientPool() *client.Pool {
 	return b.interCpPool
-}
-
-func (b *Builder) LookupIP() lookup.LookupIPFunc {
-	return b.lif
 }
 
 func (b *Builder) Config() dubbo_cp.Config {
