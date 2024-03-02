@@ -234,7 +234,6 @@ func (b *Builder) Build() (Runtime, error) {
 			cfg:      b.cfg,
 			rm:       b.rm,
 			rom:      b.rom,
-			rs:       b.rs,
 			txs:      b.txs,
 			ddsctx:   b.ddsctx,
 			ext:      b.ext,

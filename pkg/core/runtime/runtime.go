@@ -57,7 +57,6 @@ type RuntimeInfo interface {
 type RuntimeContext interface {
 	Config() dubbo_cp.Config
 	ResourceManager() core_manager.ResourceManager
-	ResourceStore() core_store.ResourceStore
 	Transactions() core_store.Transactions
 	ReadOnlyResourceManager() core_manager.ReadOnlyResourceManager
 	ConfigStore() core_store.ResourceStore
@@ -129,7 +128,6 @@ var _ RuntimeContext = &runtimeContext{}
 type runtimeContext struct {
 	cfg      dubbo_cp.Config
 	rm       core_manager.ResourceManager
-	rs       core_store.ResourceStore
 	txs      core_store.Transactions
 	cs       core_store.ResourceStore
 	rom      core_manager.ReadOnlyResourceManager
@@ -167,10 +165,6 @@ func (rc *runtimeContext) Config() dubbo_cp.Config {
 
 func (rc *runtimeContext) ResourceManager() core_manager.ResourceManager {
 	return rc.rm
-}
-
-func (rc *runtimeContext) ResourceStore() core_store.ResourceStore {
-	return rc.rs
 }
 
 func (rc *runtimeContext) Transactions() core_store.Transactions {
