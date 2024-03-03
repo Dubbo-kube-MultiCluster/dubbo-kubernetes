@@ -19,12 +19,15 @@ package store
 
 import (
 	"fmt"
-	"github.com/apache/dubbo-kubernetes/pkg/plugins/resources/zookeeper"
 	"time"
 )
 
 import (
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
+)
+
+const (
+	PathLabel = "dubbo.io/path"
 )
 
 type CreateOptions struct {
@@ -47,7 +50,7 @@ func NewCreateOptions(fs ...CreateOptionsFunc) *CreateOptions {
 
 func CreateByPath(path string) CreateOptionsFunc {
 	return func(opts *CreateOptions) {
-		opts.Labels[zookeeper.PathLabel] = path
+		opts.Labels[PathLabel] = path
 	}
 }
 
@@ -93,7 +96,7 @@ func ModifiedAt(modificationTime time.Time) UpdateOptionsFunc {
 
 func UpdateWithPath(path string) UpdateOptionsFunc {
 	return func(opts *UpdateOptions) {
-		opts.Labels[zookeeper.PathLabel] = path
+		opts.Labels[PathLabel] = path
 	}
 }
 
@@ -131,7 +134,7 @@ func NewDeleteOptions(fs ...DeleteOptionsFunc) *DeleteOptions {
 
 func DeleteByPath(path string) DeleteOptionsFunc {
 	return func(opts *DeleteOptions) {
-		opts.Labels[zookeeper.PathLabel] = path
+		opts.Labels[PathLabel] = path
 	}
 }
 
@@ -190,7 +193,7 @@ func (g *GetOptions) HashCode() string {
 
 func GetByPath(path string) GetOptionsFunc {
 	return func(opts *GetOptions) {
-		opts.Labels[zookeeper.PathLabel] = path
+		opts.Labels[PathLabel] = path
 	}
 }
 
@@ -254,7 +257,7 @@ func (l *ListOptions) Filter(rs core_model.Resource) bool {
 
 func ListByPath(path string) ListOptionsFunc {
 	return func(opts *ListOptions) {
-		opts.Labels[zookeeper.PathLabel] = path
+		opts.Labels[PathLabel] = path
 	}
 }
 

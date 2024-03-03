@@ -20,23 +20,20 @@ package zookeeper
 import (
 	"context"
 	"encoding/base64"
-	"github.com/pkg/errors"
 	"maps"
 	"strconv"
 )
 
 import (
 	gxzookeeper "github.com/dubbogo/gost/database/kv/zk"
+
+	"github.com/pkg/errors"
 )
 
 import (
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
 	"github.com/apache/dubbo-kubernetes/pkg/events"
-)
-
-const (
-	PathLabel = "dubbo.io/path"
 )
 
 type zookeeperStore struct {
@@ -61,7 +58,7 @@ func (c *zookeeperStore) Create(_ context.Context, resource core_model.Resource,
 	}
 	valueBytes := []byte(base64.StdEncoding.EncodeToString(bytes))
 
-	path := opts.Labels[PathLabel]
+	path := opts.Labels[store.PathLabel]
 
 	err = c.client.CreateWithValue(path, valueBytes)
 	// 如果创建失败的话直接返回空
@@ -93,7 +90,7 @@ func (c *zookeeperStore) Update(_ context.Context, resource core_model.Resource,
 	}
 	valueBytes := []byte(base64.StdEncoding.EncodeToString(bytes))
 
-	path := opts.Labels[PathLabel]
+	path := opts.Labels[store.PathLabel]
 
 	_, stat, _ := c.client.GetContent(path)
 	zkStat, setErr := c.client.SetContent(path, valueBytes, stat.Version)
@@ -113,7 +110,7 @@ func (c *zookeeperStore) Update(_ context.Context, resource core_model.Resource,
 
 func (c *zookeeperStore) Delete(ctx context.Context, resource core_model.Resource, fs ...store.DeleteOptionsFunc) error {
 	opts := store.NewDeleteOptions(fs...)
-	path := opts.Labels[PathLabel]
+	path := opts.Labels[store.PathLabel]
 	err := c.client.Delete(path)
 	if err != nil {
 		return err
@@ -123,7 +120,7 @@ func (c *zookeeperStore) Delete(ctx context.Context, resource core_model.Resourc
 
 func (c *zookeeperStore) Get(_ context.Context, resource core_model.Resource, fs ...store.GetOptionsFunc) error {
 	opts := store.NewGetOptions(fs...)
-	path := opts.Labels[PathLabel]
+	path := opts.Labels[store.PathLabel]
 	content, stat, err := c.client.GetContent(path)
 	if err != nil {
 		return err

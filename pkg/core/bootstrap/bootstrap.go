@@ -32,7 +32,11 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	config_manager "github.com/apache/dubbo-kubernetes/pkg/core/config/manager"
 	"github.com/apache/dubbo-kubernetes/pkg/core/datasource"
+	dataplane_managers "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/dataplane"
+	mapping_managers "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/mapping"
+	metadata_managers "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/metadata"
 	core_plugins "github.com/apache/dubbo-kubernetes/pkg/core/plugins"
+	"github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/system"
 	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
@@ -210,6 +214,18 @@ func initializeConfigStore(cfg dubbo_cp.Config, builder *core_runtime.Builder) e
 func initializeResourceManager(cfg dubbo_cp.Config, builder *core_runtime.Builder) error {
 	defaultManager := core_manager.NewResourceManager(builder.ResourceStore())
 	customizableManager := core_manager.NewCustomizableResourceManager(defaultManager, nil)
+
+	customizableManager.Customize(
+		mesh.DataplaneType,
+		dataplane_managers.NewDataplaneManager())
+
+	customizableManager.Customize(
+		mesh.MappingType,
+		mapping_managers.NewMappingManager())
+
+	customizableManager.Customize(
+		mesh.MetaDataType,
+		metadata_managers.NewMetadataManager())
 
 	builder.WithResourceManager(customizableManager)
 
