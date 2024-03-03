@@ -42,8 +42,8 @@ type StoreType = string
 const (
 	KubernetesStore StoreType = "kubernetes"
 	MemoryStore     StoreType = "memory"
-	ZookeeperStore  StoreType = "zookeeper"
 	MyStore         StoreType = "mysql"
+	ZookeeperStore  StoreType = "zookeeper"
 )
 
 // StoreConfig defines Resource Store configuration
