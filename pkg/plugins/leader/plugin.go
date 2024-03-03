@@ -26,23 +26,14 @@ import (
 	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
 	common_mysql "github.com/apache/dubbo-kubernetes/pkg/plugins/common/mysql"
-	common_zookeeper "github.com/apache/dubbo-kubernetes/pkg/plugins/common/zookeeper"
 	leader_memory "github.com/apache/dubbo-kubernetes/pkg/plugins/leader/memory"
 	leader_mysql "github.com/apache/dubbo-kubernetes/pkg/plugins/leader/mysql"
-	leader_zookeeper "github.com/apache/dubbo-kubernetes/pkg/plugins/leader/zookeeper"
 )
 
 func NewLeaderElector(b *core_runtime.Builder) (component.LeaderElector, error) {
 	switch b.Config().Store.Type {
 	case store.MemoryStore:
 		return leader_memory.NewAlwaysLeaderElector(), nil
-	case store.ZookeeperStore:
-		cfg := *b.Config().Store.Zookeeper
-		connect, err := common_zookeeper.ConnectToZK(cfg)
-		if err != nil {
-			return nil, errors.Wrap(err, "cloud not connect to zookeeper")
-		}
-		return leader_zookeeper.NewZookeeperLeaderElector(connect), nil
 	case store.MyStore:
 		cfg := *b.Config().Store.Mysql
 		db, err := common_mysql.ConnectToDb(cfg)

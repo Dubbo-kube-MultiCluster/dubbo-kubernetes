@@ -18,6 +18,7 @@
 package zookeeper
 
 import (
+	common_zookeeper "github.com/apache/dubbo-kubernetes/pkg/plugins/common/zookeeper"
 	"github.com/pkg/errors"
 )
 
@@ -43,7 +44,11 @@ func init() {
 
 func (p *plugin) NewResourceStore(pc core_plugins.PluginContext, _ core_plugins.PluginConfig) (core_store.ResourceStore, core_store.Transactions, error) {
 	log.Info("dubbo-cp runs with an in-zookeeper database and its state isn't preserved between restarts. Keep in mind that an in-memory database cannot be used with multiple instances of the control plane.")
-	return NewStore(), core_store.NoTransactions{}, nil
+	zk, err := common_zookeeper.ConnectToZK(*pc.Config().Store.Zookeeper)
+	if err != nil {
+		return nil, nil, err
+	}
+	return NewStore(zk), core_store.NoTransactions{}, nil
 }
 
 func (p *plugin) Migrate(pc core_plugins.PluginContext, config core_plugins.PluginConfig) (core_plugins.DbVersion, error) {
