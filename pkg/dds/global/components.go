@@ -73,7 +73,7 @@ func Setup(rt runtime.Runtime) error {
 	if err != nil {
 		return err
 	}
-	resourceSyncer, err := sync_store.NewResourceSyncer(ddsDeltaGlobalLog, rt.ResourceStore(), rt.Transactions(), rt.Extensions())
+	resourceSyncer, err := sync_store.NewResourceSyncer(ddsDeltaGlobalLog, rt.ResourceManager(), rt.Transactions(), rt.Extensions())
 	if err != nil {
 		return err
 	}

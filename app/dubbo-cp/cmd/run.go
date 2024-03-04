@@ -41,7 +41,6 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/gc"
 	"github.com/apache/dubbo-kubernetes/pkg/hds"
 	"github.com/apache/dubbo-kubernetes/pkg/intercp"
-	"github.com/apache/dubbo-kubernetes/pkg/registry"
 	"github.com/apache/dubbo-kubernetes/pkg/snp"
 	"github.com/apache/dubbo-kubernetes/pkg/util/os"
 	dubbo_version "github.com/apache/dubbo-kubernetes/pkg/version"
@@ -108,9 +107,6 @@ func newRunCmdWithOpts(opts dubbo_cmd.RunCmdOpts) *cobra.Command {
 
 			if err := snp.Setup(rt); err != nil {
 				runLog.Error(err, "unable to set up snp server")
-			}
-			if err := registry.Setup(rt); err != nil {
-				runLog.Error(err, "unable to set up registry cache")
 			}
 			if err := xds.Setup(rt); err != nil {
 				runLog.Error(err, "unable to set up xds server")

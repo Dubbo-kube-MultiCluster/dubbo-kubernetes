@@ -15,13 +15,48 @@
  * limitations under the License.
  */
 
-package registry
+package zookeeper
 
 import (
-	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
+	"sync"
 )
 
-func Setup(rt core_runtime.Runtime) error {
-	registryCache := NewRegistryCache()
-	return rt.Add(registryCache)
+import (
+	gxzookeeper "github.com/dubbogo/gost/database/kv/zk"
+
+	"github.com/go-logr/logr"
+
+	"go.uber.org/atomic"
+)
+
+import (
+	"github.com/apache/dubbo-kubernetes/pkg/config/plugins/resources/zookeeper"
+)
+
+type zkListener struct {
+	Client        *gxzookeeper.ZookeeperClient
+	pathMapLock   sync.Mutex
+	pathMap       map[string]*atomic.Int32
+	wg            sync.WaitGroup
+	err           chan error
+	notifications chan *Notification
+	stop          chan struct{}
+}
+
+func NewListener(cfg zookeeper.ZookeeperStoreConfig, log logr.Logger) (Listener, error) {
+	return nil, nil
+}
+
+func (z *zkListener) Error() <-chan error {
+	return z.err
+}
+
+func (z *zkListener) Notify() chan *Notification {
+	return z.notifications
+}
+
+func (z *zkListener) Close() error {
+	close(z.stop)
+	z.wg.Wait()
+	return nil
 }

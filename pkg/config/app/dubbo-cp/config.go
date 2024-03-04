@@ -37,6 +37,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/intercp"
 	"github.com/apache/dubbo-kubernetes/pkg/config/multizone"
 	"github.com/apache/dubbo-kubernetes/pkg/config/plugins/runtime"
+	"github.com/apache/dubbo-kubernetes/pkg/config/snp"
 	config_types "github.com/apache/dubbo-kubernetes/pkg/config/types"
 	"github.com/apache/dubbo-kubernetes/pkg/config/xds"
 	"github.com/apache/dubbo-kubernetes/pkg/config/xds/bootstrap"
@@ -100,7 +101,9 @@ type Config struct {
 	// EventBus is a configuration of the event bus which is local to one instance of CP.
 	EventBus eventbus.Config `json:"eventBus"`
 	// Intercommunication CP configuration
-	InterCp               intercp.InterCpConfig `json:"interCp"`
+	InterCp intercp.InterCpConfig `json:"interCp"`
+	// SNP configuration
+	ServiceNameMapping    snp.SNPConfig         `json:"snp"`
 	DDSEventBasedWatchdog DDSEventBasedWatchdog `json:"dds_event_based_watchdog"`
 }
 
@@ -141,17 +144,19 @@ func (c *Config) PostProcess() error {
 
 var DefaultConfig = func() Config {
 	return Config{
-		Environment: core.KubernetesEnvironment,
-		Mode:        core.Zone,
-		XdsServer:   xds.DefaultXdsServerConfig(),
-		Store:       store.DefaultStoreConfig(),
-		Runtime:     runtime.DefaultRuntimeConfig(),
-		General:     DefaultGeneralConfig(),
-		Defaults:    DefaultDefaultsConfig(),
-		Multizone:   multizone.DefaultMultizoneConfig(),
-		Diagnostics: diagnostics.DefaultDiagnosticsConfig(),
-		DpServer:    dp_server.DefaultDpServerConfig(),
-		EventBus:    eventbus.Default(),
+		Environment:        core.KubernetesEnvironment,
+		Mode:               core.Zone,
+		XdsServer:          xds.DefaultXdsServerConfig(),
+		Store:              store.DefaultStoreConfig(),
+		Runtime:            runtime.DefaultRuntimeConfig(),
+		General:            DefaultGeneralConfig(),
+		Defaults:           DefaultDefaultsConfig(),
+		Multizone:          multizone.DefaultMultizoneConfig(),
+		Diagnostics:        diagnostics.DefaultDiagnosticsConfig(),
+		DpServer:           dp_server.DefaultDpServerConfig(),
+		InterCp:            intercp.DefaultInterCpConfig(),
+		ServiceNameMapping: snp.DefaultServiceNameMappingConfig(),
+		EventBus:           eventbus.Default(),
 	}
 }
 

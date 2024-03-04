@@ -15,18 +15,16 @@
  * limitations under the License.
  */
 
-package registry
+package datasource_test
 
-type RegistryCache struct{}
+import (
+	"testing"
+)
 
-func NewRegistryCache() *RegistryCache {
-	return nil
-}
+import (
+	"github.com/apache/dubbo-kubernetes/pkg/test"
+)
 
-func (d *RegistryCache) Start(stop <-chan struct{}) error {
-	return nil
-}
-
-func (d *RegistryCache) NeedLeaderElection() bool {
-	return true
+func TestDataSource(t *testing.T) {
+	test.RunSpecs(t, "DataSource Suite")
 }

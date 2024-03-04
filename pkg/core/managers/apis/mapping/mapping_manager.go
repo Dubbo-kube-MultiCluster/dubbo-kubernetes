@@ -15,27 +15,16 @@
  * limitations under the License.
  */
 
-package universal
+package mapping
 
 import (
-	config_core "github.com/apache/dubbo-kubernetes/pkg/config/core"
-	"github.com/apache/dubbo-kubernetes/pkg/core"
-	core_plugins "github.com/apache/dubbo-kubernetes/pkg/core/plugins"
-	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
+	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
 )
 
-var log = core.Log.WithName("plugin").WithName("runtime").WithName("universal")
-
-type plugin struct{}
-
-func init() {
-	core_plugins.Register(core_plugins.Universal, &plugin{})
+type mappingManager struct {
+	core_manager.ResourceManager
 }
 
-func (p *plugin) Customize(rt core_runtime.Runtime) error {
-	if rt.Config().Environment != config_core.UniversalEnvironment {
-		return nil
-	}
-
+func NewMappingManager() core_manager.ResourceManager {
 	return nil
 }

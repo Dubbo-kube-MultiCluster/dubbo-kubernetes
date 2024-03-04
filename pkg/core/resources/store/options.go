@@ -19,8 +19,6 @@ package store
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 	"time"
 )
 
@@ -29,18 +27,7 @@ import (
 )
 
 const (
-	Group = "group"
-	Key   = "key"
-
-	Protocol  = "protocol"
-	Address   = "address"
-	DataId    = "data-id"
-	Cluster   = "cluster"
-	Username  = "username"
-	Password  = "password"
-	Namespace = "namespace"
-	AppID     = "dubbo"
-	Timeout   = "timeout"
+	PathLabel = "dubbo.io/path"
 )
 
 type CreateOptions struct {
@@ -61,12 +48,9 @@ func NewCreateOptions(fs ...CreateOptionsFunc) *CreateOptions {
 	return opts
 }
 
-func CreateByGroupAndKey(group string, key string) CreateOptionsFunc {
+func CreateByPath(path string) CreateOptionsFunc {
 	return func(opts *CreateOptions) {
-		opts.Labels = map[string]string{
-			Group: group,
-			Key:   key,
-		}
+		opts.Labels[PathLabel] = path
 	}
 }
 
@@ -110,6 +94,12 @@ func ModifiedAt(modificationTime time.Time) UpdateOptionsFunc {
 	}
 }
 
+func UpdateWithPath(path string) UpdateOptionsFunc {
+	return func(opts *UpdateOptions) {
+		opts.Labels[PathLabel] = path
+	}
+}
+
 func UpdateWithLabels(labels map[string]string) UpdateOptionsFunc {
 	return func(opts *UpdateOptions) {
 		opts.Labels = labels
@@ -124,15 +114,6 @@ func NewUpdateOptions(fs ...UpdateOptionsFunc) *UpdateOptions {
 		f(opts)
 	}
 	return opts
-}
-
-func UpdateGroupAndKey(group string, key string) UpdateOptionsFunc {
-	return func(opts *UpdateOptions) {
-		opts.Labels = map[string]string{
-			Group: group,
-			Key:   key,
-		}
-	}
 }
 
 type DeleteOptions struct {
@@ -151,12 +132,9 @@ func NewDeleteOptions(fs ...DeleteOptionsFunc) *DeleteOptions {
 	return opts
 }
 
-func DeleteByGroupAndKey(group string, key string) DeleteOptionsFunc {
+func DeleteByPath(path string) DeleteOptionsFunc {
 	return func(opts *DeleteOptions) {
-		opts.Labels = map[string]string{
-			Group: group,
-			Key:   key,
-		}
+		opts.Labels[PathLabel] = path
 	}
 }
 
@@ -213,70 +191,9 @@ func (g *GetOptions) HashCode() string {
 	return fmt.Sprintf("%s:%s", g.Name, g.Mesh)
 }
 
-func GetByAddress(address string) GetOptionsFunc {
-	return func(options *GetOptions) {
-		if i := strings.Index(address, "://"); i > 0 {
-			options.Labels = map[string]string{
-				Protocol: address[0:i],
-			}
-			options.Labels = map[string]string{
-				Address: address,
-			}
-		}
-	}
-}
-
-func GetByTimeout(timeout time.Duration) GetOptionsFunc {
-	return func(options *GetOptions) {
-		options.Labels = map[string]string{
-			Timeout: strconv.Itoa(int(timeout.Milliseconds())),
-		}
-	}
-}
-
-func GetByUsername(username string) GetOptionsFunc {
-	return func(options *GetOptions) {
-		options.Labels = map[string]string{
-			Username: username,
-		}
-	}
-}
-
-func GetByPassword(password string) GetOptionsFunc {
-	return func(options *GetOptions) {
-		options.Labels = map[string]string{
-			Password: password,
-		}
-	}
-}
-
-func GetByDataID(id string) GetOptionsFunc {
-	return func(options *GetOptions) {
-		options.Labels = map[string]string{}
-	}
-}
-
-func GetByCluster(cluster string) GetOptionsFunc {
-	return func(options *GetOptions) {
-		options.Labels = map[string]string{
-			Cluster: cluster,
-		}
-	}
-}
-
-func GetByNamespace(namespace string) GetOptionsFunc {
-	return func(options *GetOptions) {
-		options.Labels = map[string]string{
-			Namespace: namespace,
-		}
-	}
-}
-
-func GetByAppID(id string) GetOptionsFunc {
-	return func(options *GetOptions) {
-		options.Labels = map[string]string{
-			AppID: id,
-		}
+func GetByPath(path string) GetOptionsFunc {
+	return func(opts *GetOptions) {
+		opts.Labels[PathLabel] = path
 	}
 }
 
@@ -310,6 +227,7 @@ type (
 
 type ListOptions struct {
 	Mesh         string
+	Labels       map[string]string
 	PageSize     int
 	PageOffset   string
 	FilterFunc   ListFilterFunc
@@ -335,6 +253,12 @@ func (l *ListOptions) Filter(rs core_model.Resource) bool {
 	}
 
 	return l.FilterFunc(rs)
+}
+
+func ListByPath(path string) ListOptionsFunc {
+	return func(opts *ListOptions) {
+		opts.Labels[PathLabel] = path
+	}
 }
 
 func ListByNameContains(name string) ListOptionsFunc {

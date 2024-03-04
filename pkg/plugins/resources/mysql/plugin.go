@@ -15,47 +15,49 @@
  * limitations under the License.
  */
 
-package zookeeper
+package mysql
 
 import (
-	"github.com/pkg/errors"
+	"errors"
 )
 
 import (
+	"github.com/apache/dubbo-kubernetes/pkg/config/plugins/resources/mysql"
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	core_plugins "github.com/apache/dubbo-kubernetes/pkg/core/plugins"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
 	"github.com/apache/dubbo-kubernetes/pkg/events"
-	common_zookeeper "github.com/apache/dubbo-kubernetes/pkg/plugins/common/zookeeper"
-	zk_events "github.com/apache/dubbo-kubernetes/pkg/plugins/resources/zookeeper/events"
-)
-
-var (
-	log                                  = core.Log.WithName("plugins").WithName("resources").WithName("zookeeper")
-	_   core_plugins.ResourceStorePlugin = &plugin{}
+	mysql_events "github.com/apache/dubbo-kubernetes/pkg/plugins/resources/mysql/events"
 )
 
 type plugin struct{}
 
 func init() {
-	core_plugins.Register(core_plugins.Zookeeper, &plugin{})
+	core_plugins.Register(core_plugins.MySQL, &plugin{})
 }
 
-func (p *plugin) NewResourceStore(pc core_plugins.PluginContext, _ core_plugins.PluginConfig) (core_store.ResourceStore, core_store.Transactions, error) {
-	log.Info("dubbo-cp runs with an in-zookeeper database and its state isn't preserved between restarts. Keep in mind that an in-memory database cannot be used with multiple instances of the control plane.")
-	zk, err := common_zookeeper.ConnectToZK(*pc.Config().Store.Zookeeper)
+func (p *plugin) NewResourceStore(pc core_plugins.PluginContext, config core_plugins.PluginConfig) (core_store.ResourceStore, core_store.Transactions, error) {
+	cfg, ok := config.(*mysql.MysqlStoreConfig)
+	if !ok {
+		return nil, nil, errors.New("invalid type of the config. Passed config should be a PostgresStoreConfig")
+	}
+	store, err := NewMysqlStore(*cfg)
 	if err != nil {
 		return nil, nil, err
 	}
-	return NewStore(zk), core_store.NoTransactions{}, nil
+	return store, nil, err
 }
 
 func (p *plugin) Migrate(pc core_plugins.PluginContext, config core_plugins.PluginConfig) (core_plugins.DbVersion, error) {
-	return 0, errors.New("migrations are not supported for Memory resource store")
+	cfg, ok := config.(*mysql.MysqlStoreConfig)
+	if !ok {
+		return 0, errors.New("invalid type of the config. Passed config should be a MysqlStoreConfig")
+	}
+	return MigrateDb(*cfg)
 }
 
 func (p *plugin) EventListener(pc core_plugins.PluginContext, out events.Emitter) error {
-	zkListener := zk_events.NewListener(*pc.Config().Store.Zookeeper, out)
-	return pc.ComponentManager().Add(component.NewResilientComponent(core.Log.WithName("zk-event-listener-component"), zkListener))
+	mysqlListener := mysql_events.NewListener(*pc.Config().Store.Mysql, out)
+	return pc.ComponentManager().Add(component.NewResilientComponent(core.Log.WithName("mysql-event-listener-component"), mysqlListener))
 }

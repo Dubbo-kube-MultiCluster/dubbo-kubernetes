@@ -15,27 +15,23 @@
  * limitations under the License.
  */
 
-package universal
+package mysql
 
 import (
-	config_core "github.com/apache/dubbo-kubernetes/pkg/config/core"
-	"github.com/apache/dubbo-kubernetes/pkg/core"
+	"github.com/apache/dubbo-kubernetes/pkg/config/plugins/resources/mysql"
 	core_plugins "github.com/apache/dubbo-kubernetes/pkg/core/plugins"
-	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
+	common_mysql "github.com/apache/dubbo-kubernetes/pkg/plugins/common/mysql"
+	"github.com/apache/dubbo-kubernetes/pkg/plugins/resources/mysql/model"
 )
 
-var log = core.Log.WithName("plugin").WithName("runtime").WithName("universal")
-
-type plugin struct{}
-
-func init() {
-	core_plugins.Register(core_plugins.Universal, &plugin{})
-}
-
-func (p *plugin) Customize(rt core_runtime.Runtime) error {
-	if rt.Config().Environment != config_core.UniversalEnvironment {
-		return nil
+func MigrateDb(cfg mysql.MysqlStoreConfig) (core_plugins.DbVersion, error) {
+	db, err := common_mysql.ConnectToDb(cfg)
+	if err != nil {
+		return 0, err
 	}
-
-	return nil
+	err = db.AutoMigrate(model.Resources{})
+	if err != nil {
+		return 0, err
+	}
+	return 0, nil
 }

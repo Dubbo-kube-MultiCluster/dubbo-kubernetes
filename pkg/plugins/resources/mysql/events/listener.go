@@ -15,27 +15,33 @@
  * limitations under the License.
  */
 
-package universal
+package events
 
 import (
-	config_core "github.com/apache/dubbo-kubernetes/pkg/config/core"
+	"github.com/apache/dubbo-kubernetes/pkg/config/plugins/resources/mysql"
 	"github.com/apache/dubbo-kubernetes/pkg/core"
-	core_plugins "github.com/apache/dubbo-kubernetes/pkg/core/plugins"
-	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
+	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
+	"github.com/apache/dubbo-kubernetes/pkg/events"
 )
 
-var log = core.Log.WithName("plugin").WithName("runtime").WithName("universal")
+var log = core.Log.WithName("mysql-event-listener")
 
-type plugin struct{}
-
-func init() {
-	core_plugins.Register(core_plugins.Universal, &plugin{})
+type listener struct {
+	cfg mysql.MysqlStoreConfig
+	out events.Emitter
 }
 
-func (p *plugin) Customize(rt core_runtime.Runtime) error {
-	if rt.Config().Environment != config_core.UniversalEnvironment {
-		return nil
+func NewListener(cfg mysql.MysqlStoreConfig, out events.Emitter) component.Component {
+	return &listener{
+		cfg: cfg,
+		out: out,
 	}
+}
 
+func (k *listener) Start(stop <-chan struct{}) error {
 	return nil
+}
+
+func (k *listener) NeedLeaderElection() bool {
+	return false
 }

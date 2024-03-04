@@ -75,10 +75,10 @@ type Builder struct {
 	rm  core_manager.CustomizableResourceManager
 	rom core_manager.ReadOnlyResourceManager
 
-	lif         lookup.LookupIPFunc
 	eac         dubbo.EnvoyAdminClient
 	ext         context.Context
 	meshCache   *mesh.Cache
+	lif         lookup.LookupIPFunc
 	configm     config_manager.ConfigManager
 	leadInfo    component.LeaderInfo
 	erf         events.EventBus
@@ -234,7 +234,6 @@ func (b *Builder) Build() (Runtime, error) {
 			cfg:      b.cfg,
 			rm:       b.rm,
 			rom:      b.rom,
-			rs:       b.rs,
 			txs:      b.txs,
 			ddsctx:   b.ddsctx,
 			ext:      b.ext,
