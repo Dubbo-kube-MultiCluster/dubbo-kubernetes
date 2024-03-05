@@ -18,23 +18,124 @@
 package cmd
 
 import (
+	"context"
+	"fmt"
+	mesh_proto "github.com/apache/dubbo-kubernetes/api/mesh/v1alpha1"
+	"github.com/apache/dubbo-kubernetes/pkg/config/app/dubboctl"
+	dubbo_cmd "github.com/apache/dubbo-kubernetes/pkg/core/cmd"
+	"github.com/apache/dubbo-kubernetes/pkg/core/logger"
+	"github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
+	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
+	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model/rest"
+	"github.com/apache/dubbo-kubernetes/pkg/proxy/envoy"
+	"github.com/apache/dubbo-kubernetes/pkg/util/template"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"go.uber.org/zap/zapcore"
+	"io"
+	"os"
 )
 
-type ProxyArgs struct {
-	resourcePath string
+var runLog = controlPlaneLog.WithName("proxy")
+
+type ResourceType string
+
+func readResource(cmd *cobra.Command, r *dubboctl.DataplaneRuntime) (model.Resource, error) {
+	var b []byte
+	var err error
+
+	// Load from file first.
+	switch r.ResourcePath {
+	case "":
+		if r.Resource != "" {
+			b = []byte(r.Resource)
+		}
+	case "-":
+		if b, err = io.ReadAll(cmd.InOrStdin()); err != nil {
+			return nil, err
+		}
+	default:
+		if b, err = os.ReadFile(r.ResourcePath); err != nil {
+			return nil, errors.Wrap(err, "error while reading provided file")
+		}
+	}
+
+	if len(b) == 0 {
+		return nil, nil
+	}
+
+	b = template.Render(string(b), r.ResourceVars)
+	runLog.Info("rendered resource", "resource", string(b))
+
+	res, err := rest.YAML.UnmarshalCore(b)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
-func addProxy(cmd *cobra.Command) {
-	proxyArgs := ProxyArgs{}
+func addProxy(opts dubbo_cmd.RunCmdOpts, cmd *cobra.Command) {
+	proxyArgs := &dubboctl.ProxyArgs{}
+	var proxyResource model.Resource
 	proxyCmd := &cobra.Command{
 		Use:   "proxy",
 		Short: "Commands related to proxy",
 		Long:  "Commands help user to generate Ingress and Egress",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println("hello world")
+			logger.InitCmdSugar(zapcore.AddSync(cmd.OutOrStdout()))
+			return nil
+		},
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			proxyTypeMap := map[string]model.ResourceType{
+				string(mesh_proto.IngressProxyType): mesh.ZoneIngressType,
+				string(mesh_proto.EgressProxyType):  mesh.ZoneEgressType,
+			}
+			if _, ok := proxyTypeMap[proxyArgs.Dataplane.ProxyType]; !ok {
+				return errors.Errorf("invalid proxy type %q", proxyArgs.Dataplane.ProxyType)
+			}
+			proxyResource, err := readResource(cmd, &proxyArgs.DataplaneRuntime)
+			if err != nil {
+				runLog.Error(err, "failed to read policy", "proxyType", proxyArgs.Dataplane.ProxyType)
+				return err
+			}
+			if proxyResource != nil {
+				if resType := proxyTypeMap[proxyArgs.Dataplane.ProxyType]; resType != proxyResource.Descriptor().Name {
+					return errors.Errorf("invalid proxy resource type %q, expected %s",
+						proxyResource.Descriptor().Name, resType)
+				}
+				if proxyArgs.Dataplane.Name != "" || proxyArgs.Dataplane.Mesh != "" {
+					return errors.New("--name and --mesh cannot be specified when a dataplane definition is provided, mesh and name will be read from the dataplane definition")
+				}
+
+				proxyArgs.Dataplane.Mesh = proxyResource.GetMeta().GetMesh()
+				proxyArgs.Dataplane.Name = proxyResource.GetMeta().GetName()
+			}
+			return nil
+		},
+		PostRunE: func(cmd *cobra.Command, args []string) error {
+
+			// gracefulCtx indicate that the process received a signal to shutdown
+			gracefulCtx, _ := opts.SetupSignalHandler()
+			_, cancelComponents := context.WithCancel(gracefulCtx)
+			opts := envoy.Opts{
+				ProxyArgs: *proxyArgs,
+				Dataplane: rest.From.Resource(proxyResource),
+				Stdout:    cmd.OutOrStdout(),
+				Stderr:    cmd.OutOrStderr(),
+				OnFinish:  cancelComponents,
+			}
+			envoyVersion, err := envoy.GetEnvoyVersion(opts.ProxyArgs.DataplaneRuntime.BinaryPath)
+			if err != nil {
+				return errors.Wrap(err, "failed to get Envoy version")
+			}
+			fmt.Println(envoyVersion)
 			return nil
 		},
 	}
-	cmd.PersistentFlags().StringVarP(&proxyArgs.resourcePath, "dataplane-file", "d", "", "Path to Ingress and Egress template to apply (YAML or JSON)")
+	cmd.PersistentFlags().StringVar(&proxyArgs.Dataplane.Name, "name", proxyArgs.Dataplane.Name, "Name of the Dataplane")
+	cmd.PersistentFlags().StringVar(&proxyArgs.Dataplane.Mesh, "mesh", proxyArgs.Dataplane.Mesh, "Mesh that Dataplane belongs to")
+	cmd.PersistentFlags().StringVar(&proxyArgs.Dataplane.ProxyType, "proxy-type", "dataplane", `type of the Dataplane ("dataplane", "ingress")`)
+	cmd.PersistentFlags().StringVarP(&proxyArgs.DataplaneRuntime.ResourcePath, "dataplane-file", "d", "", "Path to Ingress and Egress template to apply (YAML or JSON)")
 	cmd.AddCommand(proxyCmd)
 }

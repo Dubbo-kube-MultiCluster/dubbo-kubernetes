@@ -18,9 +18,15 @@
 package envoy
 
 import (
+	"github.com/apache/dubbo-kubernetes/pkg/config/app/dubboctl"
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model/rest"
+	"github.com/apache/dubbo-kubernetes/pkg/util/files"
+	"github.com/pkg/errors"
 	"io"
+	"os/exec"
+	"regexp"
+	"strings"
 	"sync"
 )
 
@@ -46,6 +52,7 @@ type EnvoyVersion struct {
 }
 
 type Opts struct {
+	ProxyArgs       dubboctl.ProxyArgs
 	BootstrapConfig []byte
 	AdminPort       uint32
 	Dataplane       rest.Resource
@@ -66,4 +73,39 @@ func New(opts Opts) (*Envoy, error) {
 		opts.OnFinish = func() {}
 	}
 	return &Envoy{opts: opts}, nil
+}
+
+func lookupEnvoyPath(configuredPath string) (string, error) {
+	return files.LookupBinaryPath(
+		files.LookupInPath(configuredPath),
+		files.LookupInCurrentDirectory("envoy"),
+		files.LookupNextToCurrentExecutable("envoy"),
+	)
+}
+
+func GetEnvoyVersion(binaryPath string) (*EnvoyVersion, error) {
+	resolvedPath, err := lookupEnvoyPath(binaryPath)
+	if err != nil {
+		return nil, err
+	}
+	arg := "--version"
+	command := exec.Command(resolvedPath, arg)
+	output, err := command.Output()
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to execute %s with arguments %q", resolvedPath, arg)
+	}
+	build := strings.ReplaceAll(string(output), "\r\n", "\n")
+	build = strings.Trim(build, "\n")
+	build = regexp.MustCompile(`version:(.*)`).FindString(build)
+	build = strings.Trim(build, "version:")
+	build = strings.Trim(build, " ")
+
+	parts := strings.Split(build, "/")
+	if len(parts) != 5 { // revision/build_version_number/revision_status/build_type/ssl_version
+		return nil, errors.Errorf("wrong Envoy build format: %s", build)
+	}
+	return &EnvoyVersion{
+		Build:   build,
+		Version: parts[1],
+	}, nil
 }
