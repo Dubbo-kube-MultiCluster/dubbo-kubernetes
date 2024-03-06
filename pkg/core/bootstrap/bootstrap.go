@@ -69,6 +69,12 @@ func buildRuntime(appCtx context.Context, cfg dubbo_cp.Config) (core_runtime.Run
 			return nil, errors.Wrapf(err, "failed to run beforeBootstrap plugin:'%s'", plugin.Name())
 		}
 	}
+	if err := initializeRegistryCenter(cfg, builder); err != nil {
+		return nil, err
+	}
+	if err := initialMetadataReportCenter(cfg, builder); err != nil {
+		return nil, err
+	}
 	if err := initializeResourceStore(cfg, builder); err != nil {
 		return nil, err
 	}
@@ -151,6 +157,22 @@ func Bootstrap(appCtx context.Context, cfg dubbo_cp.Config) (core_runtime.Runtim
 	}
 
 	return runtime, nil
+}
+
+func initializeRegistryCenter(cfg dubbo_cp.Config, builder *core_runtime.Builder) error {
+	// 如果是k8s环境模式直接返回, 这里针对传统的微服务体系
+	if cfg.Environment == config_core.KubernetesEnvironment {
+		return nil
+	}
+	return nil
+}
+
+func initialMetadataReportCenter(cfg dubbo_cp.Config, builder *core_runtime.Builder) error {
+	// 如果是k8s环境模式直接返回, 这里针对传统的微服务体系
+	if cfg.Environment == config_core.KubernetesEnvironment {
+		return nil
+	}
+	return nil
 }
 
 func initializeResourceStore(cfg dubbo_cp.Config, builder *core_runtime.Builder) error {
