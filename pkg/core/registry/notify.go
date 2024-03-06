@@ -15,33 +15,25 @@
  * limitations under the License.
  */
 
-package universal
+package registry
 
 import (
-	"dubbo.apache.org/dubbo-go/v3/registry"
-	gxset "github.com/dubbogo/gost/container/set"
-	"sync"
+	dubboRegistry "dubbo.apache.org/dubbo-go/v3/registry"
+	"dubbo.apache.org/dubbo-go/v3/remoting"
 )
 
-type ServiceMappingChangedListenerImpl struct {
-	oldServiceNames *gxset.HashSet
-	listener        registry.NotifyListener
-	interfaceKey    string
+type notifyListener struct{}
 
-	mux           sync.Mutex
-	delSDRegistry registry.ServiceDiscovery
-}
+func (l *notifyListener) Notify(event *dubboRegistry.ServiceEvent) {
+	switch event.Action {
+	case remoting.EventTypeAdd, remoting.EventTypeUpdate:
 
-func NewMappingListener(oldServiceNames *gxset.HashSet, listener registry.NotifyListener) *ServiceMappingChangedListenerImpl {
-	return &ServiceMappingChangedListenerImpl{
-		listener:        listener,
-		oldServiceNames: oldServiceNames,
+	case remoting.EventTypeDel:
 	}
 }
 
-func (lstn *ServiceMappingChangedListenerImpl) updateListener(interfaceKey string, apps *gxset.HashSet) error {
-	return nil
+func (l *notifyListener) NotifyAll(events []*dubboRegistry.ServiceEvent, f func()) {
+	for _, event := range events {
+		l.Notify(event)
+	}
 }
-
-// Stop on ServiceMappingChangedEvent the service mapping change event
-func (lstn *ServiceMappingChangedListenerImpl) Stop() {}

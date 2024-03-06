@@ -18,16 +18,22 @@
 package envoy
 
 import (
-	"github.com/apache/dubbo-kubernetes/pkg/config/app/dubboctl"
-	"github.com/apache/dubbo-kubernetes/pkg/core"
-	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model/rest"
-	"github.com/apache/dubbo-kubernetes/pkg/util/files"
-	"github.com/pkg/errors"
 	"io"
 	"os/exec"
 	"regexp"
 	"strings"
 	"sync"
+)
+
+import (
+	"github.com/pkg/errors"
+)
+
+import (
+	"github.com/apache/dubbo-kubernetes/pkg/config/app/dubboctl"
+	"github.com/apache/dubbo-kubernetes/pkg/core"
+	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model/rest"
+	"github.com/apache/dubbo-kubernetes/pkg/util/files"
 )
 
 var runLog = core.Log.WithName("dubbo-proxy").WithName("run").WithName("envoy")
@@ -68,7 +74,6 @@ type Envoy struct {
 }
 
 func New(opts Opts) (*Envoy, error) {
-
 	if opts.OnFinish == nil {
 		opts.OnFinish = func() {}
 	}

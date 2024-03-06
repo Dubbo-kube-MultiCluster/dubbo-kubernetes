@@ -37,6 +37,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/intercp"
 	"github.com/apache/dubbo-kubernetes/pkg/config/multizone"
 	"github.com/apache/dubbo-kubernetes/pkg/config/plugins/runtime"
+	"github.com/apache/dubbo-kubernetes/pkg/config/registry"
 	"github.com/apache/dubbo-kubernetes/pkg/config/snp"
 	config_types "github.com/apache/dubbo-kubernetes/pkg/config/types"
 	"github.com/apache/dubbo-kubernetes/pkg/config/xds"
@@ -88,6 +89,8 @@ type Config struct {
 	Store *store.StoreConfig `json:"store,omitempty"`
 	// Envoy XDS server configuration
 	XdsServer *xds.XdsServerConfig `json:"xdsServer,omitempty"`
+	// 走传统微服务模式下需要这个东西
+	Tradition *registry.Registry `json:"tradition,omitempty"`
 	// Environment-specific configuration
 	Runtime *runtime.RuntimeConfig `json:"runtime,omitempty"`
 	// Multizone Config

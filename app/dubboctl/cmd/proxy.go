@@ -20,6 +20,19 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
+)
+
+import (
+	"github.com/pkg/errors"
+
+	"github.com/spf13/cobra"
+
+	"go.uber.org/zap/zapcore"
+)
+
+import (
 	mesh_proto "github.com/apache/dubbo-kubernetes/api/mesh/v1alpha1"
 	"github.com/apache/dubbo-kubernetes/pkg/config/app/dubboctl"
 	dubbo_cmd "github.com/apache/dubbo-kubernetes/pkg/core/cmd"
@@ -29,11 +42,6 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model/rest"
 	"github.com/apache/dubbo-kubernetes/pkg/proxy/envoy"
 	"github.com/apache/dubbo-kubernetes/pkg/util/template"
-	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
-	"go.uber.org/zap/zapcore"
-	"io"
-	"os"
 )
 
 var runLog = controlPlaneLog.WithName("proxy")
@@ -114,7 +122,6 @@ func addProxy(opts dubbo_cmd.RunCmdOpts, cmd *cobra.Command) {
 			return nil
 		},
 		PostRunE: func(cmd *cobra.Command, args []string) error {
-
 			// gracefulCtx indicate that the process received a signal to shutdown
 			gracefulCtx, _ := opts.SetupSignalHandler()
 			_, cancelComponents := context.WithCancel(gracefulCtx)

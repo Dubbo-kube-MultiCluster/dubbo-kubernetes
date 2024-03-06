@@ -17,8 +17,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/apache/dubbo-kubernetes/pkg/core"
-	cmd2 "github.com/apache/dubbo-kubernetes/pkg/core/cmd"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,6 +26,11 @@ import (
 	"github.com/ory/viper"
 
 	"github.com/spf13/cobra"
+)
+
+import (
+	"github.com/apache/dubbo-kubernetes/pkg/core"
+	cmd2 "github.com/apache/dubbo-kubernetes/pkg/core/cmd"
 )
 
 type RootCommandConfig struct {
@@ -92,7 +95,6 @@ func addSubCommands(rootCmd *cobra.Command, newClient ClientFactory) {
 	addDashboard(rootCmd)
 	addRegistryCmd(rootCmd)
 	addProxy(cmd2.DefaultRunCmdOpts, rootCmd)
-
 }
 
 // bindFunc which conforms to the cobra PreRunE method signature

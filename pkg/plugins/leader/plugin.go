@@ -18,11 +18,11 @@
 package leader
 
 import (
-	"github.com/apache/dubbo-kubernetes/pkg/config/core"
 	"github.com/pkg/errors"
 )
 
 import (
+	"github.com/apache/dubbo-kubernetes/pkg/config/core"
 	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
 	common_mysql "github.com/apache/dubbo-kubernetes/pkg/plugins/common/mysql"

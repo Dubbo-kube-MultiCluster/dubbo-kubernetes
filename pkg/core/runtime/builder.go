@@ -25,6 +25,9 @@ import (
 )
 
 import (
+	"dubbo.apache.org/dubbo-go/v3/metadata/report"
+	dubboRegistry "dubbo.apache.org/dubbo-go/v3/registry"
+
 	"github.com/pkg/errors"
 )
 
@@ -34,6 +37,7 @@ import (
 	config_manager "github.com/apache/dubbo-kubernetes/pkg/core/config/manager"
 	"github.com/apache/dubbo-kubernetes/pkg/core/datasource"
 	"github.com/apache/dubbo-kubernetes/pkg/core/dns/lookup"
+	"github.com/apache/dubbo-kubernetes/pkg/core/registry"
 	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
@@ -53,6 +57,9 @@ type BuilderContext interface {
 	ConfigStore() core_store.ResourceStore
 	ResourceManager() core_manager.CustomizableResourceManager
 	Config() dubbo_cp.Config
+	RegistryCenter() dubboRegistry.Registry
+	MetadataReportCenter() report.MetadataReport
+	AdminRegistry() *registry.Registry
 	Extensions() context.Context
 	ConfigManager() config_manager.ConfigManager
 	LeaderInfo() component.LeaderInfo
@@ -75,19 +82,22 @@ type Builder struct {
 	rm  core_manager.CustomizableResourceManager
 	rom core_manager.ReadOnlyResourceManager
 
-	eac         dubbo.EnvoyAdminClient
-	ext         context.Context
-	meshCache   *mesh.Cache
-	lif         lookup.LookupIPFunc
-	configm     config_manager.ConfigManager
-	leadInfo    component.LeaderInfo
-	erf         events.EventBus
-	dsl         datasource.Loader
-	interCpPool *client.Pool
-	dps         *dp_server.DpServer
-	rv          ResourceValidators
-	ddsctx      *dds_context.Context
-	appCtx      context.Context
+	eac                  dubbo.EnvoyAdminClient
+	ext                  context.Context
+	meshCache            *mesh.Cache
+	lif                  lookup.LookupIPFunc
+	configm              config_manager.ConfigManager
+	leadInfo             component.LeaderInfo
+	erf                  events.EventBus
+	dsl                  datasource.Loader
+	interCpPool          *client.Pool
+	dps                  *dp_server.DpServer
+	registryCenter       dubboRegistry.Registry
+	metadataReportCenter report.MetadataReport
+	adminRegistry        *registry.Registry
+	rv                   ResourceValidators
+	ddsctx               *dds_context.Context
+	appCtx               context.Context
 	*runtimeInfo
 }
 
@@ -199,6 +209,21 @@ func (b *Builder) WithResourceValidators(rv ResourceValidators) *Builder {
 	return b
 }
 
+func (b *Builder) WithRegistryCenter(rg dubboRegistry.Registry) *Builder {
+	b.registryCenter = rg
+	return b
+}
+
+func (b *Builder) WithMetadataReport(mr report.MetadataReport) *Builder {
+	b.metadataReportCenter = mr
+	return b
+}
+
+func (b *Builder) WithAdminRegistry(ag *registry.Registry) *Builder {
+	b.adminRegistry = ag
+	return b
+}
+
 func (b *Builder) Build() (Runtime, error) {
 	if b.cm == nil {
 		return nil, errors.Errorf("ComponentManager has not been configured")
@@ -231,22 +256,37 @@ func (b *Builder) Build() (Runtime, error) {
 	return &runtime{
 		RuntimeInfo: b.runtimeInfo,
 		RuntimeContext: &runtimeContext{
-			cfg:      b.cfg,
-			rm:       b.rm,
-			rom:      b.rom,
-			txs:      b.txs,
-			ddsctx:   b.ddsctx,
-			ext:      b.ext,
-			configm:  b.configm,
-			leadInfo: b.leadInfo,
-			erf:      b.erf,
-			dps:      b.dps,
-			eac:      b.eac,
-			rv:       b.rv,
-			appCtx:   b.appCtx,
+			cfg:                  b.cfg,
+			rm:                   b.rm,
+			rom:                  b.rom,
+			txs:                  b.txs,
+			ddsctx:               b.ddsctx,
+			ext:                  b.ext,
+			configm:              b.configm,
+			registryCenter:       b.registryCenter,
+			metadataReportCenter: b.metadataReportCenter,
+			adminRegistry:        b.adminRegistry,
+			leadInfo:             b.leadInfo,
+			erf:                  b.erf,
+			dps:                  b.dps,
+			eac:                  b.eac,
+			rv:                   b.rv,
+			appCtx:               b.appCtx,
 		},
 		Manager: b.cm,
 	}, nil
+}
+
+func (b *Builder) AdminRegistry() *registry.Registry {
+	return b.adminRegistry
+}
+
+func (b *Builder) RegistryCenter() dubboRegistry.Registry {
+	return b.registryCenter
+}
+
+func (b *Builder) MetadataReportCenter() report.MetadataReport {
+	return b.metadataReportCenter
 }
 
 func (b *Builder) ComponentManager() component.Manager {

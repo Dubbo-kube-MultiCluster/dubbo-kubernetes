@@ -15,7 +15,12 @@
  * limitations under the License.
  */
 
-package universal
+package registry
+
+import (
+	"reflect"
+	"sync"
+)
 
 import (
 	"dubbo.apache.org/dubbo-go/v3/common"
@@ -24,12 +29,14 @@ import (
 	"dubbo.apache.org/dubbo-go/v3/metadata/service/local"
 	"dubbo.apache.org/dubbo-go/v3/registry"
 	"dubbo.apache.org/dubbo-go/v3/remoting"
-	"github.com/apache/dubbo-kubernetes/pkg/core/consts"
-	"github.com/apache/dubbo-kubernetes/pkg/core/logger"
+
 	gxset "github.com/dubbogo/gost/container/set"
 	"github.com/dubbogo/gost/gof/observer"
-	"reflect"
-	"sync"
+)
+
+import (
+	"github.com/apache/dubbo-kubernetes/pkg/core/consts"
+	"github.com/apache/dubbo-kubernetes/pkg/core/logger"
 )
 
 // DubboSDNotifyListener The Service Discovery Changed  Event Listener
