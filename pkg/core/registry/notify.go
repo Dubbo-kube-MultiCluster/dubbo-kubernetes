@@ -18,22 +18,45 @@
 package registry
 
 import (
+	"context"
 	dubboRegistry "dubbo.apache.org/dubbo-go/v3/registry"
 	"dubbo.apache.org/dubbo-go/v3/remoting"
+	"github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
 )
 
-type notifyListener struct{}
+type NotifyListener struct {
+	manager.ResourceManager
+}
 
-func (l *notifyListener) Notify(event *dubboRegistry.ServiceEvent) {
-	switch event.Action {
-	case remoting.EventTypeAdd, remoting.EventTypeUpdate:
-
-	case remoting.EventTypeDel:
+func NewNotifyListener(manager manager.ResourceManager) *NotifyListener {
+	return &NotifyListener{
+		manager,
 	}
 }
 
-func (l *notifyListener) NotifyAll(events []*dubboRegistry.ServiceEvent, f func()) {
+func (l *NotifyListener) Notify(event *dubboRegistry.ServiceEvent) {
+	switch event.Action {
+	case remoting.EventTypeAdd, remoting.EventTypeUpdate:
+		if err := l.createOrUpdateDataplane(context.Background()); err != nil {
+			return
+		}
+	case remoting.EventTypeDel:
+		if err := l.deleteDataplane(context.Background()); err != nil {
+			return
+		}
+	}
+}
+
+func (l *NotifyListener) NotifyAll(events []*dubboRegistry.ServiceEvent, f func()) {
 	for _, event := range events {
 		l.Notify(event)
 	}
+}
+
+func (l *NotifyListener) deleteDataplane(ctx context.Context) error {
+	return nil
+}
+
+func (l *NotifyListener) createOrUpdateDataplane(ctx context.Context) error {
+	return nil
 }
