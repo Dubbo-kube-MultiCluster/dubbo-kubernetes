@@ -38,7 +38,7 @@ func (p *plugin) Customize(rt core_runtime.Runtime) error {
 		return nil
 	}
 
-	if err := rt.AdminRegistry().Subscribe(rt.MetadataReportCenter()); err != nil {
+	if err := rt.AdminRegistry().Subscribe(rt.MetadataReportCenter(), rt.ResourceManager()); err != nil {
 		logger.Errorf("Failed to subscribe to registry, error msg is %s.", err.Error())
 		return err
 	}
