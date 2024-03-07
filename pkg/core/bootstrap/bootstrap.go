@@ -19,9 +19,15 @@ package bootstrap
 
 import (
 	"context"
+	"net/url"
+	"strings"
 )
 
 import (
+	"dubbo.apache.org/dubbo-go/v3/common"
+	"dubbo.apache.org/dubbo-go/v3/common/extension"
+	"dubbo.apache.org/dubbo-go/v3/config_center"
+
 	"github.com/pkg/errors"
 )
 
@@ -29,13 +35,17 @@ import (
 	dubbo_cp "github.com/apache/dubbo-kubernetes/pkg/config/app/dubbo-cp"
 	config_core "github.com/apache/dubbo-kubernetes/pkg/config/core"
 	"github.com/apache/dubbo-kubernetes/pkg/config/core/resources/store"
+	"github.com/apache/dubbo-kubernetes/pkg/config/registry"
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	config_manager "github.com/apache/dubbo-kubernetes/pkg/core/config/manager"
+	"github.com/apache/dubbo-kubernetes/pkg/core/consts"
 	"github.com/apache/dubbo-kubernetes/pkg/core/datasource"
+	"github.com/apache/dubbo-kubernetes/pkg/core/logger"
 	dataplane_managers "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/dataplane"
 	mapping_managers "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/mapping"
 	metadata_managers "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/metadata"
 	core_plugins "github.com/apache/dubbo-kubernetes/pkg/core/plugins"
+	registry2 "github.com/apache/dubbo-kubernetes/pkg/core/registry"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/system"
 	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
@@ -69,10 +79,8 @@ func buildRuntime(appCtx context.Context, cfg dubbo_cp.Config) (core_runtime.Run
 			return nil, errors.Wrapf(err, "failed to run beforeBootstrap plugin:'%s'", plugin.Name())
 		}
 	}
-	if err := initializeRegistryCenter(cfg, builder); err != nil {
-		return nil, err
-	}
-	if err := initialMetadataReportCenter(cfg, builder); err != nil {
+	// 初始化传统微服务体系所需要的组件
+	if err := initializeTraditional(cfg, builder); err != nil {
 		return nil, err
 	}
 	if err := initializeResourceStore(cfg, builder); err != nil {
@@ -159,20 +167,121 @@ func Bootstrap(appCtx context.Context, cfg dubbo_cp.Config) (core_runtime.Runtim
 	return runtime, nil
 }
 
-func initializeRegistryCenter(cfg dubbo_cp.Config, builder *core_runtime.Builder) error {
+func initializeTraditional(cfg dubbo_cp.Config, builder *core_runtime.Builder) error {
 	// 如果是k8s环境模式直接返回, 这里针对传统的微服务体系
 	if cfg.Environment == config_core.KubernetesEnvironment {
 		return nil
 	}
+	address := cfg.Tradition.ConfigCenter
+	registryAddress := cfg.Tradition.Registry.Address
+	metadataReportAddress := cfg.Tradition.MetadataReport.Address
+	c, addrUrl := getValidAddressConfig(address, registryAddress)
+	configCenter := newConfigCenter(c, addrUrl)
+	properties, err := configCenter.GetProperties(consts.DubboPropertyKey)
+	if err != nil {
+		logger.Info("No configuration found in config center.")
+	}
+	if len(properties) > 0 {
+		logger.Infof("Loaded remote configuration from config center:\n %s", properties)
+		for _, property := range strings.Split(properties, "\n") {
+			if strings.HasPrefix(property, consts.RegistryAddressKey) {
+				registryAddress = strings.Split(property, "=")[1]
+			}
+			if strings.HasPrefix(property, consts.MetadataReportAddressKey) {
+				metadataReportAddress = strings.Split(property, "=")[1]
+			}
+		}
+	}
+	if len(registryAddress) > 0 {
+		logger.Infof("Valid registry address is %s", registryAddress)
+		c := newAddressConfig(registryAddress)
+		addrUrl, err := c.ToURL()
+		if err != nil {
+			panic(err)
+		}
+
+		registryCenter, err := extension.GetRegistry(c.GetProtocol(), addrUrl)
+		if err != nil {
+			return err
+		}
+		builder.WithRegistryCenter(registryCenter)
+		delegate, err := extension.GetRegistry(c.GetProtocol(), addrUrl)
+		if err != nil {
+			logger.Error("Error initialize registry instance.")
+			return err
+		}
+
+		sdUrl := addrUrl.Clone()
+		sdUrl.AddParam("registry", addrUrl.Protocol)
+		sdUrl.Protocol = "service-discovery"
+		sdDelegate, err := extension.GetServiceDiscovery(sdUrl)
+		if err != nil {
+			logger.Error("Error initialize service discovery instance.")
+			return err
+		}
+		adminRegistry := registry2.NewRegistry(delegate, sdDelegate)
+		builder.WithAdminRegistry(adminRegistry)
+	}
+	if len(metadataReportAddress) > 0 {
+		logger.Infof("Valid meta center address is %s", metadataReportAddress)
+		c := newAddressConfig(metadataReportAddress)
+		addrUrl, err := c.ToURL()
+		if err != nil {
+			panic(err)
+		}
+		factory := extension.GetMetadataReportFactory(c.GetProtocol())
+		metadataReport := factory.CreateMetadataReport(addrUrl)
+		builder.WithMetadataReport(metadataReport)
+	}
+
 	return nil
 }
 
-func initialMetadataReportCenter(cfg dubbo_cp.Config, builder *core_runtime.Builder) error {
-	// 如果是k8s环境模式直接返回, 这里针对传统的微服务体系
-	if cfg.Environment == config_core.KubernetesEnvironment {
-		return nil
+func getValidAddressConfig(address string, registryAddress string) (registry.AddressConfig, *common.URL) {
+	if len(address) <= 0 && len(registryAddress) <= 0 {
+		panic("Must at least specify `admin.config-center.address` or `admin.registry.address`!")
 	}
-	return nil
+
+	var c registry.AddressConfig
+	if len(address) > 0 {
+		logger.Infof("Specified config center address is %s", address)
+		c = newAddressConfig(address)
+	} else {
+		logger.Info("Using registry address as default config center address")
+		c = newAddressConfig(registryAddress)
+	}
+
+	configUrl, err := c.ToURL()
+	if err != nil {
+		panic(err)
+	}
+	return c, configUrl
+}
+
+func newAddressConfig(address string) registry.AddressConfig {
+	cfg := registry.AddressConfig{}
+	cfg.Address = address
+	var err error
+	cfg.Url, err = url.Parse(address)
+	if err != nil {
+		panic(err)
+	}
+	return cfg
+}
+
+func newConfigCenter(c registry.AddressConfig, url *common.URL) config_center.DynamicConfiguration {
+	factory, err := extension.GetConfigCenterFactory(c.GetProtocol())
+	if err != nil {
+		logger.Info(err.Error())
+		panic(err)
+	}
+
+	configCenter, err := factory.GetDynamicConfiguration(url)
+	if err != nil {
+		logger.Info("Failed to init config center, error msg is %s.", err.Error())
+		panic(err)
+	}
+	return configCenter
 }
 
 func initializeResourceStore(cfg dubbo_cp.Config, builder *core_runtime.Builder) error {

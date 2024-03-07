@@ -77,7 +77,6 @@ type Envoy struct {
 }
 
 func New(opts Opts) (*Envoy, error) {
-
 	if opts.OnFinish == nil {
 		opts.OnFinish = func() {}
 	}

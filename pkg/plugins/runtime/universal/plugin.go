@@ -20,6 +20,7 @@ package universal
 import (
 	config_core "github.com/apache/dubbo-kubernetes/pkg/config/core"
 	"github.com/apache/dubbo-kubernetes/pkg/core"
+	"github.com/apache/dubbo-kubernetes/pkg/core/logger"
 	core_plugins "github.com/apache/dubbo-kubernetes/pkg/core/plugins"
 	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
 )
@@ -37,5 +38,16 @@ func (p *plugin) Customize(rt core_runtime.Runtime) error {
 		return nil
 	}
 
+	if err := rt.AdminRegistry().Subscribe(rt.MetadataReportCenter()); err != nil {
+		logger.Errorf("Failed to subscribe to registry, error msg is %s.", err.Error())
+		return err
+	}
+
+	defer func() {
+		if err := rt.AdminRegistry().Destroy(); err != nil {
+			logger.Errorf("Failed to subscribe to registry, error msg is %s.", err.Error())
+			return
+		}
+	}()
 	return nil
 }

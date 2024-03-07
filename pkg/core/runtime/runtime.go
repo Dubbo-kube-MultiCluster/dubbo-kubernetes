@@ -24,11 +24,17 @@ import (
 )
 
 import (
+	"dubbo.apache.org/dubbo-go/v3/metadata/report"
+	dubboRegistry "dubbo.apache.org/dubbo-go/v3/registry"
+)
+
+import (
 	dubbo_cp "github.com/apache/dubbo-kubernetes/pkg/config/app/dubbo-cp"
 	"github.com/apache/dubbo-kubernetes/pkg/config/core"
 	config_manager "github.com/apache/dubbo-kubernetes/pkg/core/config/manager"
 	managers_dataplane "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/dataplane"
 	managers_mesh "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/mesh"
+	"github.com/apache/dubbo-kubernetes/pkg/core/registry"
 	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
@@ -67,6 +73,9 @@ type RuntimeContext interface {
 	EventBus() events.EventBus
 	DpServer() *dp_server.DpServer
 	DDSContext() *dds_context.Context
+	RegistryCenter() dubboRegistry.Registry
+	MetadataReportCenter() report.MetadataReport
+	AdminRegistry() *registry.Registry
 	ResourceValidators() ResourceValidators
 	// AppContext returns a context.Context which tracks the lifetime of the apps, it gets cancelled when the app is starting to shutdown.
 	AppContext() context.Context
@@ -126,21 +135,36 @@ func (i *runtimeInfo) GetMode() core.CpMode {
 var _ RuntimeContext = &runtimeContext{}
 
 type runtimeContext struct {
-	cfg      dubbo_cp.Config
-	rm       core_manager.ResourceManager
-	txs      core_store.Transactions
-	cs       core_store.ResourceStore
-	rom      core_manager.ReadOnlyResourceManager
-	ext      context.Context
-	eac      dubbo.EnvoyAdminClient
-	configm  config_manager.ConfigManager
-	xds      xds_runtime.XDSRuntimeContext
-	leadInfo component.LeaderInfo
-	erf      events.EventBus
-	dps      *dp_server.DpServer
-	rv       ResourceValidators
-	ddsctx   *dds_context.Context
-	appCtx   context.Context
+	cfg                  dubbo_cp.Config
+	rm                   core_manager.ResourceManager
+	txs                  core_store.Transactions
+	cs                   core_store.ResourceStore
+	rom                  core_manager.ReadOnlyResourceManager
+	ext                  context.Context
+	eac                  dubbo.EnvoyAdminClient
+	configm              config_manager.ConfigManager
+	xds                  xds_runtime.XDSRuntimeContext
+	leadInfo             component.LeaderInfo
+	erf                  events.EventBus
+	dps                  *dp_server.DpServer
+	rv                   ResourceValidators
+	ddsctx               *dds_context.Context
+	registryCenter       dubboRegistry.Registry
+	metadataReportCenter report.MetadataReport
+	adminRegistry        *registry.Registry
+	appCtx               context.Context
+}
+
+func (b *runtimeContext) AdminRegistry() *registry.Registry {
+	return b.adminRegistry
+}
+
+func (b *runtimeContext) RegistryCenter() dubboRegistry.Registry {
+	return b.registryCenter
+}
+
+func (b *runtimeContext) MetadataReportCenter() report.MetadataReport {
+	return b.metadataReportCenter
 }
 
 func (rc *runtimeContext) EnvoyAdminClient() dubbo.EnvoyAdminClient {
