@@ -28,7 +28,9 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model/rest"
 	"github.com/apache/dubbo-kubernetes/pkg/proxy/envoy"
+	"github.com/apache/dubbo-kubernetes/pkg/util/proto"
 	"github.com/apache/dubbo-kubernetes/pkg/util/template"
+	envoy_bootstrap_v3 "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap/zapcore"
@@ -75,7 +77,8 @@ func readResource(cmd *cobra.Command, r *dubboctl.DataplaneRuntime) (model.Resou
 }
 
 func addProxy(opts dubbo_cmd.RunCmdOpts, cmd *cobra.Command) {
-	proxyArgs := &dubboctl.ProxyArgs{}
+	proxyArgs := &dubboctl.ProxyConfig{}
+	proxyArgs.SetDefault()
 	var proxyResource model.Resource
 	proxyCmd := &cobra.Command{
 		Use:   "proxy",
@@ -119,17 +122,33 @@ func addProxy(opts dubbo_cmd.RunCmdOpts, cmd *cobra.Command) {
 			gracefulCtx, _ := opts.SetupSignalHandler()
 			_, cancelComponents := context.WithCancel(gracefulCtx)
 			opts := envoy.Opts{
-				ProxyArgs: *proxyArgs,
+				Config:    *proxyArgs,
 				Dataplane: rest.From.Resource(proxyResource),
 				Stdout:    cmd.OutOrStdout(),
 				Stderr:    cmd.OutOrStderr(),
 				OnFinish:  cancelComponents,
 			}
-			envoyVersion, err := envoy.GetEnvoyVersion(opts.ProxyArgs.DataplaneRuntime.BinaryPath)
+			envoyVersion, err := envoy.GetEnvoyVersion(opts.Config.DataplaneRuntime.BinaryPath)
 			if err != nil {
 				return errors.Wrap(err, "failed to get Envoy version")
 			}
-			fmt.Println(envoyVersion)
+			runLog.Info("fetched Envoy version", "version", envoyVersion)
+			runLog.Info("generating bootstrap configuration")
+			bootstrap := envoy_bootstrap_v3.Bootstrap{}
+
+			runLog.Info("received bootstrap configuration", "adminPort", bootstrap.GetAdmin().GetAddress().GetSocketAddress().GetPortValue())
+			opts.BootstrapConfig, err = proto.ToYAML(&bootstrap)
+			if err != nil {
+				return errors.Errorf("could not convert to yaml. %v", err)
+			}
+			stopComponents := make(chan struct{})
+			envoyComponent, err := envoy.New(opts)
+			err = envoyComponent.Start(stopComponents)
+			if err != nil {
+				runLog.Error(err, "error while running Kuma DP")
+				return err
+			}
+			runLog.Info("stopping Dubbo proxy")
 			return nil
 		},
 	}

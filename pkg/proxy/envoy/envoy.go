@@ -18,16 +18,25 @@
 package envoy
 
 import (
+	"context"
+	"fmt"
+	"github.com/Masterminds/semver/v3"
 	"github.com/apache/dubbo-kubernetes/pkg/config/app/dubboctl"
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model/rest"
+	command_utils "github.com/apache/dubbo-kubernetes/pkg/proxy/command"
 	"github.com/apache/dubbo-kubernetes/pkg/util/files"
 	"github.com/pkg/errors"
 	"io"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
+	"runtime"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 var runLog = core.Log.WithName("dubbo-proxy").WithName("run").WithName("envoy")
@@ -52,7 +61,7 @@ type EnvoyVersion struct {
 }
 
 type Opts struct {
-	ProxyArgs       dubboctl.ProxyArgs
+	Config          dubboctl.ProxyConfig
 	BootstrapConfig []byte
 	AdminPort       uint32
 	Dataplane       rest.Resource
@@ -73,6 +82,98 @@ func New(opts Opts) (*Envoy, error) {
 		opts.OnFinish = func() {}
 	}
 	return &Envoy{opts: opts}, nil
+}
+func GenerateBootstrapFile(cfg dubboctl.DataplaneRuntime, config []byte) (string, error) {
+	configFile := filepath.Join(cfg.ConfigDir, "bootstrap.yaml")
+	if err := writeFile(configFile, config, 0o600); err != nil {
+		return "", errors.Wrap(err, "failed to persist Envoy bootstrap config on disk")
+	}
+	return configFile, nil
+}
+func writeFile(filename string, data []byte, perm os.FileMode) error {
+	if err := os.MkdirAll(filepath.Dir(filename), 0o755); err != nil {
+		return err
+	}
+	return os.WriteFile(filename, data, perm)
+}
+
+func (e *Envoy) Start(stop <-chan struct{}) error {
+	e.wg.Add(1)
+	// Component should only be considered done after Envoy exists.
+	// Otherwise, we may not propagate SIGTERM on time.
+	defer func() {
+		e.wg.Done()
+		e.opts.OnFinish()
+	}()
+
+	configFile, err := GenerateBootstrapFile(e.opts.Config.DataplaneRuntime, e.opts.BootstrapConfig)
+	if err != nil {
+		return err
+	}
+	runLog.Info("bootstrap configuration saved to a file", "file", configFile)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	binaryPathConfig := e.opts.Config.DataplaneRuntime.BinaryPath
+	resolvedPath, err := lookupEnvoyPath(binaryPathConfig)
+	if err != nil {
+		return err
+	}
+
+	args := []string{
+		"--config-path", configFile,
+		"--drain-time-s",
+		fmt.Sprintf("%d", e.opts.Config.Dataplane.DrainTime.Duration/time.Second),
+		// "hot restart" (enabled by default) requires each Envoy instance to have
+		// `--base-id <uint32_t>` argument.
+		// it is not possible to start multiple Envoy instances on the same Linux machine
+		// without `--base-id <uint32_t>` set.
+		// although we could come up with a solution how to generate `--base-id <uint32_t>`
+		// automatically, it is not strictly necessary since we're not using "hot restart"
+		// and we don't expect users to do "hot restart" manually.
+		// so, let's turn it off to simplify getting started experience.
+		"--disable-hot-restart",
+		"--log-level", e.opts.Config.DataplaneRuntime.EnvoyLogLevel,
+	}
+
+	if e.opts.Config.DataplaneRuntime.EnvoyComponentLogLevel != "" {
+		args = append(args, "--component-log-level", e.opts.Config.DataplaneRuntime.EnvoyComponentLogLevel)
+	}
+
+	// If the concurrency is explicit, use that. On Linux, users
+	// can also implicitly set concurrency using cpusets.
+	if e.opts.Config.DataplaneRuntime.Concurrency > 0 {
+		args = append(args,
+			"--concurrency",
+			strconv.FormatUint(uint64(e.opts.Config.DataplaneRuntime.Concurrency), 10),
+		)
+	} else if runtime.GOOS == "linux" {
+		// The `--cpuset-threads` flag is still present on
+		// non-Linux, but emits a warning that we might as well
+		// avoid.
+		args = append(args, "--cpuset-threads")
+	}
+
+	command := command_utils.BuildCommand(ctx, e.opts.Stdout, e.opts.Stderr, resolvedPath, args...)
+
+	runLog.Info("starting Envoy", "path", resolvedPath, "arguments", args)
+	if err := command.Start(); err != nil {
+		runLog.Error(err, "envoy executable failed", "path", resolvedPath, "arguments", args)
+		return err
+	}
+	go func() {
+		<-stop
+		runLog.Info("stopping Envoy")
+		cancel()
+	}()
+	err = command.Wait()
+	if err != nil && !errors.Is(err, context.Canceled) {
+		runLog.Error(err, "Envoy terminated with an error")
+		return err
+	}
+	runLog.Info("Envoy terminated successfully")
+	return nil
 }
 
 func lookupEnvoyPath(configuredPath string) (string, error) {
@@ -108,4 +209,18 @@ func GetEnvoyVersion(binaryPath string) (*EnvoyVersion, error) {
 		Build:   build,
 		Version: parts[1],
 	}, nil
+}
+func VersionCompatible(expectedVersion string, envoyVersion string) (bool, error) {
+	ver, err := semver.NewVersion(envoyVersion)
+	if err != nil {
+		return false, errors.Wrapf(err, "unable to parse envoy version %s", envoyVersion)
+	}
+
+	constraint, err := semver.NewConstraint(expectedVersion)
+	if err != nil {
+		// Programmer error
+		panic(errors.Wrapf(err, "Invalid envoy compatibility constraint %s", expectedVersion))
+	}
+
+	return constraint.Check(ver), nil
 }

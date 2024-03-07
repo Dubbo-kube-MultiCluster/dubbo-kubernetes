@@ -40,9 +40,14 @@ type DataplaneRuntime struct {
 	// DynamicConfiguration defines properties of dataplane dynamic configuration
 	DynamicConfiguration DynamicConfiguration `json:"dynamicConfiguration" envconfig:"dubbo_dataplane_runtime_dynamic_configuration"`
 }
-type ProxyArgs struct {
+type ProxyConfig struct {
 	DataplaneRuntime DataplaneRuntime
 	Dataplane        Dataplane
+}
+
+func (p *ProxyConfig) SetDefault() {
+	p.DataplaneRuntime.BinaryPath = "/go/src/test/envoy"
+	p.DataplaneRuntime.EnvoyLogLevel = "debug"
 }
 
 type Metrics struct {
