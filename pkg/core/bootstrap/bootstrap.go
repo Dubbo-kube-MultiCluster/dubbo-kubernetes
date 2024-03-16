@@ -291,8 +291,8 @@ func initializeResourceStore(cfg dubbo_cp.Config, builder *core_runtime.Builder)
 	case store.KubernetesStore:
 		pluginName = core_plugins.Kubernetes
 		pluginConfig = nil
-	case store.ZookeeperStore:
-		pluginName = core_plugins.Zookeeper
+	case store.Traditional:
+		pluginName = core_plugins.Traditional
 		pluginConfig = nil
 	case store.MemoryStore:
 		pluginName = core_plugins.Memory

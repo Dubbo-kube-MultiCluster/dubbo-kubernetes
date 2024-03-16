@@ -19,6 +19,7 @@ package runtime
 
 import (
 	"context"
+	"dubbo.apache.org/dubbo-go/v3/config_center"
 	"sync"
 	"time"
 )
@@ -75,6 +76,7 @@ type RuntimeContext interface {
 	DDSContext() *dds_context.Context
 	RegistryCenter() dubboRegistry.Registry
 	MetadataReportCenter() report.MetadataReport
+	ConfigCenter() config_center.DynamicConfiguration
 	AdminRegistry() *registry.Registry
 	ResourceValidators() ResourceValidators
 	// AppContext returns a context.Context which tracks the lifetime of the apps, it gets cancelled when the app is starting to shutdown.
@@ -151,8 +153,13 @@ type runtimeContext struct {
 	ddsctx               *dds_context.Context
 	registryCenter       dubboRegistry.Registry
 	metadataReportCenter report.MetadataReport
+	configCenter         config_center.DynamicConfiguration
 	adminRegistry        *registry.Registry
 	appCtx               context.Context
+}
+
+func (b *runtimeContext) ConfigCenter() config_center.DynamicConfiguration {
+	return b.configCenter
 }
 
 func (b *runtimeContext) AdminRegistry() *registry.Registry {

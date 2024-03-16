@@ -19,6 +19,7 @@ package runtime
 
 import (
 	"context"
+	"dubbo.apache.org/dubbo-go/v3/config_center"
 	"fmt"
 	"os"
 	"time"
@@ -60,6 +61,7 @@ type BuilderContext interface {
 	RegistryCenter() dubboRegistry.Registry
 	MetadataReportCenter() report.MetadataReport
 	AdminRegistry() *registry.Registry
+	ConfigCenter() config_center.DynamicConfiguration
 	Extensions() context.Context
 	ConfigManager() config_manager.ConfigManager
 	LeaderInfo() component.LeaderInfo
@@ -74,14 +76,13 @@ var _ BuilderContext = &Builder{}
 
 // Builder represents a multi-step initialization process.
 type Builder struct {
-	cfg dubbo_cp.Config
-	cm  component.Manager
-	rs  core_store.CustomizableResourceStore
-	cs  core_store.ResourceStore
-	txs core_store.Transactions
-	rm  core_manager.CustomizableResourceManager
-	rom core_manager.ReadOnlyResourceManager
-
+	cfg                  dubbo_cp.Config
+	cm                   component.Manager
+	rs                   core_store.CustomizableResourceStore
+	cs                   core_store.ResourceStore
+	txs                  core_store.Transactions
+	rm                   core_manager.CustomizableResourceManager
+	rom                  core_manager.ReadOnlyResourceManager
 	eac                  dubbo.EnvoyAdminClient
 	ext                  context.Context
 	meshCache            *mesh.Cache
@@ -94,6 +95,7 @@ type Builder struct {
 	dps                  *dp_server.DpServer
 	registryCenter       dubboRegistry.Registry
 	metadataReportCenter report.MetadataReport
+	configCenter         config_center.DynamicConfiguration
 	adminRegistry        *registry.Registry
 	rv                   ResourceValidators
 	ddsctx               *dds_context.Context
@@ -219,6 +221,11 @@ func (b *Builder) WithMetadataReport(mr report.MetadataReport) *Builder {
 	return b
 }
 
+func (b *Builder) WithConfigCenter(cc config_center.DynamicConfiguration) *Builder {
+	b.configCenter = cc
+	return b
+}
+
 func (b *Builder) WithAdminRegistry(ag *registry.Registry) *Builder {
 	b.adminRegistry = ag
 	return b
@@ -265,6 +272,7 @@ func (b *Builder) Build() (Runtime, error) {
 			configm:              b.configm,
 			registryCenter:       b.registryCenter,
 			metadataReportCenter: b.metadataReportCenter,
+			configCenter:         b.configCenter,
 			adminRegistry:        b.adminRegistry,
 			leadInfo:             b.leadInfo,
 			erf:                  b.erf,
@@ -279,6 +287,10 @@ func (b *Builder) Build() (Runtime, error) {
 
 func (b *Builder) AdminRegistry() *registry.Registry {
 	return b.adminRegistry
+}
+
+func (b *Builder) ConfigCenter() config_center.DynamicConfiguration {
+	return b.configCenter
 }
 
 func (b *Builder) RegistryCenter() dubboRegistry.Registry {

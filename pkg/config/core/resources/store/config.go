@@ -18,6 +18,10 @@
 package store
 
 import (
+	"dubbo.apache.org/dubbo-go/v3/common"
+	"dubbo.apache.org/dubbo-go/v3/common/constant"
+	"net/url"
+	"strings"
 	"time"
 )
 
@@ -43,7 +47,7 @@ const (
 	KubernetesStore StoreType = "kubernetes"
 	MemoryStore     StoreType = "memory"
 	MyStore         StoreType = "mysql"
-	ZookeeperStore  StoreType = "zookeeper"
+	Traditional     StoreType = "traditional"
 )
 
 // StoreConfig defines Resource Store configuration
@@ -55,7 +59,8 @@ type StoreConfig struct {
 	// Zookeeper Store configuration
 	Zookeeper *zookeeper.ZookeeperStoreConfig `json:"zookeeper"`
 	// Mysql Store configuration
-	Mysql *mysql.MysqlStoreConfig `json:"mysql"`
+	Mysql    *mysql.MysqlStoreConfig `json:"mysql"`
+	Registry Registry                `json:"registry"`
 	// Cache configuration
 	Cache CacheStoreConfig `json:"cache"`
 	// Upsert configuration
@@ -148,3 +153,77 @@ func (u *UpsertConfig) Validate() error {
 }
 
 var _ config.Config = &UpsertConfig{}
+
+type Registry struct {
+	ConfigCenter   string        `json:"config_center,omitempty"`
+	MetadataReport AddressConfig `json:"metadata_report,omitempty"`
+	Registry       AddressConfig `json:"registry,omitempty"`
+}
+
+func (r *Registry) Sanitize() {}
+
+func (r *Registry) Validate() error {
+	return nil
+}
+
+func (r *Registry) PostProcess() error {
+	return nil
+}
+
+var _ config.Config = &Registry{}
+
+type AddressConfig struct {
+	Address string   `json:"address,omitempty"`
+	Url     *url.URL `json:"-"`
+}
+
+func (a *AddressConfig) Sanitize() {}
+
+var _ config.Config = &AddressConfig{}
+
+func (a *AddressConfig) PostProcess() error {
+	return nil
+}
+
+func (a *AddressConfig) Validate() error {
+	return nil
+}
+
+func (c *AddressConfig) GetProtocol() string {
+	return c.Url.Scheme
+}
+
+func (c *AddressConfig) GetAddress() string {
+	return c.Url.Host
+}
+
+func (c *AddressConfig) GetUrlMap() url.Values {
+	urlMap := url.Values{}
+	urlMap.Set(constant.ConfigNamespaceKey, c.param("namespace", ""))
+	urlMap.Set(constant.ConfigGroupKey, c.param(constant.GroupKey, "dubbo"))
+	urlMap.Set(constant.MetadataReportGroupKey, c.param(constant.GroupKey, "dubbo"))
+	urlMap.Set(constant.ClientNameKey, clientNameID(c.Url.Scheme, c.Url.Host))
+	return urlMap
+}
+
+func (c *AddressConfig) param(key string, defaultValue string) string {
+	param := c.Url.Query().Get(key)
+	if len(param) > 0 {
+		return param
+	}
+	return defaultValue
+}
+
+func (c *AddressConfig) ToURL() (*common.URL, error) {
+	return common.NewURL(c.GetAddress(),
+		common.WithProtocol(c.GetProtocol()),
+		common.WithParams(c.GetUrlMap()),
+		common.WithParamsValue("registry", c.GetProtocol()),
+		common.WithUsername(c.param("username", "")),
+		common.WithPassword(c.param("password", "")),
+	)
+}
+
+func clientNameID(protocol, address string) string {
+	return strings.Join([]string{protocol, address}, "-")
+}
