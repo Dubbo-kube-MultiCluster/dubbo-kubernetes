@@ -18,7 +18,10 @@
 package mapping
 
 import (
+	"context"
 	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
+	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
+	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
 )
 
 type mappingManager struct {
@@ -26,5 +29,25 @@ type mappingManager struct {
 }
 
 func NewMappingManager() core_manager.ResourceManager {
+	return nil
+}
+
+func (m *mappingManager) Create(ctx context.Context, r model.Resource, opts ...core_store.CreateOptionsFunc) error {
+	return nil
+}
+
+func (m *mappingManager) Update(ctx context.Context, r model.Resource, opts ...core_store.UpdateOptionsFunc) error {
+	return nil
+}
+
+func (m *mappingManager) Delete(ctx context.Context, r model.Resource, opts ...core_store.DeleteOptionsFunc) error {
+	return nil
+}
+
+func (m *mappingManager) Get(ctx context.Context, r model.Resource, opts ...core_store.GetOptionsFunc) error {
+	return nil
+}
+
+func (m *mappingManager) List(ctx context.Context, r model.ResourceList, opts ...core_store.ListOptionsFunc) error {
 	return nil
 }

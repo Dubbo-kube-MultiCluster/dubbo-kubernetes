@@ -18,7 +18,9 @@
 package dataplane
 
 import (
+	"context"
 	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
+	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
 )
 
@@ -29,4 +31,24 @@ type dataplaneManager struct {
 
 func NewDataplaneManager() core_manager.ResourceManager {
 	return &dataplaneManager{}
+}
+
+func (m *dataplaneManager) Create(ctx context.Context, r model.Resource, opts ...core_store.CreateOptionsFunc) error {
+	return nil
+}
+
+func (m *dataplaneManager) Update(ctx context.Context, r model.Resource, opts ...core_store.UpdateOptionsFunc) error {
+	return nil
+}
+
+func (m *dataplaneManager) Delete(ctx context.Context, r model.Resource, opts ...core_store.DeleteOptionsFunc) error {
+	return nil
+}
+
+func (m *dataplaneManager) Get(ctx context.Context, r model.Resource, opts ...core_store.GetOptionsFunc) error {
+	return nil
+}
+
+func (m *dataplaneManager) List(ctx context.Context, r model.ResourceList, opts ...core_store.ListOptionsFunc) error {
+	return nil
 }
