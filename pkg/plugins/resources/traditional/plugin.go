@@ -18,10 +18,13 @@
 package traditional
 
 import (
+	"errors"
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	core_plugins "github.com/apache/dubbo-kubernetes/pkg/core/plugins"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
+	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
 	"github.com/apache/dubbo-kubernetes/pkg/events"
+	trditional_events "github.com/apache/dubbo-kubernetes/pkg/plugins/resources/traditional/events"
 )
 
 var (
@@ -36,13 +39,16 @@ func init() {
 }
 
 func (p *plugin) NewResourceStore(pc core_plugins.PluginContext, _ core_plugins.PluginConfig) (core_store.ResourceStore, core_store.Transactions, error) {
-	return nil, nil, nil
+	log.Info("dubbo-cp runs with an traditional mode")
+
+	return NewStore(pc.ConfigCenter(), pc.MetadataReportCenter(), pc.RegistryCenter()), core_store.NoTransactions{}, nil
 }
 
 func (p *plugin) Migrate(pc core_plugins.PluginContext, config core_plugins.PluginConfig) (core_plugins.DbVersion, error) {
-	return 0, nil
+	return 0, errors.New("migrations are not supported for this mode")
 }
 
 func (p *plugin) EventListener(pc core_plugins.PluginContext, out events.Emitter) error {
-	return nil
+	traListener := trditional_events.NewListener(out)
+	return pc.ComponentManager().Add(component.NewResilientComponent(core.Log.WithName("traditional-event-listener-component"), traListener))
 }

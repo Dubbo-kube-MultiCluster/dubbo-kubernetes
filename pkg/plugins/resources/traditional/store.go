@@ -19,15 +19,29 @@ package traditional
 
 import (
 	"context"
+	"dubbo.apache.org/dubbo-go/v3/config_center"
+	"dubbo.apache.org/dubbo-go/v3/metadata/report"
+	dubboRegistry "dubbo.apache.org/dubbo-go/v3/registry"
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
 )
 
 type traditionalStore struct {
+	configCenter   config_center.DynamicConfiguration
+	metadataReport report.MetadataReport
+	registryCenter dubboRegistry.Registry
 }
 
-func NewStore() store.ResourceStore {
-	return &traditionalStore{}
+func NewStore(
+	configCenter config_center.DynamicConfiguration,
+	metadataReport report.MetadataReport,
+	registryCenter dubboRegistry.Registry,
+) store.ResourceStore {
+	return &traditionalStore{
+		configCenter:   configCenter,
+		metadataReport: metadataReport,
+		registryCenter: registryCenter,
+	}
 }
 
 func (t *traditionalStore) Create(_ context.Context, resource core_model.Resource, fs ...store.CreateOptionsFunc) error {
