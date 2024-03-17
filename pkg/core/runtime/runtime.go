@@ -74,6 +74,7 @@ type RuntimeContext interface {
 	LeaderInfo() component.LeaderInfo
 	EventBus() events.EventBus
 	DpServer() *dp_server.DpServer
+	DataplaneCache() *sync.Map
 	DDSContext() *dds_context.Context
 	RegistryCenter() dubboRegistry.Registry
 	MetadataReportCenter() report.MetadataReport
@@ -151,6 +152,7 @@ type runtimeContext struct {
 	leadInfo             component.LeaderInfo
 	erf                  events.EventBus
 	dps                  *dp_server.DpServer
+	dCache               *sync.Map
 	rv                   ResourceValidators
 	ddsctx               *dds_context.Context
 	registryCenter       dubboRegistry.Registry
@@ -159,6 +161,10 @@ type runtimeContext struct {
 	adminRegistry        *registry.Registry
 	governance           governance.GovernanceConfig
 	appCtx               context.Context
+}
+
+func (b *runtimeContext) DataplaneCache() *sync.Map {
+	return b.dCache
 }
 
 func (b *runtimeContext) Governance() governance.GovernanceConfig {

@@ -31,6 +31,7 @@ import (
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
 	"golang.org/x/exp/maps"
+	"sync"
 )
 
 const (
@@ -44,6 +45,7 @@ type traditionalStore struct {
 	metadataReport report.MetadataReport
 	registryCenter dubboRegistry.Registry
 	governance     governance.GovernanceConfig
+	dCache         *sync.Map
 }
 
 func NewStore(
@@ -51,12 +53,14 @@ func NewStore(
 	metadataReport report.MetadataReport,
 	registryCenter dubboRegistry.Registry,
 	governance governance.GovernanceConfig,
+	dCache *sync.Map,
 ) store.ResourceStore {
 	return &traditionalStore{
 		configCenter:   configCenter,
 		metadataReport: metadataReport,
 		registryCenter: registryCenter,
 		governance:     governance,
+		dCache:         dCache,
 	}
 }
 
@@ -108,7 +112,7 @@ func (t *traditionalStore) Create(_ context.Context, resource core_model.Resourc
 			return err
 		}
 	case mesh.DataplaneType:
-
+		// Dataplane无法Create, 只能Get和List
 	case mesh.TagRouteType:
 		labels := resource.GetMeta().GetLabels()
 		base := mesh_proto.Base{
@@ -203,6 +207,10 @@ func (t *traditionalStore) Delete(ctx context.Context, resource core_model.Resou
 }
 
 func (c *traditionalStore) Get(_ context.Context, resource core_model.Resource, fs ...store.GetOptionsFunc) error {
+	switch resource.Descriptor().Name {
+	case mesh.DataplaneType:
+		t
+	}
 	return nil
 }
 

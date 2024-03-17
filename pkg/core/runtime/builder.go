@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"github.com/apache/dubbo-kubernetes/pkg/core/governance"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -69,6 +70,7 @@ type BuilderContext interface {
 	LeaderInfo() component.LeaderInfo
 	EventBus() events.EventBus
 	DpServer() *dp_server.DpServer
+	DataplaneCache() *sync.Map
 	InterCPClientPool() *client.Pool
 	DDSContext() *dds_context.Context
 	ResourceValidators() ResourceValidators
@@ -103,6 +105,7 @@ type Builder struct {
 	rv                   ResourceValidators
 	ddsctx               *dds_context.Context
 	appCtx               context.Context
+	dCache               *sync.Map
 	*runtimeInfo
 }
 
@@ -171,6 +174,11 @@ func (b *Builder) WithConfigManager(configm config_manager.ConfigManager) *Build
 
 func (b *Builder) WithLeaderInfo(leadInfo component.LeaderInfo) *Builder {
 	b.leadInfo = leadInfo
+	return b
+}
+
+func (b *Builder) WithDataplaneCache(cache *sync.Map) *Builder {
+	b.dCache = cache
 	return b
 }
 
@@ -285,6 +293,7 @@ func (b *Builder) Build() (Runtime, error) {
 			governance:           b.governance,
 			leadInfo:             b.leadInfo,
 			erf:                  b.erf,
+			dCache:               b.dCache,
 			dps:                  b.dps,
 			eac:                  b.eac,
 			rv:                   b.rv,
@@ -292,6 +301,10 @@ func (b *Builder) Build() (Runtime, error) {
 		},
 		Manager: b.cm,
 	}, nil
+}
+
+func (b *Builder) DataplaneCache() *sync.Map {
+	return b.dCache
 }
 
 func (b *Builder) Governance() governance.GovernanceConfig {

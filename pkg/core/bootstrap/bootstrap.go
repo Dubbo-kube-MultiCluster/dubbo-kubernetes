@@ -22,6 +22,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/core/governance"
 	"net/url"
 	"strings"
+	"sync"
 )
 
 import (
@@ -105,6 +106,7 @@ func buildRuntime(appCtx context.Context, cfg dubbo_cp.Config) (core_runtime.Run
 	leaderInfoComponent := &component.LeaderInfoComponent{}
 	builder.WithLeaderInfo(leaderInfoComponent)
 
+	builder.WithDataplaneCache(&sync.Map{})
 	builder.WithDpServer(server.NewDpServer(*cfg.DpServer))
 
 	resourceManager := builder.ResourceManager()

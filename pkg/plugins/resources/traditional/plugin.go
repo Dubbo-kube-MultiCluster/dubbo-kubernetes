@@ -41,7 +41,7 @@ func init() {
 func (p *plugin) NewResourceStore(pc core_plugins.PluginContext, _ core_plugins.PluginConfig) (core_store.ResourceStore, core_store.Transactions, error) {
 	log.Info("dubbo-cp runs with an traditional mode")
 
-	return NewStore(pc.ConfigCenter(), pc.MetadataReportCenter(), pc.RegistryCenter(), pc.Governance()), core_store.NoTransactions{}, nil
+	return NewStore(pc.ConfigCenter(), pc.MetadataReportCenter(), pc.RegistryCenter(), pc.Governance(), pc.DataplaneCache()), core_store.NoTransactions{}, nil
 }
 
 func (p *plugin) Migrate(pc core_plugins.PluginContext, config core_plugins.PluginConfig) (core_plugins.DbVersion, error) {

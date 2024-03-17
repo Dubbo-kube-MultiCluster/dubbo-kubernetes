@@ -20,6 +20,7 @@ package registry
 import (
 	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
 	"net/url"
+	"sync"
 )
 
 import (
@@ -55,7 +56,7 @@ func (r *Registry) Delegate() dubboRegistry.Registry {
 	return r.delegate
 }
 
-func (r *Registry) Subscribe(metadataReport report.MetadataReport, resourceManager core_manager.ResourceManager) error {
+func (r *Registry) Subscribe(metadataReport report.MetadataReport, resourceManager core_manager.ResourceManager, cache *sync.Map) error {
 	subscribeUrl := &common.URL{}
 	queryParams := url.Values{
 		consts.InterfaceKey:  {consts.AnyValue},
@@ -72,7 +73,7 @@ func (r *Registry) Subscribe(metadataReport report.MetadataReport, resourceManag
 	subscribeUrl, _ = common.NewURL(common.GetLocalIp()+":0",
 		common.WithProtocol(consts.AdminProtocol),
 		common.WithParams(queryParams))
-	listener := NewNotifyListener(resourceManager)
+	listener := NewNotifyListener(resourceManager, cache)
 	go func() {
 		err := r.delegate.Subscribe(subscribeUrl, listener)
 		if err != nil {
