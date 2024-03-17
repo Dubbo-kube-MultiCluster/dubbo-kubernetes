@@ -27,11 +27,15 @@ type ResourceChangedCallbackFn func(items PushedItems)
 type ResourceChangedEventFilter func(resourceList core_model.ResourceList) core_model.ResourceList
 
 type ResourceChangedCallback struct {
+	mu       sync.Mutex // Only one can run at a time
 	Callback ResourceChangedCallbackFn
 	Filters  []ResourceChangedEventFilter
 }
 
 func (c *ResourceChangedCallback) Invoke(items PushedItems) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	pushed := items.resourceList
 	for _, filter := range c.Filters {
 		pushed = filter(items.resourceList)
@@ -48,12 +52,12 @@ func (c *ResourceChangedCallback) Invoke(items PushedItems) {
 type ResourceChangedCallbacks struct {
 	// mu to protect resourceChangedCallbacks
 	mu          sync.RWMutex
-	callbackMap map[core_model.ResourceType]map[string]ResourceChangedCallback
+	callbackMap map[core_model.ResourceType]map[string]*ResourceChangedCallback
 }
 
 func NewResourceChangedCallbacks() *ResourceChangedCallbacks {
 	return &ResourceChangedCallbacks{
-		callbackMap: make(map[core_model.ResourceType]map[string]ResourceChangedCallback),
+		callbackMap: make(map[core_model.ResourceType]map[string]*ResourceChangedCallback),
 	}
 }
 
@@ -84,10 +88,10 @@ func (callbacks *ResourceChangedCallbacks) AddCallBack(
 	defer callbacks.mu.Unlock()
 
 	if _, ok := callbacks.callbackMap[resourceType]; !ok {
-		callbacks.callbackMap[resourceType] = make(map[string]ResourceChangedCallback)
+		callbacks.callbackMap[resourceType] = make(map[string]*ResourceChangedCallback)
 	}
 
-	callbacks.callbackMap[resourceType][id] = ResourceChangedCallback{Callback: callback, Filters: filters}
+	callbacks.callbackMap[resourceType][id] = &ResourceChangedCallback{Callback: callback, Filters: filters}
 }
 
 func (callbacks *ResourceChangedCallbacks) RemoveCallBack(resourceType core_model.ResourceType, id string) {
@@ -101,12 +105,12 @@ func (callbacks *ResourceChangedCallbacks) RemoveCallBack(resourceType core_mode
 	delete(callbacks.callbackMap[resourceType], id)
 }
 
-func (callbacks *ResourceChangedCallbacks) GetCallBack(resourceType core_model.ResourceType, id string) (ResourceChangedCallback, bool) {
+func (callbacks *ResourceChangedCallbacks) GetCallBack(resourceType core_model.ResourceType, id string) (*ResourceChangedCallback, bool) {
 	callbacks.mu.RLock()
 	defer callbacks.mu.RUnlock()
 
 	if _, ok := callbacks.callbackMap[resourceType]; !ok {
-		return ResourceChangedCallback{}, false
+		return nil, false
 	}
 
 	cb, ok := callbacks.callbackMap[resourceType][id]

@@ -19,6 +19,7 @@ package pusher
 
 import (
 	"context"
+	"reflect"
 	"time"
 
 	"github.com/apache/dubbo-kubernetes/pkg/core"
@@ -160,6 +161,11 @@ func (p *pusher) Start(stop <-chan struct{}) error {
 				log.Error(err, "list resource failed", "ResourceType", ce.resourceType)
 				continue
 			}
+			if reflect.DeepEqual(p.resourceLastPushed[ce.resourceType], resourceList) {
+				log.Info("resource not changed, nothing to push")
+				continue
+			}
+
 			p.resourceRevisions[ce.resourceType]++
 			p.resourceLastPushed[ce.resourceType] = resourceList
 
@@ -176,12 +182,14 @@ func (p *pusher) Start(stop <-chan struct{}) error {
 
 			cb, ok := p.resourceChangedCallbacks.GetCallBack(resourceType, id)
 			if !ok {
+				log.Info("not found callback", "ResourceType", resourceType, "id", id)
 				continue
 			}
 
 			revision := p.resourceRevisions[resourceType]
 			lastedPushed := p.resourceLastPushed[resourceType]
 			if lastedPushed == nil {
+				log.Info("last pushed is nil", "ResourceType", resourceType, "id", id)
 				continue
 			}
 
