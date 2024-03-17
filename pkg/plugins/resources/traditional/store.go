@@ -30,6 +30,8 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
+	"github.com/apache/dubbo-kubernetes/pkg/plugins/util/ccache"
+	"github.com/pkg/errors"
 	"golang.org/x/exp/maps"
 	"sync"
 )
@@ -207,9 +209,100 @@ func (t *traditionalStore) Delete(ctx context.Context, resource core_model.Resou
 }
 
 func (c *traditionalStore) Get(_ context.Context, resource core_model.Resource, fs ...store.GetOptionsFunc) error {
+	opts := store.NewGetOptions(fs...)
+
 	switch resource.Descriptor().Name {
 	case mesh.DataplaneType:
-		t
+		value, ok := c.dCache.Load(ccache.GenerateDCacheKey(opts.Name, opts.Mesh))
+		if !ok {
+			return nil
+		}
+		r := value.(core_model.Resource)
+		resource.SetMeta(r.GetMeta())
+		err := resource.SetSpec(r.GetSpec())
+		if err != nil {
+			return err
+		}
+	case mesh.TagRouteType:
+		labels := resource.GetMeta().GetLabels()
+		base := mesh_proto.Base{
+			Application:    labels[mesh_proto.Application],
+			Service:        labels[mesh_proto.Service],
+			ID:             labels[mesh_proto.ID],
+			ServiceVersion: labels[mesh_proto.ServiceVersion],
+			ServiceGroup:   labels[mesh_proto.ServiceGroup],
+		}
+		id := mesh_proto.BuildServiceKey(base)
+		path := mesh_proto.GetRoutePath(id, consts.TagRoute)
+		cfg, err := c.governance.GetConfig(path)
+		if err != nil {
+			return err
+		}
+		if cfg != "" {
+			if err := core_model.FromYAML([]byte(cfg), resource.GetSpec()); err != nil {
+				return errors.Wrap(err, "failed to convert json to spec")
+			}
+		}
+		meta := &resourceMetaObject{
+			Name: opts.Name,
+			Mesh: opts.Mesh,
+		}
+		resource.SetMeta(meta)
+	case mesh.ConditionRouteType:
+		labels := resource.GetMeta().GetLabels()
+		base := mesh_proto.Base{
+			Application:    labels[mesh_proto.Application],
+			Service:        labels[mesh_proto.Service],
+			ID:             labels[mesh_proto.ID],
+			ServiceVersion: labels[mesh_proto.ServiceVersion],
+			ServiceGroup:   labels[mesh_proto.ServiceGroup],
+		}
+		id := mesh_proto.BuildServiceKey(base)
+		path := mesh_proto.GetRoutePath(id, consts.ConditionRoute)
+		cfg, err := c.governance.GetConfig(path)
+		if err != nil {
+			return err
+		}
+		if cfg != "" {
+			if err := core_model.FromYAML([]byte(cfg), resource.GetSpec()); err != nil {
+				return errors.Wrap(err, "failed to convert json to spec")
+			}
+		}
+		meta := &resourceMetaObject{
+			Name: opts.Name,
+			Mesh: opts.Mesh,
+		}
+		resource.SetMeta(meta)
+	case mesh.DynamicConfigType:
+		labels := resource.GetMeta().GetLabels()
+		base := mesh_proto.Base{
+			Application:    labels[mesh_proto.Application],
+			Service:        labels[mesh_proto.Service],
+			ID:             labels[mesh_proto.ID],
+			ServiceVersion: labels[mesh_proto.ServiceVersion],
+			ServiceGroup:   labels[mesh_proto.ServiceGroup],
+		}
+		id := mesh_proto.BuildServiceKey(base)
+		path := mesh_proto.GetOverridePath(id)
+		cfg, err := c.governance.GetConfig(path)
+		if err != nil {
+			return err
+		}
+		if cfg != "" {
+			if err := core_model.FromYAML([]byte(cfg), resource.GetSpec()); err != nil {
+				return errors.Wrap(err, "failed to convert json to spec")
+			}
+		}
+		meta := &resourceMetaObject{
+			Name: opts.Name,
+			Mesh: opts.Mesh,
+		}
+		resource.SetMeta(meta)
+	case mesh.MappingType:
+
+	case mesh.MetaDataType:
+	default:
+
 	}
 	return nil
 }
