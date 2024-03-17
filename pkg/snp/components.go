@@ -35,7 +35,14 @@ func Setup(rt core_runtime.Runtime) error {
 		server := snp_server.NewServer(cfg.Server)
 
 		// register ServiceNameMappingService
-		serviceMapping := servicemapping.NewSnpServer(rt.AppContext(), cfg.ServiceMapping, rt.ResourceManager(), rt.Transactions(), rt.EventBus())
+		serviceMapping := servicemapping.NewSnpServer(
+			rt.AppContext(),
+			cfg.ServiceMapping,
+			rt.ResourceManager(),
+			rt.Transactions(),
+			rt.EventBus(),
+			rt.Config().Multizone.Zone.Name,
+		)
 		mesh_proto.RegisterServiceNameMappingServiceServer(server.GrpcServer(), serviceMapping)
 
 		return rt.Add(server, serviceMapping)

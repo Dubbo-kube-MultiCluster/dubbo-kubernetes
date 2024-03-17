@@ -309,6 +309,12 @@ func ZoneSyncCallback(ctx context.Context, configToSync map[string]bool, syncer 
 					// todo: remove in 2 releases after 2.6.x
 					return zi.IsRemoteIngress(localZone)
 				}
+
+				if m, ok := r.(*core_mesh.MappingResource); ok {
+					// we do not sync Mapping Resource in local zone
+					return m.IsRemoteMapping(localZone)
+				}
+
 				return !core_model.IsLocallyOriginated(config_core.Zone, r) || !isExpectedOnZoneCP(r.Descriptor())
 			}))
 		},
@@ -360,6 +366,10 @@ func GlobalSyncCallback(
 			case core_mesh.ZoneEgressType:
 				for _, ze := range upstream.AddedResources.(*core_mesh.ZoneEgressResourceList).Items {
 					ze.Spec.Zone = upstream.ControlPlaneId
+				}
+			case core_mesh.MappingType:
+				for _, m := range upstream.AddedResources.(*core_mesh.MappingResourceList).Items {
+					m.Spec.Zone = upstream.ControlPlaneId
 				}
 			}
 

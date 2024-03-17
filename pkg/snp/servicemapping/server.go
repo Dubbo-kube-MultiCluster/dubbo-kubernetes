@@ -52,8 +52,9 @@ var _ component.Component = &SnpServer{}
 type SnpServer struct {
 	mesh_proto.ServiceNameMappingServiceServer
 
-	config snp.ServiceMapping
-	queue  chan *RegisterRequest
+	locallyZone string
+	config      snp.ServiceMapping
+	queue       chan *RegisterRequest
 
 	ctx           context.Context
 	eventBus      events.EventBus
@@ -78,8 +79,10 @@ func NewSnpServer(
 	resourceStore core_store.ResourceStore,
 	transactions core_store.Transactions,
 	eventBus events.EventBus,
+	locallyZone string,
 ) *SnpServer {
 	return &SnpServer{
+		locallyZone:   locallyZone,
 		config:        config,
 		queue:         make(chan *RegisterRequest, queueSize),
 		ctx:           ctx,
@@ -311,88 +314,77 @@ func (s *SnpServer) register(req *RegisterRequest) {
 	}
 }
 
-func (s *SnpServer) tryRegister(mesh, interfaceName string, newApps []string) (err error) {
-	var trans core_store.Transaction
-	trans, err = s.transactions.Begin(s.ctx)
-	if err != nil {
-		log.Error(err, "transactions begin failed")
-		return err
-	}
-
-	defer func() {
-		if err != nil {
-			_ = trans.Rollback(s.ctx)
-			return
+func (s *SnpServer) tryRegister(mesh, interfaceName string, newApps []string) error {
+	err := core_store.InTx(s.ctx, s.transactions, func(ctx context.Context) error {
+		key := core_model.ResourceKey{
+			Mesh: mesh,
+			Name: interfaceName,
 		}
 
-		err = trans.Commit(s.ctx)
-		if err != nil {
-			log.Error(err, "transactions commit failed")
-			return
+		// get Mapping Resource first,
+		// if Mapping is not found, create it,
+		// else update it.
+		mapping := core_mesh.NewMappingResource()
+		err := s.resourceStore.Get(s.ctx, mapping, core_store.GetBy(key))
+		if err != nil && !core_store.IsResourceNotFound(err) {
+			log.Error(err, "get Mapping Resource")
+			return err
 		}
 
-		log.Info("transactions commit success")
-	}()
+		if core_store.IsResourceNotFound(err) {
+			// create if not found
+			mapping.Spec = &mesh_proto.Mapping{
+				Zone:             s.locallyZone,
+				InterfaceName:    interfaceName,
+				ApplicationNames: newApps,
+			}
+			err = s.resourceStore.Create(s.ctx, mapping, core_store.CreateBy(key), core_store.CreatedAt(time.Now()))
+			if err != nil {
+				log.Error(err, "create Mapping Resource failed")
+				return err
+			}
 
-	key := core_model.ResourceKey{
-		Mesh: mesh,
-		Name: interfaceName,
-	}
+			log.Info("create Mapping Resource success", "key", key, "applicationNames", newApps)
+			return nil
+		} else {
+			// if found, update it
+			previousLen := len(mapping.Spec.ApplicationNames)
+			previousAppNames := make(map[string]struct{}, previousLen)
+			for _, name := range mapping.Spec.ApplicationNames {
+				previousAppNames[name] = struct{}{}
+			}
+			for _, newApp := range newApps {
+				previousAppNames[newApp] = struct{}{}
+			}
+			if len(previousAppNames) == previousLen {
+				log.Info("Mapping not need to register", "interfaceName", interfaceName, "applicationNames", newApps)
+				return nil
+			}
 
-	mapping := core_mesh.NewMappingResource()
-	err = s.resourceStore.Get(s.ctx, mapping, core_store.GetBy(key))
-	if err != nil && !core_store.IsResourceNotFound(err) {
-		log.Error(err, "get Mapping Resource")
-		return err
-	}
+			mergedApps := make([]string, 0, len(previousAppNames))
+			for name := range previousAppNames {
+				mergedApps = append(mergedApps, name)
+			}
+			mapping.Spec = &mesh_proto.Mapping{
+				Zone:             s.locallyZone,
+				InterfaceName:    interfaceName,
+				ApplicationNames: mergedApps,
+			}
 
-	if core_store.IsResourceNotFound(err) {
-		// create if not found
-		mapping.Spec = &mesh_proto.Mapping{
-			Zone:             "",
-			InterfaceName:    interfaceName,
-			ApplicationNames: newApps,
-		}
-		err = s.resourceStore.Create(s.ctx, mapping, core_store.CreateBy(key), core_store.CreatedAt(time.Now()))
-		if err != nil {
-			log.Error(err, "create Mapping Resource failed")
-			return
-		}
+			err = s.resourceStore.Update(s.ctx, mapping, core_store.ModifiedAt(time.Now()))
+			if err != nil {
+				log.Error(err, "update Mapping Resource failed")
+				return err
+			}
 
-		log.Info("create Mapping Resource success", "key", key, "applicationNames", newApps)
-		return nil
-	} else {
-		// update
-		previousLen := len(mapping.Spec.ApplicationNames)
-		previousAppNames := make(map[string]struct{}, previousLen)
-		for _, name := range mapping.Spec.ApplicationNames {
-			previousAppNames[name] = struct{}{}
-		}
-		for _, newApp := range newApps {
-			previousAppNames[newApp] = struct{}{}
-		}
-		if len(previousAppNames) == previousLen {
-			log.Info("Mapping not need to register", "interfaceName", interfaceName, "applicationNames", newApps)
+			log.Info("update Mapping Resource success", "key", key, "applicationNames", newApps)
 			return nil
 		}
-
-		mergedApps := make([]string, 0, len(previousAppNames))
-		for name := range previousAppNames {
-			mergedApps = append(mergedApps, name)
-		}
-		mapping.Spec = &mesh_proto.Mapping{
-			Zone:             "",
-			InterfaceName:    interfaceName,
-			ApplicationNames: mergedApps,
-		}
-
-		err = s.resourceStore.Update(s.ctx, mapping, core_store.ModifiedAt(time.Now()))
-		if err != nil {
-			log.Error(err, "update Mapping Resource failed")
-			return
-		}
-
-		log.Info("update Mapping Resource success", "key", key, "applicationNames", newApps)
-		return nil
+	})
+	if err != nil {
+		log.Error(err, "transactions failed")
+		return err
 	}
+
+	return nil
 }
