@@ -19,6 +19,7 @@ package bootstrap
 
 import (
 	"context"
+	"github.com/apache/dubbo-kubernetes/pkg/core/extensions"
 	"github.com/apache/dubbo-kubernetes/pkg/core/governance"
 	"net/url"
 	"strings"
@@ -200,6 +201,14 @@ func initializeTraditional(cfg dubbo_cp.Config, builder *core_runtime.Builder) e
 		addrUrl, err := c.ToURL()
 		if err != nil {
 			panic(err)
+		}
+
+		fac := extensions.GetRegClientFactory(addrUrl.Protocol)
+		if fac != nil {
+			regClient := fac.CreateRegClient(addrUrl)
+			builder.WithRegClient(regClient)
+		} else {
+			logger.Sugar().Infof("Metadata of type %v not registered.", addrUrl.Protocol)
 		}
 
 		registryCenter, err := extension.GetRegistry(c.GetProtocol(), addrUrl)

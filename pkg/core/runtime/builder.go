@@ -22,6 +22,7 @@ import (
 	"dubbo.apache.org/dubbo-go/v3/config_center"
 	"fmt"
 	"github.com/apache/dubbo-kubernetes/pkg/core/governance"
+	"github.com/apache/dubbo-kubernetes/pkg/core/reg_client"
 	"os"
 	"sync"
 	"time"
@@ -61,6 +62,7 @@ type BuilderContext interface {
 	ResourceManager() core_manager.CustomizableResourceManager
 	Config() dubbo_cp.Config
 	RegistryCenter() dubboRegistry.Registry
+	RegClient() reg_client.RegClient
 	MetadataReportCenter() report.MetadataReport
 	AdminRegistry() *registry.Registry
 	ConfigCenter() config_center.DynamicConfiguration
@@ -106,6 +108,7 @@ type Builder struct {
 	ddsctx               *dds_context.Context
 	appCtx               context.Context
 	dCache               *sync.Map
+	regClient            reg_client.RegClient
 	*runtimeInfo
 }
 
@@ -222,6 +225,11 @@ func (b *Builder) WithResourceValidators(rv ResourceValidators) *Builder {
 	return b
 }
 
+func (b *Builder) WithRegClient(regClient reg_client.RegClient) *Builder {
+	b.regClient = regClient
+	return b
+}
+
 func (b *Builder) WithRegistryCenter(rg dubboRegistry.Registry) *Builder {
 	b.registryCenter = rg
 	return b
@@ -298,9 +306,14 @@ func (b *Builder) Build() (Runtime, error) {
 			eac:                  b.eac,
 			rv:                   b.rv,
 			appCtx:               b.appCtx,
+			regClient:            b.regClient,
 		},
 		Manager: b.cm,
 	}, nil
+}
+
+func (b *Builder) RegClient() reg_client.RegClient {
+	return b.regClient
 }
 
 func (b *Builder) DataplaneCache() *sync.Map {

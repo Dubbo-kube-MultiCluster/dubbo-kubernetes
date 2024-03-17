@@ -27,6 +27,7 @@ import (
 	mesh_proto "github.com/apache/dubbo-kubernetes/api/mesh/v1alpha1"
 	"github.com/apache/dubbo-kubernetes/pkg/core/consts"
 	"github.com/apache/dubbo-kubernetes/pkg/core/governance"
+	"github.com/apache/dubbo-kubernetes/pkg/core/reg_client"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
@@ -48,6 +49,7 @@ type traditionalStore struct {
 	registryCenter dubboRegistry.Registry
 	governance     governance.GovernanceConfig
 	dCache         *sync.Map
+	regClient      reg_client.RegClient
 }
 
 func NewStore(
@@ -56,6 +58,7 @@ func NewStore(
 	registryCenter dubboRegistry.Registry,
 	governance governance.GovernanceConfig,
 	dCache *sync.Map,
+	regClient reg_client.RegClient,
 ) store.ResourceStore {
 	return &traditionalStore{
 		configCenter:   configCenter,
@@ -63,6 +66,7 @@ func NewStore(
 		registryCenter: registryCenter,
 		governance:     governance,
 		dCache:         dCache,
+		regClient:      regClient,
 	}
 }
 
@@ -299,10 +303,8 @@ func (c *traditionalStore) Get(_ context.Context, resource core_model.Resource, 
 		}
 		resource.SetMeta(meta)
 	case mesh.MappingType:
-
 	case mesh.MetaDataType:
 	default:
-
 	}
 	return nil
 }

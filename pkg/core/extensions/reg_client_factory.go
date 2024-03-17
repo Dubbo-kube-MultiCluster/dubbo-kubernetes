@@ -15,24 +15,19 @@
  * limitations under the License.
  */
 
-package ccache
+package extensions
 
-import "strings"
+import "github.com/apache/dubbo-kubernetes/pkg/core/reg_client/factory"
 
-func GenerateDCacheKey(name string, mesh string) string {
-	if mesh == "" {
-		return name
-	}
-	return name + "/" + mesh
+var regClientFactories = make(map[string]func() factory.RegClientFactory, 8)
+
+func SetRegClientFactory(name string, v func() factory.RegClientFactory) {
+	regClientFactories[name] = v
 }
 
-func DeDCacheKey(key string) (name string, mesh string) {
-	parts := strings.Split(key, "/")
-	if len(parts) == 1 {
-		return parts[0], ""
-	} else if len(parts) == 2 {
-		return parts[0], parts[1]
-	} else {
-		return "", ""
+func GetRegClientFactory(name string) factory.RegClientFactory {
+	if regClientFactories[name] == nil {
+		return nil
 	}
+	return regClientFactories[name]()
 }

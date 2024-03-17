@@ -15,24 +15,15 @@
  * limitations under the License.
  */
 
-package ccache
+package factory
 
-import "strings"
+import (
+	"dubbo.apache.org/dubbo-go/v3/common"
+	"github.com/apache/dubbo-kubernetes/pkg/core/reg_client"
+)
 
-func GenerateDCacheKey(name string, mesh string) string {
-	if mesh == "" {
-		return name
-	}
-	return name + "/" + mesh
+type RegClientFactory interface {
+	CreateRegClient(url *common.URL) reg_client.RegClient
 }
 
-func DeDCacheKey(key string) (name string, mesh string) {
-	parts := strings.Split(key, "/")
-	if len(parts) == 1 {
-		return parts[0], ""
-	} else if len(parts) == 2 {
-		return parts[0], parts[1]
-	} else {
-		return "", ""
-	}
-}
+type BaseRegClientFactory struct{}

@@ -21,6 +21,7 @@ import (
 	"context"
 	"dubbo.apache.org/dubbo-go/v3/config_center"
 	"github.com/apache/dubbo-kubernetes/pkg/core/governance"
+	"github.com/apache/dubbo-kubernetes/pkg/core/reg_client"
 	"sync"
 	"time"
 )
@@ -81,6 +82,7 @@ type RuntimeContext interface {
 	Governance() governance.GovernanceConfig
 	ConfigCenter() config_center.DynamicConfiguration
 	AdminRegistry() *registry.Registry
+	RegClient() reg_client.RegClient
 	ResourceValidators() ResourceValidators
 	// AppContext returns a context.Context which tracks the lifetime of the apps, it gets cancelled when the app is starting to shutdown.
 	AppContext() context.Context
@@ -161,6 +163,11 @@ type runtimeContext struct {
 	adminRegistry        *registry.Registry
 	governance           governance.GovernanceConfig
 	appCtx               context.Context
+	regClient            reg_client.RegClient
+}
+
+func (b *runtimeContext) RegClient() reg_client.RegClient {
+	return b.regClient
 }
 
 func (b *runtimeContext) DataplaneCache() *sync.Map {
