@@ -198,6 +198,9 @@ func (s *SnpServer) MappingSync(stream mesh_proto.ServiceNameMappingService_Mapp
 		},
 	)
 
+	// in the end, remove callback of this client
+	defer s.pusher.RemoveCallback(core_mesh.MappingType, mappingSyncClient.ClientID())
+
 	for {
 		select {
 		case err := <-errChan:
