@@ -18,12 +18,14 @@
 package client
 
 import (
+	core_mesh "github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
+	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	"sync"
 )
 
 import (
 	mesh_proto "github.com/apache/dubbo-kubernetes/api/mesh/v1alpha1"
-	core_mesh "github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
 )
 
 var _ MappingSyncStream = &stream{}
@@ -33,6 +35,7 @@ type stream struct {
 
 	// subscribedInterfaceNames records request's interfaceName in Mapping Request from data plane.
 	subscribedInterfaceNames map[string]struct{}
+	lastNonce                string
 	mu                       sync.RWMutex
 }
 
@@ -45,44 +48,9 @@ func NewMappingSyncStream(streamClient mesh_proto.ServiceNameMappingService_Mapp
 }
 
 type MappingSyncStream interface {
-	ACK(mappingList core_mesh.MappingResourceList) error
-	NACK(interfaceNames []string, message string) error
 	Recv() (*mesh_proto.MappingSyncRequest, error)
+	Send(mappingList *core_mesh.MappingResourceList, revision int64) error
 	SubscribedInterfaceNames() []string
-}
-
-func (s *stream) ACK(mappingList core_mesh.MappingResourceList) error {
-	mappings := make([]*mesh_proto.Mapping, 0, len(mappingList.Items))
-	interfaceNameSet := make(map[string]struct{}, len(mappingList.Items))
-	for _, item := range mappingList.Items {
-		mappings = append(mappings, &mesh_proto.Mapping{
-			Zone:             item.Spec.Zone,
-			InterfaceName:    item.Spec.InterfaceName,
-			ApplicationNames: item.Spec.ApplicationNames,
-		})
-		interfaceNameSet[item.Spec.InterfaceName] = struct{}{}
-	}
-
-	interfaceNames := make([]string, 0, len(interfaceNameSet))
-	for interfaceName := range interfaceNameSet {
-		interfaceNames = append(interfaceNames, interfaceName)
-	}
-	response := &mesh_proto.MappingSyncResponse{
-		Mappings:       mappings,
-		InterfaceNames: interfaceNames,
-		Success:        true,
-		Message:        "SUCCESS",
-	}
-	return s.streamClient.Send(response)
-}
-
-func (s *stream) NACK(interfaceNames []string, message string) error {
-	response := &mesh_proto.MappingSyncResponse{
-		InterfaceNames: interfaceNames,
-		Success:        false,
-		Message:        message,
-	}
-	return s.streamClient.Send(response)
 }
 
 func (s *stream) Recv() (*mesh_proto.MappingSyncRequest, error) {
@@ -91,14 +59,38 @@ func (s *stream) Recv() (*mesh_proto.MappingSyncRequest, error) {
 		return nil, err
 	}
 
+	if s.lastNonce != "" && s.lastNonce != request.GetNonce() {
+		return nil, errors.New("request's nonce is different to last nonce")
+	}
+
 	// subscribe Mapping
 	s.mu.Lock()
-	for _, interfaceName := range request.InterfaceNames {
-		s.subscribedInterfaceNames[interfaceName] = struct{}{}
-	}
+	interfaceName := request.GetInterfaceName()
+	s.subscribedInterfaceNames[interfaceName] = struct{}{}
 	s.mu.Lock()
 
 	return request, nil
+}
+
+func (s *stream) Send(mappingList *core_mesh.MappingResourceList, revision int64) error {
+	nonce := uuid.NewString()
+	mappings := make([]*mesh_proto.Mapping, 0, len(mappingList.Items))
+	for _, item := range mappingList.Items {
+		mappings = append(mappings, &mesh_proto.Mapping{
+			Zone:             item.Spec.Zone,
+			InterfaceName:    item.Spec.InterfaceName,
+			ApplicationNames: item.Spec.ApplicationNames,
+		})
+	}
+
+	s.lastNonce = nonce
+	response := &mesh_proto.MappingSyncResponse{
+		Nonce:    nonce,
+		Revision: revision,
+		Mappings: mappings,
+	}
+	return s.streamClient.Send(response)
+
 }
 
 func (s *stream) SubscribedInterfaceNames() []string {

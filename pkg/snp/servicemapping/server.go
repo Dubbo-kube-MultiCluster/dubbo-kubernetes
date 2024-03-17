@@ -24,10 +24,10 @@ import (
 )
 
 import (
+	"github.com/apache/dubbo-kubernetes/pkg/snp/pusher"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
-
 	"google.golang.org/grpc/codes"
-
 	"google.golang.org/grpc/status"
 )
 
@@ -52,9 +52,10 @@ var _ component.Component = &SnpServer{}
 type SnpServer struct {
 	mesh_proto.ServiceNameMappingServiceServer
 
-	locallyZone string
-	config      snp.ServiceMapping
-	queue       chan *RegisterRequest
+	localZone string
+	config    snp.ServiceMapping
+	queue     chan *RegisterRequest
+	pusher    pusher.Pusher
 
 	ctx           context.Context
 	eventBus      events.EventBus
@@ -76,14 +77,16 @@ func (s *SnpServer) NeedLeaderElection() bool {
 func NewSnpServer(
 	ctx context.Context,
 	config snp.ServiceMapping,
+	pusher pusher.Pusher,
 	resourceStore core_store.ResourceStore,
 	transactions core_store.Transactions,
 	eventBus events.EventBus,
-	locallyZone string,
+	localZone string,
 ) *SnpServer {
 	return &SnpServer{
-		locallyZone:   locallyZone,
+		localZone:     localZone,
 		config:        config,
+		pusher:        pusher,
 		queue:         make(chan *RegisterRequest, queueSize),
 		ctx:           ctx,
 		eventBus:      eventBus,
@@ -122,99 +125,84 @@ func (s *SnpServer) MappingSync(stream mesh_proto.ServiceNameMappingService_Mapp
 	mesh := core_model.DefaultMesh // todo: mesh
 	errChan := make(chan error)
 
+	clientID := uuid.NewString()
 	mappingSyncStream := client.NewMappingSyncStream(stream)
 	// MappingSyncClient is to handle MappingSyncRequest from data plane
-	mappingSyncClient := client.NewMappingSyncClient(log.WithName("client"), mappingSyncStream, &client.Callbacks{
-		OnResourcesReceived: func(request *mesh_proto.MappingSyncRequest) (core_mesh.MappingResourceList, error) {
-			// List Mapping Resources which client subscribed.
-			resourceKeys := make([]core_model.ResourceKey, 0, len(mappingSyncStream.SubscribedInterfaceNames()))
-			for _, interfaceName := range mappingSyncStream.SubscribedInterfaceNames() {
-				resourceKeys = append(resourceKeys, core_model.ResourceKey{
-					Mesh: mesh,
-					Name: interfaceName,
-				})
-			}
-
-			var mappingList core_mesh.MappingResourceList
-			err := s.resourceStore.List(stream.Context(), &mappingList, core_store.ListByResourceKeys(resourceKeys))
-			if err != nil {
-				return core_mesh.MappingResourceList{}, err
-			}
-
-			return mappingList, err
-		},
-	})
+	mappingSyncClient := client.NewMappingSyncClient(
+		log.WithName("client"),
+		clientID,
+		mappingSyncStream,
+		&client.Callbacks{
+			OnRequestReceived: func(request *mesh_proto.MappingSyncRequest) error {
+				// when received request, invoke callback
+				s.pusher.InvokeCallback(core_mesh.MappingType, clientID)
+				return nil
+			},
+		})
 	go func() {
 		// Handle requests from client
 		err := mappingSyncClient.HandleReceive()
-		if err != nil {
+		if errors.Is(err, io.EOF) {
 			log.Info("MappingSyncClient finished gracefully")
 			errChan <- nil
+			return
 		}
 
 		log.Error(err, "MappingSyncClient finished with an error")
 		errChan <- errors.Wrap(err, "MappingSyncClient finished with an error")
 	}()
 
-	// subscribe Mapping changed Event
-	mappingChanged := s.eventBus.Subscribe(func(e events.Event) bool {
-		resourceChangedEvent, ok := e.(events.ResourceChangedEvent)
-		if ok {
-			for _, interfaceName := range mappingSyncStream.SubscribedInterfaceNames() {
-				if resourceChangedEvent.Key.Name == interfaceName {
-					return true
+	s.pusher.AddCallback(
+		core_mesh.MappingType,
+		mappingSyncClient.ClientID(),
+		func(items pusher.PushedItems) {
+			resourceList := items.ResourceList()
+			revision := items.Revision()
+			mappingList, ok := resourceList.(*core_mesh.MappingResourceList)
+			if !ok {
+				return
+			}
+
+			err := mappingSyncClient.Send(mappingList, revision)
+			if err != nil {
+				if errors.Is(err, io.EOF) {
+					log.Info("MappingSyncClient finished gracefully")
+					errChan <- nil
+					return
+				}
+
+				log.Error(err, "send mapping sync response failed", "mappingList", mappingList, "revision", revision)
+				errChan <- errors.Wrap(err, "MappingSyncClient send with an error")
+			}
+		},
+		func(resourceList core_model.ResourceList) core_model.ResourceList {
+			if resourceList.GetItemType() != core_mesh.MappingType {
+				return nil
+			}
+
+			// only send Mapping which client subscribed
+			newResourceList := &core_mesh.MeshResourceList{}
+			for _, resource := range resourceList.GetItems() {
+				expected := false
+				for _, interfaceName := range mappingSyncStream.SubscribedInterfaceNames() {
+					if interfaceName == resource.GetMeta().GetName() && mesh == resource.GetMeta().GetMesh() {
+						expected = true
+						break
+					}
+				}
+
+				if expected {
+					// find
+					_ = newResourceList.AddItem(resource)
 				}
 			}
-		}
 
-		return false
-	})
-	defer mappingChanged.Close()
+			return newResourceList
+		},
+	)
 
 	for {
 		select {
-		case changedEvent := <-mappingChanged.Recv():
-			// when Mapping Changed
-			mappingChangedEvent, ok := changedEvent.(events.ResourceChangedEvent)
-			if !ok {
-				continue
-			}
-
-			// get Mapping Resource
-			mapping := core_mesh.NewMappingResource()
-			err := s.resourceStore.Get(stream.Context(), mapping, core_store.GetBy(
-				mappingChangedEvent.Key,
-			))
-			if err != nil {
-				log.Error(err, "MappingSync get mapping resource failed")
-				if err := mappingSyncStream.NACK([]string{mapping.Spec.InterfaceName}, err.Error()); err != nil {
-					if err == io.EOF {
-						errChan <- nil
-						continue
-					}
-					errChan <- errors.Wrap(err, "failed to NACK a MappingSyncRequest")
-					continue
-				}
-				continue
-			}
-
-			// sync Mapping Resource to client
-			var mappingList core_mesh.MappingResourceList
-			_ = mappingList.AddItem(mapping)
-			err = mappingSyncStream.ACK(mappingList)
-			if err != nil {
-				log.Error(err, "MappingSync ack mapping resource failed")
-				if err := mappingSyncStream.NACK([]string{mapping.Spec.InterfaceName}, err.Error()); err != nil {
-					if err == io.EOF {
-						errChan <- nil
-						continue
-					}
-					errChan <- errors.Wrap(err, "failed to ACK a MappingSyncRequest")
-					continue
-				}
-				continue
-			}
-
 		case err := <-errChan:
 			if err == nil {
 				log.Info("MappingSync finished gracefully")
@@ -334,7 +322,7 @@ func (s *SnpServer) tryRegister(mesh, interfaceName string, newApps []string) er
 		if core_store.IsResourceNotFound(err) {
 			// create if not found
 			mapping.Spec = &mesh_proto.Mapping{
-				Zone:             s.locallyZone,
+				Zone:             s.localZone,
 				InterfaceName:    interfaceName,
 				ApplicationNames: newApps,
 			}
@@ -366,7 +354,7 @@ func (s *SnpServer) tryRegister(mesh, interfaceName string, newApps []string) er
 				mergedApps = append(mergedApps, name)
 			}
 			mapping.Spec = &mesh_proto.Mapping{
-				Zone:             s.locallyZone,
+				Zone:             s.localZone,
 				InterfaceName:    interfaceName,
 				ApplicationNames: mergedApps,
 			}
