@@ -76,11 +76,11 @@ type Dubbo struct {
 	//   [registry]/[namespace]/[name]:[tag]
 	// example:
 	//   quay.io/alice/my.function.name
-	// Traditional is optional and is defaulted to DefaultRegistry
+	// Registry is optional and is defaulted to DefaultRegistry
 	// example:
 	//   alice/my.function.name
 	// If Image is provided, it overrides the default of concatenating
-	// "Traditional+Name:latest" to derive the Image.
+	// "Registry+Name:latest" to derive the Image.
 	Image string `yaml:"image,omitempty"`
 
 	// SHA256 hash of the latest image that has been built
