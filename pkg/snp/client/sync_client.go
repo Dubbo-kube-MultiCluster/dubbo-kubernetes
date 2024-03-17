@@ -33,26 +33,34 @@ import (
 )
 
 type Callbacks struct {
-	OnResourcesReceived func(request *mesh_proto.MappingSyncRequest) (core_mesh.MappingResourceList, error)
+	OnRequestReceived func(request *mesh_proto.MappingSyncRequest) error
 }
 
 // MappingSyncClient Handle MappingSyncRequest from client
 type MappingSyncClient interface {
+	ClientID() string
 	HandleReceive() error
+	Send(mappingList *core_mesh.MappingResourceList, revision int64) error
 }
 
 type mappingSyncClient struct {
 	log        logr.Logger
+	id         string
 	syncStream MappingSyncStream
 	callbacks  *Callbacks
 }
 
-func NewMappingSyncClient(log logr.Logger, syncStream MappingSyncStream, cb *Callbacks) MappingSyncClient {
+func NewMappingSyncClient(log logr.Logger, id string, syncStream MappingSyncStream, cb *Callbacks) MappingSyncClient {
 	return &mappingSyncClient{
 		log:        log,
+		id:         id,
 		syncStream: syncStream,
 		callbacks:  cb,
 	}
+}
+
+func (s *mappingSyncClient) ClientID() string {
+	return s.id
 }
 
 func (s *mappingSyncClient) HandleReceive() error {
@@ -65,38 +73,23 @@ func (s *mappingSyncClient) HandleReceive() error {
 			return errors.Wrap(err, "failed to receive a MappingSyncRequest")
 		}
 
-		var mappingList core_mesh.MappingResourceList
 		if s.callbacks == nil {
-			// if no callbacks, send NACK
-			s.log.Info("no callback set, sending NACK")
-			if err := s.syncStream.NACK(received.InterfaceNames, "no callbacks in control plane, could not get Mapping"); err != nil {
-				if err == io.EOF {
-					return nil
-				}
-				return errors.Wrap(err, "failed to NACK a MappingSyncRequest")
-			}
+			// if no callbacks
+			s.log.Info("no callback set")
 			continue
 		}
 
-		// callbacks to get Mapping Resource List
-		mappingList, err = s.callbacks.OnResourcesReceived(received)
+		// callbacks
+		err = s.callbacks.OnRequestReceived(received)
 		if err != nil {
-			s.log.Info("error during search Mapping Resource, sending NACK", "err", err)
-			if err := s.syncStream.NACK(received.InterfaceNames, err.Error()); err != nil {
-				if err == io.EOF {
-					return nil
-				}
-				return errors.Wrap(err, "failed to NACK a MappingSyncRequest")
-			}
+			s.log.Error(err, "error in OnRequestReceived")
 		} else {
-			s.log.V(1).Info("sending ACK")
-			if err := s.syncStream.ACK(mappingList); err != nil {
-				if err == io.EOF {
-					return nil
-				}
-				return errors.Wrap(err, "failed to ACK a MappingSyncRequest")
-			}
+			s.log.Info("OnRequestReceived successed")
 		}
 
 	}
+}
+
+func (s *mappingSyncClient) Send(mappingList *core_mesh.MappingResourceList, revision int64) error {
+	return s.syncStream.Send(mappingList, revision)
 }

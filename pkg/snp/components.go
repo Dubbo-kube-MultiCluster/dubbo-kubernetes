@@ -18,10 +18,15 @@
 package snp
 
 import (
+	"time"
+
 	mesh_proto "github.com/apache/dubbo-kubernetes/api/mesh/v1alpha1"
 	"github.com/apache/dubbo-kubernetes/pkg/core"
+	core_mesh "github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
+	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
+	"github.com/apache/dubbo-kubernetes/pkg/snp/pusher"
 	snp_server "github.com/apache/dubbo-kubernetes/pkg/snp/server"
 	"github.com/apache/dubbo-kubernetes/pkg/snp/servicemapping"
 )
@@ -32,13 +37,25 @@ func Setup(rt core_runtime.Runtime) error {
 	cfg := rt.Config().ServiceNameMapping
 
 	snpComponent := component.ComponentFunc(func(stop <-chan struct{}) error {
+		snpPusher := pusher.NewPusher(rt.ResourceManager(), rt.EventBus(), func() *time.Ticker {
+			// todo: should configured by config in the future
+			return time.NewTicker(time.Minute * 10)
+		}, []core_model.ResourceType{core_mesh.MappingType})
+
 		server := snp_server.NewServer(cfg.Server)
 
 		// register ServiceNameMappingService
-		serviceMapping := servicemapping.NewSnpServer(rt.AppContext(), cfg.ServiceMapping, rt.ResourceManager(), rt.Transactions(), rt.EventBus())
+		serviceMapping := servicemapping.NewSnpServer(
+			rt.AppContext(),
+			cfg.ServiceMapping,
+			snpPusher,
+			rt.ResourceManager(),
+			rt.Transactions(),
+			rt.Config().Multizone.Zone.Name,
+		)
 		mesh_proto.RegisterServiceNameMappingServiceServer(server.GrpcServer(), serviceMapping)
 
-		return rt.Add(server, serviceMapping)
+		return rt.Add(snpPusher, server, serviceMapping)
 	})
 
 	return rt.Add(component.NewResilientComponent(

@@ -8,9 +8,6 @@ package v1alpha1
 
 import (
 	context "context"
-)
-
-import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -25,16 +22,16 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ServiceNameMappingServiceClient interface {
-	// MappingRegister from dp to cp, data plane register snp information to control plane.
+	// MappingRegister from dp to cp, data plane register snp information to
+	// control plane.
 	MappingRegister(ctx context.Context, in *MappingRegisterRequest, opts ...grpc.CallOption) (*MappingRegisterResponse, error)
-	// MappingSync from cp to dp, control plane sync snp information to data plane.
-	// Only in Kubernetes environment without zk/nacos, this rpc works.
-	// In other case (exists zk/nacos), data plane search in zk/nacos.
+	// MappingSync from cp to dp, control plane sync snp information to data
+	// plane. Only in Kubernetes environment without zk/nacos, this rpc works. In
+	// other case (exists zk/nacos), data plane search in zk/nacos.
 	//
 	// data plane and control plane keep a streaming link:
-	// 1. when Mapping Resource updated, control plane sync Mapping Resource to data plane.
-	// 2. data plane could request Mapping Request, control plane would response Mapping information to data plane.
-	// In the after, control plane will sync Mapping Resource according to earlier Mapping Request.
+	// when Mapping Resource updated, control plane sync Mapping Resource to
+	// data plane.
 	MappingSync(ctx context.Context, opts ...grpc.CallOption) (ServiceNameMappingService_MappingSyncClient, error)
 }
 
@@ -90,16 +87,16 @@ func (x *serviceNameMappingServiceMappingSyncClient) Recv() (*MappingSyncRespons
 // All implementations must embed UnimplementedServiceNameMappingServiceServer
 // for forward compatibility
 type ServiceNameMappingServiceServer interface {
-	// MappingRegister from dp to cp, data plane register snp information to control plane.
+	// MappingRegister from dp to cp, data plane register snp information to
+	// control plane.
 	MappingRegister(context.Context, *MappingRegisterRequest) (*MappingRegisterResponse, error)
-	// MappingSync from cp to dp, control plane sync snp information to data plane.
-	// Only in Kubernetes environment without zk/nacos, this rpc works.
-	// In other case (exists zk/nacos), data plane search in zk/nacos.
+	// MappingSync from cp to dp, control plane sync snp information to data
+	// plane. Only in Kubernetes environment without zk/nacos, this rpc works. In
+	// other case (exists zk/nacos), data plane search in zk/nacos.
 	//
 	// data plane and control plane keep a streaming link:
-	// 1. when Mapping Resource updated, control plane sync Mapping Resource to data plane.
-	// 2. data plane could request Mapping Request, control plane would response Mapping information to data plane.
-	// In the after, control plane will sync Mapping Resource according to earlier Mapping Request.
+	// when Mapping Resource updated, control plane sync Mapping Resource to
+	// data plane.
 	MappingSync(ServiceNameMappingService_MappingSyncServer) error
 	mustEmbedUnimplementedServiceNameMappingServiceServer()
 }
