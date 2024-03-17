@@ -24,7 +24,6 @@ import (
 )
 
 import (
-	"github.com/apache/dubbo-kubernetes/pkg/snp/pusher"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
@@ -36,11 +35,12 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/snp"
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	core_mesh "github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
+	"github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
-	"github.com/apache/dubbo-kubernetes/pkg/events"
 	"github.com/apache/dubbo-kubernetes/pkg/snp/client"
+	"github.com/apache/dubbo-kubernetes/pkg/snp/pusher"
 )
 
 var log = core.Log.WithName("snp").WithName("server").WithName("service-name-mapping")
@@ -57,10 +57,9 @@ type SnpServer struct {
 	queue     chan *RegisterRequest
 	pusher    pusher.Pusher
 
-	ctx           context.Context
-	eventBus      events.EventBus
-	resourceStore core_store.ResourceStore
-	transactions  core_store.Transactions
+	ctx             context.Context
+	resourceManager manager.ResourceManager
+	transactions    core_store.Transactions
 }
 
 func (s *SnpServer) Start(stop <-chan struct{}) error {
@@ -78,20 +77,18 @@ func NewSnpServer(
 	ctx context.Context,
 	config snp.ServiceMapping,
 	pusher pusher.Pusher,
-	resourceStore core_store.ResourceStore,
+	resourceManager manager.ResourceManager,
 	transactions core_store.Transactions,
-	eventBus events.EventBus,
 	localZone string,
 ) *SnpServer {
 	return &SnpServer{
-		localZone:     localZone,
-		config:        config,
-		pusher:        pusher,
-		queue:         make(chan *RegisterRequest, queueSize),
-		ctx:           ctx,
-		eventBus:      eventBus,
-		resourceStore: resourceStore,
-		transactions:  transactions,
+		localZone:       localZone,
+		config:          config,
+		pusher:          pusher,
+		queue:           make(chan *RegisterRequest, queueSize),
+		ctx:             ctx,
+		resourceManager: resourceManager,
+		transactions:    transactions,
 	}
 }
 
@@ -313,7 +310,7 @@ func (s *SnpServer) tryRegister(mesh, interfaceName string, newApps []string) er
 		// if Mapping is not found, create it,
 		// else update it.
 		mapping := core_mesh.NewMappingResource()
-		err := s.resourceStore.Get(s.ctx, mapping, core_store.GetBy(key))
+		err := s.resourceManager.Get(s.ctx, mapping, core_store.GetBy(key))
 		if err != nil && !core_store.IsResourceNotFound(err) {
 			log.Error(err, "get Mapping Resource")
 			return err
@@ -326,7 +323,7 @@ func (s *SnpServer) tryRegister(mesh, interfaceName string, newApps []string) er
 				InterfaceName:    interfaceName,
 				ApplicationNames: newApps,
 			}
-			err = s.resourceStore.Create(s.ctx, mapping, core_store.CreateBy(key), core_store.CreatedAt(time.Now()))
+			err = s.resourceManager.Create(s.ctx, mapping, core_store.CreateBy(key), core_store.CreatedAt(time.Now()))
 			if err != nil {
 				log.Error(err, "create Mapping Resource failed")
 				return err
@@ -359,7 +356,7 @@ func (s *SnpServer) tryRegister(mesh, interfaceName string, newApps []string) er
 				ApplicationNames: mergedApps,
 			}
 
-			err = s.resourceStore.Update(s.ctx, mapping, core_store.ModifiedAt(time.Now()))
+			err = s.resourceManager.Update(s.ctx, mapping, core_store.ModifiedAt(time.Now()))
 			if err != nil {
 				log.Error(err, "update Mapping Resource failed")
 				return err

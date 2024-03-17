@@ -51,7 +51,6 @@ func Setup(rt core_runtime.Runtime) error {
 			snpPusher,
 			rt.ResourceManager(),
 			rt.Transactions(),
-			rt.EventBus(),
 			rt.Config().Multizone.Zone.Name,
 		)
 		mesh_proto.RegisterServiceNameMappingServiceServer(server.GrpcServer(), serviceMapping)
