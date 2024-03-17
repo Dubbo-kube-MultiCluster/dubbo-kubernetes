@@ -73,6 +73,9 @@ func (s *stream) Recv() (*mesh_proto.MappingSyncRequest, error) {
 }
 
 func (s *stream) Send(mappingList *core_mesh.MappingResourceList, revision int64) error {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
 	nonce := uuid.NewString()
 	mappings := make([]*mesh_proto.Mapping, 0, len(mappingList.Items))
 	for _, item := range mappingList.Items {
