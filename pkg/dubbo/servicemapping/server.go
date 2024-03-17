@@ -39,11 +39,11 @@ import (
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
-	"github.com/apache/dubbo-kubernetes/pkg/snp/client"
-	"github.com/apache/dubbo-kubernetes/pkg/snp/pusher"
+	"github.com/apache/dubbo-kubernetes/pkg/dubbo/client"
+	"github.com/apache/dubbo-kubernetes/pkg/dubbo/pusher"
 )
 
-var log = core.Log.WithName("snp").WithName("server").WithName("service-name-mapping")
+var log = core.Log.WithName("dubbo").WithName("server").WithName("service-name-mapping")
 
 const queueSize = 100
 

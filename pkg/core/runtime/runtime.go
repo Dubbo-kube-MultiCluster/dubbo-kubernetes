@@ -32,6 +32,7 @@ import (
 )
 
 import (
+	"github.com/apache/dubbo-kubernetes/pkg/admin"
 	dubbo_cp "github.com/apache/dubbo-kubernetes/pkg/config/app/dubbo-cp"
 	"github.com/apache/dubbo-kubernetes/pkg/config/core"
 	config_manager "github.com/apache/dubbo-kubernetes/pkg/core/config/manager"
@@ -43,7 +44,6 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
 	dds_context "github.com/apache/dubbo-kubernetes/pkg/dds/context"
 	dp_server "github.com/apache/dubbo-kubernetes/pkg/dp-server/server"
-	"github.com/apache/dubbo-kubernetes/pkg/dubbo"
 	"github.com/apache/dubbo-kubernetes/pkg/events"
 	xds_runtime "github.com/apache/dubbo-kubernetes/pkg/xds/runtime"
 )
@@ -70,7 +70,7 @@ type RuntimeContext interface {
 	ReadOnlyResourceManager() core_manager.ReadOnlyResourceManager
 	ConfigStore() core_store.ResourceStore
 	Extensions() context.Context
-	EnvoyAdminClient() dubbo.EnvoyAdminClient
+	EnvoyAdminClient() admin.EnvoyAdminClient
 	ConfigManager() config_manager.ConfigManager
 	LeaderInfo() component.LeaderInfo
 	EventBus() events.EventBus
@@ -148,7 +148,7 @@ type runtimeContext struct {
 	cs                   core_store.ResourceStore
 	rom                  core_manager.ReadOnlyResourceManager
 	ext                  context.Context
-	eac                  dubbo.EnvoyAdminClient
+	eac                  admin.EnvoyAdminClient
 	configm              config_manager.ConfigManager
 	xds                  xds_runtime.XDSRuntimeContext
 	leadInfo             component.LeaderInfo
@@ -194,7 +194,7 @@ func (b *runtimeContext) MetadataReportCenter() report.MetadataReport {
 	return b.metadataReportCenter
 }
 
-func (rc *runtimeContext) EnvoyAdminClient() dubbo.EnvoyAdminClient {
+func (rc *runtimeContext) EnvoyAdminClient() admin.EnvoyAdminClient {
 	return rc.eac
 }
 

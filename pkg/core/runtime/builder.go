@@ -36,6 +36,7 @@ import (
 )
 
 import (
+	"github.com/apache/dubbo-kubernetes/pkg/admin"
 	dubbo_cp "github.com/apache/dubbo-kubernetes/pkg/config/app/dubbo-cp"
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	config_manager "github.com/apache/dubbo-kubernetes/pkg/core/config/manager"
@@ -47,7 +48,6 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
 	dds_context "github.com/apache/dubbo-kubernetes/pkg/dds/context"
 	dp_server "github.com/apache/dubbo-kubernetes/pkg/dp-server/server"
-	"github.com/apache/dubbo-kubernetes/pkg/dubbo"
 	"github.com/apache/dubbo-kubernetes/pkg/events"
 	"github.com/apache/dubbo-kubernetes/pkg/intercp/client"
 	"github.com/apache/dubbo-kubernetes/pkg/xds/cache/mesh"
@@ -89,7 +89,7 @@ type Builder struct {
 	txs                  core_store.Transactions
 	rm                   core_manager.CustomizableResourceManager
 	rom                  core_manager.ReadOnlyResourceManager
-	eac                  dubbo.EnvoyAdminClient
+	eac                  admin.EnvoyAdminClient
 	ext                  context.Context
 	meshCache            *mesh.Cache
 	lif                  lookup.LookupIPFunc
@@ -210,7 +210,7 @@ func (b *Builder) WithDpServer(dps *dp_server.DpServer) *Builder {
 	return b
 }
 
-func (b *Builder) WithEnvoyAdminClient(eac dubbo.EnvoyAdminClient) *Builder {
+func (b *Builder) WithEnvoyAdminClient(eac admin.EnvoyAdminClient) *Builder {
 	b.eac = eac
 	return b
 }

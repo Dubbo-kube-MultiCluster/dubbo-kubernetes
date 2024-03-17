@@ -22,10 +22,10 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ServiceNameMappingServiceClient interface {
-	// MappingRegister from dp to cp, data plane register snp information to
+	// MappingRegister from dp to cp, data plane register dubbo information to
 	// control plane.
 	MappingRegister(ctx context.Context, in *MappingRegisterRequest, opts ...grpc.CallOption) (*MappingRegisterResponse, error)
-	// MappingSync from cp to dp, control plane sync snp information to data
+	// MappingSync from cp to dp, control plane sync dubbo information to data
 	// plane. Only in Kubernetes environment without zk/nacos, this rpc works. In
 	// other case (exists zk/nacos), data plane search in zk/nacos.
 	//
@@ -87,10 +87,10 @@ func (x *serviceNameMappingServiceMappingSyncClient) Recv() (*MappingSyncRespons
 // All implementations must embed UnimplementedServiceNameMappingServiceServer
 // for forward compatibility
 type ServiceNameMappingServiceServer interface {
-	// MappingRegister from dp to cp, data plane register snp information to
+	// MappingRegister from dp to cp, data plane register dubbo information to
 	// control plane.
 	MappingRegister(context.Context, *MappingRegisterRequest) (*MappingRegisterResponse, error)
-	// MappingSync from cp to dp, control plane sync snp information to data
+	// MappingSync from cp to dp, control plane sync dubbo information to data
 	// plane. Only in Kubernetes environment without zk/nacos, this rpc works. In
 	// other case (exists zk/nacos), data plane search in zk/nacos.
 	//

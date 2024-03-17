@@ -103,7 +103,7 @@ type Config struct {
 	// Intercommunication CP configuration
 	InterCp intercp.InterCpConfig `json:"interCp"`
 	// SNP configuration
-	ServiceNameMapping    snp.SNPConfig         `json:"snp"`
+	ServiceNameMapping    snp.SNPConfig         `json:"dubbo"`
 	DDSEventBasedWatchdog DDSEventBasedWatchdog `json:"dds_event_based_watchdog"`
 }
 

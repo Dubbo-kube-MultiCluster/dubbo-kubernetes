@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package snp
+package dubbo
 
 import (
 	"time"
@@ -26,12 +26,12 @@ import (
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
-	"github.com/apache/dubbo-kubernetes/pkg/snp/pusher"
-	snp_server "github.com/apache/dubbo-kubernetes/pkg/snp/server"
-	"github.com/apache/dubbo-kubernetes/pkg/snp/servicemapping"
+	"github.com/apache/dubbo-kubernetes/pkg/dubbo/pusher"
+	snp_server "github.com/apache/dubbo-kubernetes/pkg/dubbo/server"
+	"github.com/apache/dubbo-kubernetes/pkg/dubbo/servicemapping"
 )
 
-var log = core.Log.WithName("snp")
+var log = core.Log.WithName("dubbo")
 
 func Setup(rt core_runtime.Runtime) error {
 	cfg := rt.Config().ServiceNameMapping

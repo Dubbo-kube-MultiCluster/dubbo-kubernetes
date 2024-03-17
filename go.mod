@@ -43,6 +43,7 @@ require (
 	github.com/go-logr/zapr v1.3.0
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/goburrow/cache v0.1.4
+	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3
 	github.com/google/go-cmp v0.6.0
 	github.com/google/go-containerregistry v0.16.1
@@ -121,6 +122,12 @@ require (
 	github.com/Workiva/go-datastructures v1.0.52 // indirect
 	github.com/acomagu/bufpipe v1.0.4 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
+	github.com/alibabacloud-go/debug v0.0.0-20190504072949-9472017b5c68 // indirect
+	github.com/alibabacloud-go/tea v1.1.17 // indirect
+	github.com/alibabacloud-go/tea-utils v1.4.4 // indirect
+	github.com/aliyun/alibaba-cloud-sdk-go v1.61.1800 // indirect
+	github.com/aliyun/alibabacloud-dkms-gcs-go-sdk v0.2.2 // indirect
+	github.com/aliyun/alibabacloud-dkms-transfer-go-sdk v0.1.7 // indirect
 	github.com/apache/dubbo-getty v1.4.9 // indirect
 	github.com/apache/dubbo-go-hessian2 v1.12.2 // indirect
 	github.com/apex/log v1.9.0 // indirect
@@ -143,6 +150,7 @@ require (
 	github.com/bits-and-blooms/bitset v1.2.0 // indirect
 	github.com/bmatcuk/doublestar/v4 v4.6.0 // indirect
 	github.com/braydonk/yaml v0.7.0 // indirect
+	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/buildpacks/imgutil v0.0.0-20230626185301-726f02e4225c // indirect
 	github.com/buildpacks/lifecycle v0.17.0 // indirect
 	github.com/census-instrumentation/opencensus-proto v0.4.1 // indirect

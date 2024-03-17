@@ -20,6 +20,7 @@ package store
 import (
 	"context"
 	"fmt"
+	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
 	"maps"
 	"strings"
 	"time"
@@ -91,24 +92,24 @@ func PrefilterBy(predicate func(r core_model.Resource) bool) SyncOptionFunc {
 }
 
 type syncResourceStore struct {
-	log           logr.Logger
-	resourceStore store.ResourceStore
-	transactions  store.Transactions
-	metric        prometheus.Histogram
-	extensions    context.Context
+	log             logr.Logger
+	resourceManager core_manager.ResourceManager
+	transactions    store.Transactions
+	metric          prometheus.Histogram
+	extensions      context.Context
 }
 
 func NewResourceSyncer(
 	log logr.Logger,
-	resourceStore store.ResourceStore,
+	resourceStore core_manager.ResourceManager,
 	transactions store.Transactions,
 	extensions context.Context,
 ) (ResourceSyncer, error) {
 	return &syncResourceStore{
-		log:           log,
-		resourceStore: resourceStore,
-		transactions:  transactions,
-		extensions:    extensions,
+		log:             log,
+		resourceManager: resourceStore,
+		transactions:    transactions,
+		extensions:      extensions,
 	}, nil
 }
 
@@ -130,12 +131,12 @@ func (s *syncResourceStore) Sync(syncCtx context.Context, upstreamResponse clien
 		return err
 	}
 	if upstreamResponse.IsInitialRequest {
-		if err := s.resourceStore.List(syncCtx, downstream); err != nil {
+		if err := s.resourceManager.List(syncCtx, downstream); err != nil {
 			return err
 		}
 	} else {
 		upstreamChangeKeys := append(core_model.ResourceListToResourceKeys(upstream), upstreamResponse.RemovedResourcesKey...)
-		if err := s.resourceStore.List(syncCtx, downstream, store.ListByResourceKeys(upstreamChangeKeys)); err != nil {
+		if err := s.resourceManager.List(syncCtx, downstream, store.ListByResourceKeys(upstreamChangeKeys)); err != nil {
 			return err
 		}
 	}
@@ -158,7 +159,7 @@ func (s *syncResourceStore) Sync(syncCtx context.Context, upstreamResponse clien
 	indexedDownstream := newIndexed(downstream)
 	indexedUpstream := newIndexed(upstream)
 
-	onDelete := []core_model.Resource{}
+	var onDelete []core_model.Resource
 	// 1. delete resources which were removed from the upstream
 	// on the first request when the control-plane starts we want to sync
 	// whole the resources in the store. In this case we do not check removed
@@ -185,8 +186,10 @@ func (s *syncResourceStore) Sync(syncCtx context.Context, upstreamResponse clien
 	}
 
 	// 2. create resources which are not represented in 'downstream' and update the rest of them
-	onCreate := []core_model.Resource{}
-	onUpdate := []OnUpdate{}
+	var (
+		onCreate []core_model.Resource
+		onUpdate []OnUpdate
+	)
 	for _, r := range upstream.GetItems() {
 		existing := indexedDownstream.get(core_model.MetaToResourceKey(r.GetMeta()))
 		if existing == nil {
@@ -204,7 +207,7 @@ func (s *syncResourceStore) Sync(syncCtx context.Context, upstreamResponse clien
 
 	zone := system.NewZoneResource()
 	if opts.Zone != "" && len(onCreate) > 0 {
-		if err := s.resourceStore.Get(syncCtx, zone, store.GetByKey(opts.Zone, core_model.NoMesh)); err != nil {
+		if err := s.resourceManager.Get(syncCtx, zone, store.GetByKey(opts.Zone, core_model.NoMesh)); err != nil {
 			return err
 		}
 	}
@@ -213,7 +216,7 @@ func (s *syncResourceStore) Sync(syncCtx context.Context, upstreamResponse clien
 		for _, r := range onDelete {
 			rk := core_model.MetaToResourceKey(r.GetMeta())
 			log.Info("deleting a resource since it's no longer available in the upstream", "name", r.GetMeta().GetName(), "mesh", r.GetMeta().GetMesh())
-			if err := s.resourceStore.Delete(ctx, r, store.DeleteBy(rk)); err != nil {
+			if err := s.resourceManager.Delete(ctx, r, store.DeleteBy(rk)); err != nil {
 				return err
 			}
 		}
@@ -234,7 +237,7 @@ func (s *syncResourceStore) Sync(syncCtx context.Context, upstreamResponse clien
 			// some Stores try to cast ResourceMeta to own Store type that's why we have to set meta to nil
 			r.SetMeta(nil)
 
-			if err := s.resourceStore.Create(ctx, r, createOpts...); err != nil {
+			if err := s.resourceManager.Create(ctx, r, createOpts...); err != nil {
 				return err
 			}
 		}
@@ -245,7 +248,7 @@ func (s *syncResourceStore) Sync(syncCtx context.Context, upstreamResponse clien
 			// some stores manage ModificationTime time on they own (Kubernetes), in order to be consistent
 			// we set ModificationTime when we add to downstream store. This time is almost the same with ModificationTime
 			// from upstream store, because we update downstream only when resource have changed in upstream
-			if err := s.resourceStore.Update(ctx, upd.r, append(upd.opts, store.ModifiedAt(now))...); err != nil {
+			if err := s.resourceManager.Update(ctx, upd.r, append(upd.opts, store.ModifiedAt(now))...); err != nil {
 				return err
 			}
 		}

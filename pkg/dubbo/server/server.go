@@ -35,7 +35,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
 )
 
-var log = core.Log.WithName("snp").WithName("server")
+var log = core.Log.WithName("dubbo").WithName("server")
 
 const (
 	grpcMaxConcurrentStreams = 1000000

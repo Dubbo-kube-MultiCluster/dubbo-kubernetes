@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package dubbo
+package admin
 
 import (
 	envoy_admin_v3 "github.com/envoyproxy/go-control-plane/envoy/admin/v3"

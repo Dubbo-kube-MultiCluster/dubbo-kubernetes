@@ -19,6 +19,7 @@ package bootstrap
 
 import (
 	"context"
+	"github.com/apache/dubbo-kubernetes/pkg/admin"
 	"github.com/apache/dubbo-kubernetes/pkg/core/extensions"
 	"github.com/apache/dubbo-kubernetes/pkg/core/governance"
 	"net/url"
@@ -56,7 +57,6 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
 	dds_context "github.com/apache/dubbo-kubernetes/pkg/dds/context"
 	"github.com/apache/dubbo-kubernetes/pkg/dp-server/server"
-	"github.com/apache/dubbo-kubernetes/pkg/dubbo"
 	"github.com/apache/dubbo-kubernetes/pkg/events"
 	"github.com/apache/dubbo-kubernetes/pkg/intercp"
 	"github.com/apache/dubbo-kubernetes/pkg/intercp/catalog"
@@ -115,7 +115,7 @@ func buildRuntime(appCtx context.Context, cfg dubbo_cp.Config) (core_runtime.Run
 	builder.WithDDSContext(kdsContext)
 
 	if cfg.Mode == config_core.Global {
-		kdsEnvoyAdminClient := dubbo.NewDDSEnvoyAdminClient(
+		kdsEnvoyAdminClient := admin.NewDDSEnvoyAdminClient(
 			builder.DDSContext().EnvoyAdminRPCs,
 			cfg.Store.Type == store.KubernetesStore,
 		)
@@ -128,7 +128,7 @@ func buildRuntime(appCtx context.Context, cfg dubbo_cp.Config) (core_runtime.Run
 		)
 		builder.WithEnvoyAdminClient(forwardingClient)
 	} else {
-		builder.WithEnvoyAdminClient(dubbo.NewEnvoyAdminClient(
+		builder.WithEnvoyAdminClient(admin.NewEnvoyAdminClient(
 			resourceManager,
 			builder.Config().GetEnvoyAdminPort(),
 		))

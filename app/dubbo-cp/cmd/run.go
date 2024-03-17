@@ -38,10 +38,10 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/defaults"
 	"github.com/apache/dubbo-kubernetes/pkg/diagnostics"
 	dp_server "github.com/apache/dubbo-kubernetes/pkg/dp-server"
+	"github.com/apache/dubbo-kubernetes/pkg/dubbo"
 	"github.com/apache/dubbo-kubernetes/pkg/gc"
 	"github.com/apache/dubbo-kubernetes/pkg/hds"
 	"github.com/apache/dubbo-kubernetes/pkg/intercp"
-	"github.com/apache/dubbo-kubernetes/pkg/snp"
 	"github.com/apache/dubbo-kubernetes/pkg/util/os"
 	dubbo_version "github.com/apache/dubbo-kubernetes/pkg/version"
 	"github.com/apache/dubbo-kubernetes/pkg/xds"
@@ -105,8 +105,8 @@ func newRunCmdWithOpts(opts dubbo_cmd.RunCmdOpts) *cobra.Command {
 					"minimim-open-files", minOpenFileLimit)
 			}
 
-			if err := snp.Setup(rt); err != nil {
-				runLog.Error(err, "unable to set up snp server")
+			if err := dubbo.Setup(rt); err != nil {
+				runLog.Error(err, "unable to set up dubbo server")
 			}
 			if err := xds.Setup(rt); err != nil {
 				runLog.Error(err, "unable to set up xds server")

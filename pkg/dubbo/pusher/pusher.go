@@ -28,7 +28,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/events"
 )
 
-var log = core.Log.WithName("snp").WithName("server").WithName("pusher")
+var log = core.Log.WithName("dubbo").WithName("server").WithName("pusher")
 
 const (
 	eventsChannelSize  = 10000

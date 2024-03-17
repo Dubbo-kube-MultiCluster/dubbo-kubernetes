@@ -29,6 +29,7 @@ import (
 
 import (
 	mesh_proto "github.com/apache/dubbo-kubernetes/api/mesh/v1alpha1"
+	"github.com/apache/dubbo-kubernetes/pkg/admin"
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	core_mesh "github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
 	core_system "github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/system"
@@ -36,7 +37,6 @@ import (
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
 	"github.com/apache/dubbo-kubernetes/pkg/dds/service"
-	"github.com/apache/dubbo-kubernetes/pkg/dubbo"
 	"github.com/apache/dubbo-kubernetes/pkg/intercp/catalog"
 )
 
@@ -49,7 +49,7 @@ type forwardingKdsEnvoyAdminClient struct {
 	cat            catalog.Catalog
 	instanceID     string
 	newClientFn    NewClientFn
-	fallbackClient dubbo.EnvoyAdminClient
+	fallbackClient admin.EnvoyAdminClient
 }
 
 // NewForwardingEnvoyAdminClient returns EnvoyAdminClient which is only used on Global CP in multizone environment.
@@ -65,8 +65,8 @@ func NewForwardingEnvoyAdminClient(
 	cat catalog.Catalog,
 	instanceID string,
 	newClientFn NewClientFn,
-	fallbackClient dubbo.EnvoyAdminClient,
-) dubbo.EnvoyAdminClient {
+	fallbackClient admin.EnvoyAdminClient,
+) admin.EnvoyAdminClient {
 	return &forwardingKdsEnvoyAdminClient{
 		resManager:     resManager,
 		cat:            cat,
@@ -76,7 +76,7 @@ func NewForwardingEnvoyAdminClient(
 	}
 }
 
-var _ dubbo.EnvoyAdminClient = &forwardingKdsEnvoyAdminClient{}
+var _ admin.EnvoyAdminClient = &forwardingKdsEnvoyAdminClient{}
 
 func (f *forwardingKdsEnvoyAdminClient) PostQuit(context.Context, *core_mesh.DataplaneResource) error {
 	panic("not implemented")
