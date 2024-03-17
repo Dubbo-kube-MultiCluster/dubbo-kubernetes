@@ -19,6 +19,7 @@ package bootstrap
 
 import (
 	"context"
+	"github.com/apache/dubbo-kubernetes/pkg/core/governance"
 	"net/url"
 	"strings"
 )
@@ -35,7 +36,6 @@ import (
 	dubbo_cp "github.com/apache/dubbo-kubernetes/pkg/config/app/dubbo-cp"
 	config_core "github.com/apache/dubbo-kubernetes/pkg/config/core"
 	"github.com/apache/dubbo-kubernetes/pkg/config/core/resources/store"
-	"github.com/apache/dubbo-kubernetes/pkg/config/registry"
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	config_manager "github.com/apache/dubbo-kubernetes/pkg/core/config/manager"
 	"github.com/apache/dubbo-kubernetes/pkg/core/consts"
@@ -172,9 +172,9 @@ func initializeTraditional(cfg dubbo_cp.Config, builder *core_runtime.Builder) e
 	if cfg.Environment == config_core.KubernetesEnvironment {
 		return nil
 	}
-	address := cfg.Tradition.ConfigCenter
-	registryAddress := cfg.Tradition.Registry.Address
-	metadataReportAddress := cfg.Tradition.MetadataReport.Address
+	address := cfg.Store.Traditional.ConfigCenter
+	registryAddress := cfg.Store.Traditional.Registry.Address
+	metadataReportAddress := cfg.Store.Traditional.MetadataReport.Address
 	c, addrUrl := getValidAddressConfig(address, registryAddress)
 	configCenter := newConfigCenter(c, addrUrl)
 	properties, err := configCenter.GetProperties(consts.DubboPropertyKey)
@@ -204,6 +204,7 @@ func initializeTraditional(cfg dubbo_cp.Config, builder *core_runtime.Builder) e
 		if err != nil {
 			return err
 		}
+		builder.WithGovernanceConfig(governance.NewGovernanceConfig(configCenter, registryCenter, c.GetProtocol()))
 		builder.WithRegistryCenter(registryCenter)
 		delegate, err := extension.GetRegistry(c.GetProtocol(), addrUrl)
 		if err != nil {
@@ -237,12 +238,12 @@ func initializeTraditional(cfg dubbo_cp.Config, builder *core_runtime.Builder) e
 	return nil
 }
 
-func getValidAddressConfig(address string, registryAddress string) (registry.AddressConfig, *common.URL) {
+func getValidAddressConfig(address string, registryAddress string) (store.AddressConfig, *common.URL) {
 	if len(address) <= 0 && len(registryAddress) <= 0 {
 		panic("Must at least specify `admin.config-center.address` or `admin.registry.address`!")
 	}
 
-	var c registry.AddressConfig
+	var c store.AddressConfig
 	if len(address) > 0 {
 		logger.Infof("Specified config center address is %s", address)
 		c = newAddressConfig(address)
@@ -258,8 +259,8 @@ func getValidAddressConfig(address string, registryAddress string) (registry.Add
 	return c, configUrl
 }
 
-func newAddressConfig(address string) registry.AddressConfig {
-	cfg := registry.AddressConfig{}
+func newAddressConfig(address string) store.AddressConfig {
+	cfg := store.AddressConfig{}
 	cfg.Address = address
 	var err error
 	cfg.Url, err = url.Parse(address)
@@ -269,7 +270,7 @@ func newAddressConfig(address string) registry.AddressConfig {
 	return cfg
 }
 
-func newConfigCenter(c registry.AddressConfig, url *common.URL) config_center.DynamicConfiguration {
+func newConfigCenter(c store.AddressConfig, url *common.URL) config_center.DynamicConfiguration {
 	factory, err := extension.GetConfigCenterFactory(c.GetProtocol())
 	if err != nil {
 		logger.Info(err.Error())

@@ -25,6 +25,8 @@ import (
 	"dubbo.apache.org/dubbo-go/v3/metadata/report"
 	dubboRegistry "dubbo.apache.org/dubbo-go/v3/registry"
 	mesh_proto "github.com/apache/dubbo-kubernetes/api/mesh/v1alpha1"
+	"github.com/apache/dubbo-kubernetes/pkg/core/consts"
+	"github.com/apache/dubbo-kubernetes/pkg/core/governance"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
@@ -41,17 +43,20 @@ type traditionalStore struct {
 	configCenter   config_center.DynamicConfiguration
 	metadataReport report.MetadataReport
 	registryCenter dubboRegistry.Registry
+	governance     governance.GovernanceConfig
 }
 
 func NewStore(
 	configCenter config_center.DynamicConfiguration,
 	metadataReport report.MetadataReport,
 	registryCenter dubboRegistry.Registry,
+	governance governance.GovernanceConfig,
 ) store.ResourceStore {
 	return &traditionalStore{
 		configCenter:   configCenter,
 		metadataReport: metadataReport,
 		registryCenter: registryCenter,
+		governance:     governance,
 	}
 }
 
@@ -105,13 +110,78 @@ func (t *traditionalStore) Create(_ context.Context, resource core_model.Resourc
 	case mesh.DataplaneType:
 
 	case mesh.TagRouteType:
+		labels := resource.GetMeta().GetLabels()
+		base := mesh_proto.Base{
+			Application:    labels[mesh_proto.Application],
+			Service:        labels[mesh_proto.Service],
+			ID:             labels[mesh_proto.ID],
+			ServiceVersion: labels[mesh_proto.ServiceVersion],
+			ServiceGroup:   labels[mesh_proto.ServiceGroup],
+		}
+		id := mesh_proto.BuildServiceKey(base)
+		path := mesh_proto.GetRoutePath(id, consts.TagRoute)
+		bytes, err := core_model.ToYAML(resource.GetSpec())
+		if err != nil {
+			return err
+		}
+
+		err = t.governance.SetConfig(path, string(bytes))
+		if err != nil {
+			return err
+		}
 
 	case mesh.ConditionRouteType:
+		labels := resource.GetMeta().GetLabels()
+		base := mesh_proto.Base{
+			Application:    labels[mesh_proto.Application],
+			Service:        labels[mesh_proto.Service],
+			ID:             labels[mesh_proto.ID],
+			ServiceVersion: labels[mesh_proto.ServiceVersion],
+			ServiceGroup:   labels[mesh_proto.ServiceGroup],
+		}
+		id := mesh_proto.BuildServiceKey(base)
+		path := mesh_proto.GetRoutePath(id, consts.ConditionRoute)
 
+		bytes, err := core_model.ToYAML(resource.GetSpec())
+		if err != nil {
+			return err
+		}
+
+		err = t.governance.SetConfig(path, string(bytes))
+		if err != nil {
+			return err
+		}
 	case mesh.DynamicConfigType:
+		labels := resource.GetMeta().GetLabels()
+		base := mesh_proto.Base{
+			Application:    labels[mesh_proto.Application],
+			Service:        labels[mesh_proto.Service],
+			ID:             labels[mesh_proto.ID],
+			ServiceVersion: labels[mesh_proto.ServiceVersion],
+			ServiceGroup:   labels[mesh_proto.ServiceGroup],
+		}
+		id := mesh_proto.BuildServiceKey(base)
+		path := mesh_proto.GetOverridePath(id)
+		bytes, err := core_model.ToYAML(resource.GetSpec())
+		if err != nil {
+			return err
+		}
 
+		err = t.governance.SetConfig(path, string(bytes))
+		if err != nil {
+			return err
+		}
 	default:
+		bytes, err := core_model.ToYAML(resource.GetSpec())
+		if err != nil {
+			return err
+		}
 
+		// 使用配置中心
+		err = t.configCenter.PublishConfig(resource.GetMeta().GetName(), cpGroup, string(bytes))
+		if err != nil {
+			return err
+		}
 	}
 
 	resource.SetMeta(&resourceMetaObject{

@@ -21,6 +21,7 @@ import (
 	"context"
 	"dubbo.apache.org/dubbo-go/v3/config_center"
 	"fmt"
+	"github.com/apache/dubbo-kubernetes/pkg/core/governance"
 	"os"
 	"time"
 )
@@ -62,6 +63,7 @@ type BuilderContext interface {
 	MetadataReportCenter() report.MetadataReport
 	AdminRegistry() *registry.Registry
 	ConfigCenter() config_center.DynamicConfiguration
+	Governance() governance.GovernanceConfig
 	Extensions() context.Context
 	ConfigManager() config_manager.ConfigManager
 	LeaderInfo() component.LeaderInfo
@@ -97,6 +99,7 @@ type Builder struct {
 	metadataReportCenter report.MetadataReport
 	configCenter         config_center.DynamicConfiguration
 	adminRegistry        *registry.Registry
+	governance           governance.GovernanceConfig
 	rv                   ResourceValidators
 	ddsctx               *dds_context.Context
 	appCtx               context.Context
@@ -216,6 +219,11 @@ func (b *Builder) WithRegistryCenter(rg dubboRegistry.Registry) *Builder {
 	return b
 }
 
+func (b *Builder) WithGovernanceConfig(gc governance.GovernanceConfig) *Builder {
+	b.governance = gc
+	return b
+}
+
 func (b *Builder) WithMetadataReport(mr report.MetadataReport) *Builder {
 	b.metadataReportCenter = mr
 	return b
@@ -274,6 +282,7 @@ func (b *Builder) Build() (Runtime, error) {
 			metadataReportCenter: b.metadataReportCenter,
 			configCenter:         b.configCenter,
 			adminRegistry:        b.adminRegistry,
+			governance:           b.governance,
 			leadInfo:             b.leadInfo,
 			erf:                  b.erf,
 			dps:                  b.dps,
@@ -283,6 +292,10 @@ func (b *Builder) Build() (Runtime, error) {
 		},
 		Manager: b.cm,
 	}, nil
+}
+
+func (b *Builder) Governance() governance.GovernanceConfig {
+	return b.governance
 }
 
 func (b *Builder) AdminRegistry() *registry.Registry {

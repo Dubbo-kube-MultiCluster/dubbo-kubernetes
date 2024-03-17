@@ -59,8 +59,8 @@ type StoreConfig struct {
 	// Zookeeper Store configuration
 	Zookeeper *zookeeper.ZookeeperStoreConfig `json:"zookeeper"`
 	// Mysql Store configuration
-	Mysql    *mysql.MysqlStoreConfig `json:"mysql"`
-	Registry Registry                `json:"registry"`
+	Mysql       *mysql.MysqlStoreConfig `json:"mysql"`
+	Traditional Registry                `json:"traditional"`
 	// Cache configuration
 	Cache CacheStoreConfig `json:"cache"`
 	// Upsert configuration

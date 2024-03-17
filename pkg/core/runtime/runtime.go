@@ -20,6 +20,7 @@ package runtime
 import (
 	"context"
 	"dubbo.apache.org/dubbo-go/v3/config_center"
+	"github.com/apache/dubbo-kubernetes/pkg/core/governance"
 	"sync"
 	"time"
 )
@@ -76,6 +77,7 @@ type RuntimeContext interface {
 	DDSContext() *dds_context.Context
 	RegistryCenter() dubboRegistry.Registry
 	MetadataReportCenter() report.MetadataReport
+	Governance() governance.GovernanceConfig
 	ConfigCenter() config_center.DynamicConfiguration
 	AdminRegistry() *registry.Registry
 	ResourceValidators() ResourceValidators
@@ -155,7 +157,12 @@ type runtimeContext struct {
 	metadataReportCenter report.MetadataReport
 	configCenter         config_center.DynamicConfiguration
 	adminRegistry        *registry.Registry
+	governance           governance.GovernanceConfig
 	appCtx               context.Context
+}
+
+func (b *runtimeContext) Governance() governance.GovernanceConfig {
+	return b.governance
 }
 
 func (b *runtimeContext) ConfigCenter() config_center.DynamicConfiguration {

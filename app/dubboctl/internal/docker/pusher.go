@@ -150,7 +150,7 @@ func (n *Pusher) Push(ctx context.Context, f *dubbo.Dubbo) (digest string, err e
 	return n.push(ctx, f, credentials, output)
 }
 
-// AuthConfig contains authorization information for connecting to a Registry.
+// AuthConfig contains authorization information for connecting to a Traditional.
 type AuthConfig struct {
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
