@@ -20,8 +20,6 @@ package traditional
 import (
 	"context"
 	"fmt"
-	"github.com/apache/dubbo-kubernetes/pkg/core/logger"
-	"github.com/dubbogo/gost/encoding/yaml"
 	"sync"
 )
 
@@ -32,6 +30,8 @@ import (
 	"dubbo.apache.org/dubbo-go/v3/metadata/report"
 	dubboRegistry "dubbo.apache.org/dubbo-go/v3/registry"
 
+	"github.com/dubbogo/gost/encoding/yaml"
+
 	"github.com/pkg/errors"
 
 	"golang.org/x/exp/maps"
@@ -41,6 +41,7 @@ import (
 	mesh_proto "github.com/apache/dubbo-kubernetes/api/mesh/v1alpha1"
 	"github.com/apache/dubbo-kubernetes/pkg/core/consts"
 	"github.com/apache/dubbo-kubernetes/pkg/core/governance"
+	"github.com/apache/dubbo-kubernetes/pkg/core/logger"
 	"github.com/apache/dubbo-kubernetes/pkg/core/reg_client"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
