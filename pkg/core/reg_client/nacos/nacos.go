@@ -56,6 +56,10 @@ func (z *nacosRegClientReport) GetContent(path string) ([]byte, error) {
 	return nil, nil
 }
 
+func (z *nacosRegClientReport) DeleteContent(path string) error {
+	return nil
+}
+
 type nacosRegClientFactory struct{}
 
 func (n *nacosRegClientFactory) CreateRegClient(url *common.URL) reg_client.RegClient {

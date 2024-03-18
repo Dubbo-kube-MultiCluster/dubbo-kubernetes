@@ -87,6 +87,14 @@ func (z *zookeeperRegClient) GetContent(path string) ([]byte, error) {
 	return decoded, nil
 }
 
+func (z *zookeeperRegClient) DeleteContent(path string) error {
+	err := z.client.Delete(path)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
 type zookeeperRegClientFactory struct{}
 
 func (mf *zookeeperRegClientFactory) CreateRegClient(url *common.URL) reg_client.RegClient {

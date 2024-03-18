@@ -20,6 +20,8 @@ package traditional
 import (
 	"context"
 	"fmt"
+	"github.com/apache/dubbo-kubernetes/pkg/core/logger"
+	"github.com/dubbogo/gost/encoding/yaml"
 	"sync"
 )
 
@@ -47,9 +49,10 @@ import (
 )
 
 const (
-	dubboGroup   = "dubbo"
-	mappingGroup = "mapping"
-	cpGroup      = "dubbo-cp"
+	dubboGroup    = "dubbo"
+	mappingGroup  = "mapping"
+	cpGroup       = "dubbo-cp"
+	pathSeparator = "/"
 )
 
 type traditionalStore struct {
@@ -196,7 +199,7 @@ func (t *traditionalStore) Create(_ context.Context, resource core_model.Resourc
 			return err
 		}
 
-		path := "/" + cpGroup + opts.Name
+		path := GenerateCpGroupPath(string(resource.Descriptor().Name), opts.Name)
 		// 使用RegClient
 		err = t.regClient.SetContent(path, bytes)
 		if err != nil {
@@ -214,11 +217,106 @@ func (t *traditionalStore) Create(_ context.Context, resource core_model.Resourc
 	return nil
 }
 
-func (t *traditionalStore) Update(_ context.Context, resource core_model.Resource, fs ...store.UpdateOptionsFunc) error {
+func (t *traditionalStore) Update(ctx context.Context, resource core_model.Resource, fs ...store.UpdateOptionsFunc) error {
 	return nil
 }
 
 func (t *traditionalStore) Delete(ctx context.Context, resource core_model.Resource, fs ...store.DeleteOptionsFunc) error {
+	opts := store.NewDeleteOptions(fs...)
+
+	switch resource.Descriptor().Name {
+	case mesh.DataplaneType:
+		t.dCache.Delete(ccache.GenerateDCacheKey(opts.Name, opts.Mesh))
+	case mesh.TagRouteType:
+		labels := opts.Labels
+		base := mesh_proto.Base{
+			Application:    labels[mesh_proto.Application],
+			Service:        labels[mesh_proto.Service],
+			ID:             labels[mesh_proto.ID],
+			ServiceVersion: labels[mesh_proto.ServiceVersion],
+			ServiceGroup:   labels[mesh_proto.ServiceGroup],
+		}
+		key := mesh_proto.BuildServiceKey(base)
+		path := mesh_proto.GetOverridePath(key)
+		err := t.governance.DeleteConfig(path)
+		if err != nil {
+			return err
+		}
+	case mesh.ConditionRouteType:
+		labels := opts.Labels
+		base := mesh_proto.Base{
+			Application:    labels[mesh_proto.Application],
+			Service:        labels[mesh_proto.Service],
+			ID:             labels[mesh_proto.ID],
+			ServiceVersion: labels[mesh_proto.ServiceVersion],
+			ServiceGroup:   labels[mesh_proto.ServiceGroup],
+		}
+		key := mesh_proto.BuildServiceKey(base)
+		path := mesh_proto.GetRoutePath(key, consts.ConditionRoute)
+		err := t.governance.DeleteConfig(path)
+		if err != nil {
+			return err
+		}
+	case mesh.DynamicConfigType:
+		labels := opts.Labels
+		base := mesh_proto.Base{
+			Application:    labels[mesh_proto.Application],
+			Service:        labels[mesh_proto.Service],
+			ID:             labels[mesh_proto.ID],
+			ServiceVersion: labels[mesh_proto.ServiceVersion],
+			ServiceGroup:   labels[mesh_proto.ServiceGroup],
+		}
+		key := mesh_proto.BuildServiceKey(base)
+		path := mesh_proto.GetOverridePath(key)
+		conf, err := t.governance.GetConfig(path)
+		if err != nil {
+			logger.Sugar().Error(err.Error())
+			return err
+		}
+		if err := core_model.FromYAML([]byte(conf), resource.GetSpec()); err != nil {
+			return err
+		}
+		override := resource.GetSpec().(*mesh_proto.DynamicConfig)
+		if len(override.Configs) > 0 {
+			newConfigs := make([]*mesh_proto.OverrideConfig, 0)
+			for _, c := range override.Configs {
+				if consts.Configs.Contains(c.Type) {
+					newConfigs = append(newConfigs, c)
+				}
+			}
+			if len(newConfigs) == 0 {
+				err := t.governance.DeleteConfig(path)
+				if err != nil {
+					return err
+				}
+			} else {
+				override.Configs = newConfigs
+				if b, err := yaml.MarshalYML(override); err != nil {
+					return err
+				} else {
+					err := t.governance.SetConfig(path, string(b))
+					if err != nil {
+						return err
+					}
+				}
+			}
+		} else {
+			err := t.governance.DeleteConfig(path)
+			if err != nil {
+				return err
+			}
+		}
+	case mesh.MappingType:
+		// 无法删除
+	case mesh.MetaDataType:
+		// 无法删除
+	default:
+		path := GenerateCpGroupPath(string(resource.Descriptor().Name), opts.Name)
+		err := t.regClient.DeleteContent(path)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -360,7 +458,7 @@ func (c *traditionalStore) Get(_ context.Context, resource core_model.Resource, 
 		}
 		resource.SetMeta(meta)
 	default:
-		path := "/" + cpGroup + opts.Name
+		path := GenerateCpGroupPath(string(resource.Descriptor().Name), opts.Name)
 		value, err := c.regClient.GetContent(path)
 		if err != nil {
 			return err
