@@ -144,7 +144,7 @@ func (c *Config) PostProcess() error {
 
 var DefaultConfig = func() Config {
 	return Config{
-		Environment:        core.KubernetesEnvironment,
+		Environment:        core.UniversalEnvironment,
 		Mode:               core.Zone,
 		XdsServer:          xds.DefaultXdsServerConfig(),
 		Store:              store.DefaultStoreConfig(),

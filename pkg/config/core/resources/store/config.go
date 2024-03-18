@@ -73,10 +73,12 @@ type StoreConfig struct {
 
 func DefaultStoreConfig() *StoreConfig {
 	return &StoreConfig{
-		Type:       KubernetesStore,
-		Kubernetes: k8s.DefaultKubernetesStoreConfig(),
-		Cache:      DefaultCacheStoreConfig(),
-		Upsert:     DefaultUpsertConfig(),
+		Type:        KubernetesStore,
+		Kubernetes:  k8s.DefaultKubernetesStoreConfig(),
+		Cache:       DefaultCacheStoreConfig(),
+		Upsert:      DefaultUpsertConfig(),
+		Mysql:       DefaultMysqlConfig(),
+		Traditional: DefaultTraditionalConfig(),
 	}
 }
 
@@ -132,6 +134,24 @@ func DefaultUpsertConfig() UpsertConfig {
 		ConflictRetryBaseBackoff:   config_types.Duration{Duration: 200 * time.Millisecond},
 		ConflictRetryMaxTimes:      10,
 		ConflictRetryJitterPercent: 30,
+	}
+}
+
+func DefaultMysqlConfig() *mysql.MysqlStoreConfig {
+	return &mysql.MysqlStoreConfig{
+		MysqlDsn: "127.0.0.1:6379",
+	}
+}
+
+func DefaultTraditionalConfig() Registry {
+	return Registry{
+		ConfigCenter: "zookeeper://127.0.0.1:2181",
+		Registry: AddressConfig{
+			Address: "zookeeper://127.0.0.1:2181",
+		},
+		MetadataReport: AddressConfig{
+			Address: "zookeeper://127.0.0.1:2181",
+		},
 	}
 }
 
