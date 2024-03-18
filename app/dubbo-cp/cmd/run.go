@@ -19,6 +19,7 @@ package cmd
 
 import (
 	"fmt"
+	api_server "github.com/apache/dubbo-kubernetes/pkg/api-server"
 	"time"
 )
 
@@ -105,6 +106,10 @@ func newRunCmdWithOpts(opts dubbo_cmd.RunCmdOpts) *cobra.Command {
 					"minimim-open-files", minOpenFileLimit)
 			}
 
+			if err := api_server.Setup(rt); err != nil {
+				runLog.Error(err, "unable to set up api server")
+				return err
+			}
 			if err := dubbo.Setup(rt); err != nil {
 				runLog.Error(err, "unable to set up dubbo server")
 			}
