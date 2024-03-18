@@ -45,8 +45,12 @@ type zookeeperRegClient struct {
 	client *gxzookeeper.ZookeeperClient
 }
 
-func (m *zookeeperRegClient) GetKeys() {
-
+func (z *zookeeperRegClient) GetChildren(path string) ([]string, error) {
+	children, err := z.client.GetChildren(path)
+	if err != nil {
+		return nil, err
+	}
+	return children, nil
 }
 
 type zookeeperRegClientFactory struct{}

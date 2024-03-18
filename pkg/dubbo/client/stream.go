@@ -97,7 +97,6 @@ func (s *stream) Send(mappingList *core_mesh.MappingResourceList, revision int64
 		Mappings: mappings,
 	}
 	return s.streamClient.Send(response)
-
 }
 
 func (s *stream) SubscribedInterfaceNames() []string {

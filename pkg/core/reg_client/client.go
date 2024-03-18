@@ -18,5 +18,5 @@
 package reg_client
 
 type RegClient interface {
-	GetKeys()
+	GetChildren(path string) ([]string, error)
 }

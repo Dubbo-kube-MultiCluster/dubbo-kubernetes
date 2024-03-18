@@ -43,8 +43,9 @@ type nacosRegClientReport struct {
 	client *nacosClient.NacosConfigClient
 }
 
-func (m *nacosRegClientReport) GetKeys() {
-
+// GetChildren TODO
+func (z *nacosRegClientReport) GetChildren(path string) ([]string, error) {
+	return nil, nil
 }
 
 type nacosRegClientFactory struct{}

@@ -35,6 +35,7 @@ golangci-lint-fmt:
 
 .PHONY: dubbogofmt
 dubbogofmt:
+	go install github.com/dubbogo/tools/cmd/imports-formatter
 	$(GO_GET) -u github.com/dubbogo/tools/cmd/imports-formatter
 	imports-formatter
 

@@ -25,8 +25,10 @@ import (
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 )
 
-type ResourceChangedCallbackFn func(items PushedItems)
-type ResourceChangedEventFilter func(resourceList core_model.ResourceList) core_model.ResourceList
+type (
+	ResourceChangedCallbackFn  func(items PushedItems)
+	ResourceChangedEventFilter func(resourceList core_model.ResourceList) core_model.ResourceList
+)
 
 type ResourceChangedCallback struct {
 	mu       sync.Mutex // Only one can run at a time
@@ -48,7 +50,6 @@ func (c *ResourceChangedCallback) Invoke(items PushedItems) {
 
 	callback := c.Callback
 	callback(items)
-
 }
 
 type ResourceChangedCallbacks struct {

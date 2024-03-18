@@ -89,6 +89,7 @@ func New(opts Opts) (*Envoy, error) {
 	}
 	return &Envoy{opts: opts}, nil
 }
+
 func GenerateBootstrapFile(cfg dubboctl.DataplaneRuntime, config []byte) (string, error) {
 	configFile := filepath.Join(cfg.ConfigDir, "bootstrap.yaml")
 	if err := writeFile(configFile, config, 0o600); err != nil {
@@ -96,6 +97,7 @@ func GenerateBootstrapFile(cfg dubboctl.DataplaneRuntime, config []byte) (string
 	}
 	return configFile, nil
 }
+
 func writeFile(filename string, data []byte, perm os.FileMode) error {
 	if err := os.MkdirAll(filepath.Dir(filename), 0o755); err != nil {
 		return err
@@ -216,6 +218,7 @@ func GetEnvoyVersion(binaryPath string) (*EnvoyVersion, error) {
 		Version: parts[1],
 	}, nil
 }
+
 func VersionCompatible(expectedVersion string, envoyVersion string) (bool, error) {
 	ver, err := semver.NewVersion(envoyVersion)
 	if err != nil {
