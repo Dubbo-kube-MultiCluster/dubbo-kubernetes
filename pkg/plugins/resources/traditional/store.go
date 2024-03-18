@@ -19,6 +19,7 @@ package traditional
 
 import (
 	"context"
+	"fmt"
 	"sync"
 )
 
@@ -128,7 +129,7 @@ func (t *traditionalStore) Create(_ context.Context, resource core_model.Resourc
 	case mesh.DataplaneType:
 		// Dataplane无法Create, 只能Get和List
 	case mesh.TagRouteType:
-		labels := resource.GetMeta().GetLabels()
+		labels := opts.Labels
 		base := mesh_proto.Base{
 			Application:    labels[mesh_proto.Application],
 			Service:        labels[mesh_proto.Service],
@@ -149,7 +150,7 @@ func (t *traditionalStore) Create(_ context.Context, resource core_model.Resourc
 		}
 
 	case mesh.ConditionRouteType:
-		labels := resource.GetMeta().GetLabels()
+		labels := opts.Labels
 		base := mesh_proto.Base{
 			Application:    labels[mesh_proto.Application],
 			Service:        labels[mesh_proto.Service],
@@ -170,7 +171,7 @@ func (t *traditionalStore) Create(_ context.Context, resource core_model.Resourc
 			return err
 		}
 	case mesh.DynamicConfigType:
-		labels := resource.GetMeta().GetLabels()
+		labels := opts.Labels
 		base := mesh_proto.Base{
 			Application:    labels[mesh_proto.Application],
 			Service:        labels[mesh_proto.Service],
@@ -236,7 +237,7 @@ func (c *traditionalStore) Get(_ context.Context, resource core_model.Resource, 
 			return err
 		}
 	case mesh.TagRouteType:
-		labels := resource.GetMeta().GetLabels()
+		labels := opts.Labels
 		base := mesh_proto.Base{
 			Application:    labels[mesh_proto.Application],
 			Service:        labels[mesh_proto.Service],
@@ -261,7 +262,7 @@ func (c *traditionalStore) Get(_ context.Context, resource core_model.Resource, 
 		}
 		resource.SetMeta(meta)
 	case mesh.ConditionRouteType:
-		labels := resource.GetMeta().GetLabels()
+		labels := opts.Labels
 		base := mesh_proto.Base{
 			Application:    labels[mesh_proto.Application],
 			Service:        labels[mesh_proto.Service],
@@ -286,7 +287,7 @@ func (c *traditionalStore) Get(_ context.Context, resource core_model.Resource, 
 		}
 		resource.SetMeta(meta)
 	case mesh.DynamicConfigType:
-		labels := resource.GetMeta().GetLabels()
+		labels := opts.Labels
 		base := mesh_proto.Base{
 			Application:    labels[mesh_proto.Application],
 			Service:        labels[mesh_proto.Service],
@@ -311,7 +312,52 @@ func (c *traditionalStore) Get(_ context.Context, resource core_model.Resource, 
 		}
 		resource.SetMeta(meta)
 	case mesh.MappingType:
+		// Get通过Key获取, 不设置listener
+		key := opts.Name
+		set, err := c.metadataReport.GetServiceAppMapping(key, mappingGroup, nil)
+		if err != nil {
+			return err
+		}
+		meta := &resourceMetaObject{
+			Name: opts.Name,
+			Mesh: opts.Mesh,
+		}
+		resource.SetMeta(meta)
+		mapping := resource.GetSpec().(*mesh_proto.Mapping)
+		mapping.Zone = "default"
+		mapping.InterfaceName = key
+		var items []string
+		for k := range set.Items {
+			items = append(items, fmt.Sprintf("%v", k))
+		}
+		mapping.ApplicationNames = items
 	case mesh.MetaDataType:
+		labels := opts.Labels
+		id := dubbo_identifier.NewSubscriberMetadataIdentifier(labels[mesh_proto.Service], "")
+		appMetadata, err := c.metadataReport.GetAppMetadata(id)
+		if err != nil {
+			return err
+		}
+		metaData := resource.GetSpec().(*mesh_proto.MetaData)
+		metaData.App = appMetadata.App
+		metaData.Revision = appMetadata.Revision
+		service := map[string]*mesh_proto.ServiceInfo{}
+		for key, serviceInfo := range appMetadata.Services {
+			service[key] = &mesh_proto.ServiceInfo{
+				Name:     serviceInfo.Name,
+				Group:    serviceInfo.Group,
+				Version:  serviceInfo.Version,
+				Protocol: serviceInfo.Protocol,
+				Path:     serviceInfo.Path,
+				Params:   serviceInfo.Params,
+			}
+		}
+		metaData.Services = service
+		meta := &resourceMetaObject{
+			Name: opts.Name,
+			Mesh: opts.Mesh,
+		}
+		resource.SetMeta(meta)
 	default:
 	}
 	return nil
