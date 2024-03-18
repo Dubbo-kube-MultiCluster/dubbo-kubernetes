@@ -108,11 +108,6 @@ func (p *pusher) registerResourceType(resourceType core_model.ResourceType) {
 		return false
 	})
 	p.resourceChangedEventListeners[resourceType] = resourceChanged
-
-	// start a goroutine to receive ResourceChangedEvent, and send event to s.eventsChannel
-	go func() {
-
-	}()
 }
 
 func (p *pusher) receiveResourceChangedEvents(stop <-chan struct{}, resourceType core_model.ResourceType) {
