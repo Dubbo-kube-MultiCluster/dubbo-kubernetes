@@ -52,6 +52,7 @@ import (
 const (
 	dubboGroup    = "dubbo"
 	mappingGroup  = "mapping"
+	dubboConfig   = "config"
 	metadataGroup = "metadata"
 	cpGroup       = "dubbo-cp"
 	pathSeparator = "/"
@@ -615,14 +616,7 @@ func (c *traditionalStore) Get(_ context.Context, resource core_model.Resource, 
 
 func (c *traditionalStore) List(_ context.Context, resources core_model.ResourceList, fs ...store.ListOptionsFunc) error {
 	opts := store.NewListOptions(fs...)
-	labels := opts.Labels
-	base := mesh_proto.Base{
-		Application:    labels[mesh_proto.Application],
-		Service:        labels[mesh_proto.Service],
-		ID:             labels[mesh_proto.ID],
-		ServiceVersion: labels[mesh_proto.ServiceVersion],
-		ServiceGroup:   labels[mesh_proto.ServiceGroup],
-	}
+
 	switch resources.GetItemType() {
 	case mesh.DataplaneType:
 		// iterator services key set
@@ -718,10 +712,11 @@ func (c *traditionalStore) List(_ context.Context, resources core_model.Resource
 		}
 
 	case mesh.DynamicConfigType:
-
+		// 不支持List
 	case mesh.TagRouteType:
-
+		// 不支持List
 	case mesh.ConditionRouteType:
+		// 不支持List
 	default:
 		rootDir := getDubboCpPath(string(resources.GetItemType()))
 		names, err := c.regClient.GetChildren(rootDir)

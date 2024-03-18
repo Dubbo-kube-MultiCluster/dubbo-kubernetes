@@ -17,7 +17,9 @@
 
 package traditional
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func GenerateCpGroupPath(resourceName string, name string) string {
 	return pathSeparator + cpGroup + pathSeparator + resourceName + pathSeparator + name

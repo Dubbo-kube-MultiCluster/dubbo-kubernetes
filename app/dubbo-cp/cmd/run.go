@@ -19,7 +19,6 @@ package cmd
 
 import (
 	"fmt"
-	api_server "github.com/apache/dubbo-kubernetes/pkg/api-server"
 	"time"
 )
 
@@ -28,6 +27,7 @@ import (
 )
 
 import (
+	api_server "github.com/apache/dubbo-kubernetes/pkg/api-server"
 	"github.com/apache/dubbo-kubernetes/pkg/clusterid"
 	"github.com/apache/dubbo-kubernetes/pkg/config"
 	dubbo_cp "github.com/apache/dubbo-kubernetes/pkg/config/app/dubbo-cp"
