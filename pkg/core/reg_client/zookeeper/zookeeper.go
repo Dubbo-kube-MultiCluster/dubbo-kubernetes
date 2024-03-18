@@ -18,13 +18,20 @@
 package zookeeper
 
 import (
+	"strings"
+)
+
+import (
 	"dubbo.apache.org/dubbo-go/v3/common"
+
+	gxzookeeper "github.com/dubbogo/gost/database/kv/zk"
+)
+
+import (
 	"github.com/apache/dubbo-kubernetes/pkg/core/consts"
 	"github.com/apache/dubbo-kubernetes/pkg/core/extensions"
 	"github.com/apache/dubbo-kubernetes/pkg/core/reg_client"
 	"github.com/apache/dubbo-kubernetes/pkg/core/reg_client/factory"
-	gxzookeeper "github.com/dubbogo/gost/database/kv/zk"
-	"strings"
 )
 
 func init() {

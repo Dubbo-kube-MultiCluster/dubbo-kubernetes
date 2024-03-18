@@ -17,7 +17,9 @@
 
 package ccache
 
-import "strings"
+import (
+	"strings"
+)
 
 func GenerateDCacheKey(name string, mesh string) string {
 	if mesh == "" {

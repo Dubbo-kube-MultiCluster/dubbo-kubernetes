@@ -19,12 +19,18 @@ package registry
 
 import (
 	"context"
+	"sync"
+)
+
+import (
 	"dubbo.apache.org/dubbo-go/v3/common"
 	dubboRegistry "dubbo.apache.org/dubbo-go/v3/registry"
 	"dubbo.apache.org/dubbo-go/v3/remoting"
+)
+
+import (
 	mesh_proto "github.com/apache/dubbo-kubernetes/api/mesh/v1alpha1"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
-	"sync"
 )
 
 type NotifyListener struct {

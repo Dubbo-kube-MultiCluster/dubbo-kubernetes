@@ -17,7 +17,9 @@
 
 package extensions
 
-import "github.com/apache/dubbo-kubernetes/pkg/core/reg_client/factory"
+import (
+	"github.com/apache/dubbo-kubernetes/pkg/core/reg_client/factory"
+)
 
 var regClientFactories = make(map[string]func() factory.RegClientFactory, 8)
 

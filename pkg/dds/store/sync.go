@@ -20,7 +20,6 @@ package store
 import (
 	"context"
 	"fmt"
-	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
 	"maps"
 	"strings"
 	"time"
@@ -40,6 +39,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	core_mesh "github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/system"
+	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/registry"

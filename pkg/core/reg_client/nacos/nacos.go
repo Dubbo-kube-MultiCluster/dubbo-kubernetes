@@ -21,11 +21,15 @@ import (
 	"dubbo.apache.org/dubbo-go/v3/common"
 	"dubbo.apache.org/dubbo-go/v3/common/constant"
 	"dubbo.apache.org/dubbo-go/v3/remoting/nacos"
+
+	nacosClient "github.com/dubbogo/gost/database/kv/nacos"
+)
+
+import (
 	"github.com/apache/dubbo-kubernetes/pkg/core/extensions"
 	"github.com/apache/dubbo-kubernetes/pkg/core/logger"
 	"github.com/apache/dubbo-kubernetes/pkg/core/reg_client"
 	"github.com/apache/dubbo-kubernetes/pkg/core/reg_client/factory"
-	nacosClient "github.com/dubbogo/gost/database/kv/nacos"
 )
 
 func init() {

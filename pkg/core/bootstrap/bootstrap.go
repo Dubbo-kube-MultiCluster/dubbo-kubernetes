@@ -19,9 +19,6 @@ package bootstrap
 
 import (
 	"context"
-	"github.com/apache/dubbo-kubernetes/pkg/admin"
-	"github.com/apache/dubbo-kubernetes/pkg/core/extensions"
-	"github.com/apache/dubbo-kubernetes/pkg/core/governance"
 	"net/url"
 	"strings"
 	"sync"
@@ -36,6 +33,7 @@ import (
 )
 
 import (
+	"github.com/apache/dubbo-kubernetes/pkg/admin"
 	dubbo_cp "github.com/apache/dubbo-kubernetes/pkg/config/app/dubbo-cp"
 	config_core "github.com/apache/dubbo-kubernetes/pkg/config/core"
 	"github.com/apache/dubbo-kubernetes/pkg/config/core/resources/store"
@@ -43,6 +41,8 @@ import (
 	config_manager "github.com/apache/dubbo-kubernetes/pkg/core/config/manager"
 	"github.com/apache/dubbo-kubernetes/pkg/core/consts"
 	"github.com/apache/dubbo-kubernetes/pkg/core/datasource"
+	"github.com/apache/dubbo-kubernetes/pkg/core/extensions"
+	"github.com/apache/dubbo-kubernetes/pkg/core/governance"
 	"github.com/apache/dubbo-kubernetes/pkg/core/logger"
 	dataplane_managers "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/dataplane"
 	mapping_managers "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/mapping"

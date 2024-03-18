@@ -20,13 +20,6 @@ package envoy
 import (
 	"context"
 	"fmt"
-	"github.com/Masterminds/semver/v3"
-	"github.com/apache/dubbo-kubernetes/pkg/config/app/dubboctl"
-	"github.com/apache/dubbo-kubernetes/pkg/core"
-	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model/rest"
-	command_utils "github.com/apache/dubbo-kubernetes/pkg/proxy/command"
-	"github.com/apache/dubbo-kubernetes/pkg/util/files"
-	"github.com/pkg/errors"
 	"io"
 	"os"
 	"os/exec"
@@ -37,6 +30,20 @@ import (
 	"strings"
 	"sync"
 	"time"
+)
+
+import (
+	"github.com/Masterminds/semver/v3"
+
+	"github.com/pkg/errors"
+)
+
+import (
+	"github.com/apache/dubbo-kubernetes/pkg/config/app/dubboctl"
+	"github.com/apache/dubbo-kubernetes/pkg/core"
+	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model/rest"
+	command_utils "github.com/apache/dubbo-kubernetes/pkg/proxy/command"
+	"github.com/apache/dubbo-kubernetes/pkg/util/files"
 )
 
 var runLog = core.Log.WithName("dubbo-proxy").WithName("run").WithName("envoy")

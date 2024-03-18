@@ -21,7 +21,9 @@ import (
 	"context"
 	"reflect"
 	"time"
+)
 
+import (
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"

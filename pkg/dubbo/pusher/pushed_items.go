@@ -17,7 +17,9 @@
 
 package pusher
 
-import core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
+import (
+	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
+)
 
 type PushedItems struct {
 	resourceList core_model.ResourceList

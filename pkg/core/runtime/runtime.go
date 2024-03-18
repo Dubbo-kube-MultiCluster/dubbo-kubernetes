@@ -19,14 +19,12 @@ package runtime
 
 import (
 	"context"
-	"dubbo.apache.org/dubbo-go/v3/config_center"
-	"github.com/apache/dubbo-kubernetes/pkg/core/governance"
-	"github.com/apache/dubbo-kubernetes/pkg/core/reg_client"
 	"sync"
 	"time"
 )
 
 import (
+	"dubbo.apache.org/dubbo-go/v3/config_center"
 	"dubbo.apache.org/dubbo-go/v3/metadata/report"
 	dubboRegistry "dubbo.apache.org/dubbo-go/v3/registry"
 )
@@ -36,8 +34,10 @@ import (
 	dubbo_cp "github.com/apache/dubbo-kubernetes/pkg/config/app/dubbo-cp"
 	"github.com/apache/dubbo-kubernetes/pkg/config/core"
 	config_manager "github.com/apache/dubbo-kubernetes/pkg/core/config/manager"
+	"github.com/apache/dubbo-kubernetes/pkg/core/governance"
 	managers_dataplane "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/dataplane"
 	managers_mesh "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/mesh"
+	"github.com/apache/dubbo-kubernetes/pkg/core/reg_client"
 	"github.com/apache/dubbo-kubernetes/pkg/core/registry"
 	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"

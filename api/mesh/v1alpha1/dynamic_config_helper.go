@@ -18,8 +18,11 @@
 package v1alpha1
 
 import (
-	"github.com/apache/dubbo-kubernetes/pkg/core/consts"
 	"strings"
+)
+
+import (
+	"github.com/apache/dubbo-kubernetes/pkg/core/consts"
 )
 
 func GetOverridePath(key string) string {

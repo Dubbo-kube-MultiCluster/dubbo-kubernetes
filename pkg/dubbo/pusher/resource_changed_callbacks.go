@@ -19,7 +19,9 @@ package pusher
 
 import (
 	"sync"
+)
 
+import (
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 )
 

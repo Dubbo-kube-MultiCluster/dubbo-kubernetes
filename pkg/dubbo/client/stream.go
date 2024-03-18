@@ -18,14 +18,18 @@
 package client
 
 import (
-	core_mesh "github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
-	"github.com/google/uuid"
-	"github.com/pkg/errors"
 	"sync"
 )
 
 import (
+	"github.com/google/uuid"
+
+	"github.com/pkg/errors"
+)
+
+import (
 	mesh_proto "github.com/apache/dubbo-kubernetes/api/mesh/v1alpha1"
+	core_mesh "github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
 )
 
 var _ MappingSyncStream = &stream{}
