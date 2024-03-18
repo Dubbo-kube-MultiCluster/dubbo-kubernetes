@@ -152,7 +152,6 @@ func (t *traditionalStore) Create(_ context.Context, resource core_model.Resourc
 		if err != nil {
 			return err
 		}
-
 	case mesh.ConditionRouteType:
 		labels := opts.Labels
 		base := mesh_proto.Base{
@@ -219,6 +218,164 @@ func (t *traditionalStore) Create(_ context.Context, resource core_model.Resourc
 }
 
 func (t *traditionalStore) Update(ctx context.Context, resource core_model.Resource, fs ...store.UpdateOptionsFunc) error {
+	opts := store.NewUpdateOptions(fs...)
+
+	switch resource.Descriptor().Name {
+	case mesh.DataplaneType:
+		// Dataplane资源无法更新, 只能获取和删除
+	case mesh.TagRouteType:
+		labels := opts.Labels
+		base := mesh_proto.Base{
+			Application:    labels[mesh_proto.Application],
+			Service:        labels[mesh_proto.Service],
+			ID:             labels[mesh_proto.ID],
+			ServiceVersion: labels[mesh_proto.ServiceVersion],
+			ServiceGroup:   labels[mesh_proto.ServiceGroup],
+		}
+		id := mesh_proto.BuildServiceKey(base)
+		path := mesh_proto.GetRoutePath(id, consts.TagRoute)
+		cfg, _ := t.governance.GetConfig(path)
+		if cfg == "" {
+			return fmt.Errorf("tag route %s not found", id)
+		}
+		bytes, err := core_model.ToYAML(resource.GetSpec())
+		if err != nil {
+			return err
+		}
+		err = t.governance.SetConfig(path, string(bytes))
+		if err != nil {
+			return err
+		}
+	case mesh.ConditionRouteType:
+		labels := opts.Labels
+		base := mesh_proto.Base{
+			Application:    labels[mesh_proto.Application],
+			Service:        labels[mesh_proto.Service],
+			ID:             labels[mesh_proto.ID],
+			ServiceVersion: labels[mesh_proto.ServiceVersion],
+			ServiceGroup:   labels[mesh_proto.ServiceGroup],
+		}
+		id := mesh_proto.BuildServiceKey(base)
+		path := mesh_proto.GetRoutePath(id, consts.ConditionRoute)
+		cfg, err := t.governance.GetConfig(path)
+		if err != nil {
+			return err
+		}
+		if cfg == "" {
+			if cfg == "" {
+				return fmt.Errorf("no existing condition route for path: %s", path)
+			}
+		}
+
+		bytes, err := core_model.ToYAML(resource.GetSpec())
+		if err != nil {
+			return err
+		}
+		err = t.governance.SetConfig(path, string(bytes))
+		if err != nil {
+			return err
+		}
+	case mesh.DynamicConfigType:
+		labels := opts.Labels
+		base := mesh_proto.Base{
+			Application:    labels[mesh_proto.Application],
+			Service:        labels[mesh_proto.Service],
+			ID:             labels[mesh_proto.ID],
+			ServiceVersion: labels[mesh_proto.ServiceVersion],
+			ServiceGroup:   labels[mesh_proto.ServiceGroup],
+		}
+		id := mesh_proto.BuildServiceKey(base)
+		path := mesh_proto.GetOverridePath(id)
+		existConfig, err := t.governance.GetConfig(path)
+		if err != nil {
+			return err
+		}
+		override := &mesh_proto.DynamicConfig{}
+		err = yaml.UnmarshalYML([]byte(existConfig), override)
+		if err != nil {
+			return err
+		}
+		configs := make([]*mesh_proto.OverrideConfig, 0)
+		if len(override.Configs) > 0 {
+			for _, c := range override.Configs {
+				if consts.Configs.Contains(c.Type) {
+					configs = append(configs, c)
+				}
+			}
+		}
+		update := resource.GetSpec().(*mesh_proto.DynamicConfig)
+		configs = append(configs, update.Configs...)
+		override.Configs = configs
+		override.Enabled = update.Enabled
+		if b, err := yaml.MarshalYML(override); err != nil {
+			return err
+		} else {
+			err := t.governance.SetConfig(path, string(b))
+			if err != nil {
+				return err
+			}
+		}
+	case mesh.MappingType:
+		spec := resource.GetSpec()
+		mapping := spec.(*mesh_proto.Mapping)
+		appNames := mapping.ApplicationNames
+		serviceInterface := mapping.InterfaceName
+		for _, app := range appNames {
+			err := t.metadataReport.RegisterServiceAppMapping(serviceInterface, mappingGroup, app)
+			if err != nil {
+				return err
+			}
+		}
+	case mesh.MetaDataType:
+		spec := resource.GetSpec()
+		metadata := spec.(*mesh_proto.MetaData)
+		identifier := &dubbo_identifier.SubscriberMetadataIdentifier{
+			Revision: metadata.GetRevision(),
+			BaseApplicationMetadataIdentifier: dubbo_identifier.BaseApplicationMetadataIdentifier{
+				Application: metadata.GetApp(),
+				Group:       dubboGroup,
+			},
+		}
+		services := map[string]*common.ServiceInfo{}
+		// 把metadata赋值到services中
+		for key, serviceInfo := range metadata.GetServices() {
+			services[key] = &common.ServiceInfo{
+				Name:     serviceInfo.GetName(),
+				Group:    serviceInfo.GetGroup(),
+				Version:  serviceInfo.GetVersion(),
+				Protocol: serviceInfo.GetProtocol(),
+				Path:     serviceInfo.GetPath(),
+				Params:   serviceInfo.GetParams(),
+			}
+		}
+		info := &common.MetadataInfo{
+			App:      metadata.GetApp(),
+			Revision: metadata.GetRevision(),
+			Services: services,
+		}
+		err := t.metadataReport.PublishAppMetadata(identifier, info)
+		if err != nil {
+			return err
+		}
+	default:
+		bytes, err := core_model.ToYAML(resource.GetSpec())
+		if err != nil {
+			return err
+		}
+
+		path := GenerateCpGroupPath(string(resource.Descriptor().Name), opts.Name)
+		// 使用RegClient
+		err = t.regClient.SetContent(path, bytes)
+		if err != nil {
+			return err
+		}
+	}
+	resource.SetMeta(&resourceMetaObject{
+		Name:             opts.Name,
+		Mesh:             opts.Mesh,
+		ModificationTime: opts.ModificationTime,
+		Labels:           maps.Clone(opts.Labels),
+	})
 	return nil
 }
 
@@ -356,11 +513,6 @@ func (c *traditionalStore) Get(_ context.Context, resource core_model.Resource, 
 				return errors.Wrap(err, "failed to convert json to spec")
 			}
 		}
-		meta := &resourceMetaObject{
-			Name: opts.Name,
-			Mesh: opts.Mesh,
-		}
-		resource.SetMeta(meta)
 	case mesh.ConditionRouteType:
 		labels := opts.Labels
 		base := mesh_proto.Base{
@@ -381,11 +533,6 @@ func (c *traditionalStore) Get(_ context.Context, resource core_model.Resource, 
 				return errors.Wrap(err, "failed to convert json to spec")
 			}
 		}
-		meta := &resourceMetaObject{
-			Name: opts.Name,
-			Mesh: opts.Mesh,
-		}
-		resource.SetMeta(meta)
 	case mesh.DynamicConfigType:
 		labels := opts.Labels
 		base := mesh_proto.Base{
@@ -406,11 +553,6 @@ func (c *traditionalStore) Get(_ context.Context, resource core_model.Resource, 
 				return errors.Wrap(err, "failed to convert json to spec")
 			}
 		}
-		meta := &resourceMetaObject{
-			Name: opts.Name,
-			Mesh: opts.Mesh,
-		}
-		resource.SetMeta(meta)
 	case mesh.MappingType:
 		// Get通过Key获取, 不设置listener
 		key := opts.Name
@@ -453,11 +595,6 @@ func (c *traditionalStore) Get(_ context.Context, resource core_model.Resource, 
 			}
 		}
 		metaData.Services = service
-		meta := &resourceMetaObject{
-			Name: opts.Name,
-			Mesh: opts.Mesh,
-		}
-		resource.SetMeta(meta)
 	default:
 		path := GenerateCpGroupPath(string(resource.Descriptor().Name), opts.Name)
 		value, err := c.regClient.GetContent(path)
@@ -467,12 +604,11 @@ func (c *traditionalStore) Get(_ context.Context, resource core_model.Resource, 
 		if err := core_model.FromYAML(value, resource.GetSpec()); err != nil {
 			return err
 		}
-		meta := &resourceMetaObject{
-			Name: opts.Name,
-			Mesh: opts.Mesh,
-		}
-		resource.SetMeta(meta)
 	}
+	resource.SetMeta(&resourceMetaObject{
+		Name: opts.Name,
+		Mesh: opts.Mesh,
+	})
 	return nil
 }
 

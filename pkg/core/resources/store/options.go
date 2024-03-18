@@ -85,6 +85,8 @@ func CreateWithLabels(labels map[string]string) CreateOptionsFunc {
 }
 
 type UpdateOptions struct {
+	Name             string
+	Mesh             string
 	ModificationTime time.Time
 	Labels           map[string]string
 }
@@ -92,6 +94,17 @@ type UpdateOptions struct {
 func ModifiedAt(modificationTime time.Time) UpdateOptionsFunc {
 	return func(opts *UpdateOptions) {
 		opts.ModificationTime = modificationTime
+	}
+}
+
+func UpdateBy(key core_model.ResourceKey) CreateOptionsFunc {
+	return CreateByKey(key.Name, key.Mesh)
+}
+
+func UpdateByKey(name, mesh string) CreateOptionsFunc {
+	return func(opts *CreateOptions) {
+		opts.Name = name
+		opts.Mesh = mesh
 	}
 }
 
