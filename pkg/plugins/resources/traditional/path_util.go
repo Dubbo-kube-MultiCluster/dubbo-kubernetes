@@ -17,6 +17,32 @@
 
 package traditional
 
+import "fmt"
+
 func GenerateCpGroupPath(resourceName string, name string) string {
 	return pathSeparator + cpGroup + pathSeparator + resourceName + pathSeparator + name
+}
+
+func getMappingPath(keys ...string) string {
+	rootDir := pathSeparator + dubboGroup + pathSeparator + mappingGroup + pathSeparator
+	for _, key := range keys {
+		rootDir += fmt.Sprintf("%s%s", key, pathSeparator)
+	}
+	return rootDir
+}
+
+func getMetadataPath(keys ...string) string {
+	rootDir := pathSeparator + dubboGroup + pathSeparator + metadataGroup + pathSeparator
+	for _, key := range keys {
+		rootDir += fmt.Sprintf("%s%s", key, pathSeparator)
+	}
+	return rootDir
+}
+
+func getDubboCpPath(keys ...string) string {
+	rootDir := pathSeparator + cpGroup + pathSeparator
+	for _, key := range keys {
+		rootDir += fmt.Sprintf("%s%s", key, pathSeparator)
+	}
+	return rootDir
 }

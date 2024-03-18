@@ -52,6 +52,7 @@ import (
 const (
 	dubboGroup    = "dubbo"
 	mappingGroup  = "mapping"
+	metadataGroup = "metadata"
 	cpGroup       = "dubbo-cp"
 	pathSeparator = "/"
 )
@@ -612,6 +613,140 @@ func (c *traditionalStore) Get(_ context.Context, resource core_model.Resource, 
 	return nil
 }
 
-func (c *traditionalStore) List(_ context.Context, resource core_model.ResourceList, fs ...store.ListOptionsFunc) error {
+func (c *traditionalStore) List(_ context.Context, resources core_model.ResourceList, fs ...store.ListOptionsFunc) error {
+	opts := store.NewListOptions(fs...)
+	labels := opts.Labels
+	base := mesh_proto.Base{
+		Application:    labels[mesh_proto.Application],
+		Service:        labels[mesh_proto.Service],
+		ID:             labels[mesh_proto.ID],
+		ServiceVersion: labels[mesh_proto.ServiceVersion],
+		ServiceGroup:   labels[mesh_proto.ServiceGroup],
+	}
+	switch resources.GetItemType() {
+	case mesh.DataplaneType:
+		// iterator services key set
+		c.dCache.Range(func(key, value any) bool {
+			item := resources.NewItem()
+			r := value.(core_model.Resource)
+			item.SetMeta(r.GetMeta())
+			err := item.SetSpec(r.GetSpec())
+			if err != nil {
+				return false
+			}
+			if err := resources.AddItem(item); err != nil {
+				return false
+			}
+			return true
+		})
+	case mesh.MappingType:
+		// 1. 首先获取到所有到key
+		path := getMappingPath()
+		keys, err := c.regClient.GetChildren(path)
+		if err != nil {
+			return err
+		}
+		for _, key := range keys {
+			// 通过key得到所有的mapping映射关系
+			set, err := c.metadataReport.GetServiceAppMapping(key, mappingGroup, nil)
+			if err != nil {
+				return err
+			}
+			meta := &resourceMetaObject{
+				Name: key,
+			}
+			item := resources.NewItem()
+			item.SetMeta(meta)
+			mapping := item.GetSpec().(*mesh_proto.Mapping)
+			mapping.Zone = "default"
+			mapping.InterfaceName = key
+			var items []string
+			for k := range set.Items {
+				items = append(items, fmt.Sprintf("%v", k))
+			}
+			mapping.ApplicationNames = items
+			err = resources.AddItem(item)
+			if err != nil {
+				return err
+			}
+		}
+	case mesh.MetaDataType:
+		// 1. 获取到所有的key, key是application(应用名)
+		rootDir := getMetadataPath()
+		appNames, err := c.regClient.GetChildren(rootDir)
+		if err != nil {
+			return err
+		}
+		for _, app := range appNames {
+			// 2. 获取到该应用名下所有的revision
+			path := getMetadataPath(app)
+			revisions, err := c.regClient.GetChildren(path)
+			if err != nil {
+				return err
+			}
+			for _, revision := range revisions {
+				id := dubbo_identifier.NewSubscriberMetadataIdentifier(app, revision)
+				appMetadata, err := c.metadataReport.GetAppMetadata(id)
+				if err != nil {
+					return err
+				}
+				item := resources.NewItem()
+				metaData := item.GetSpec().(*mesh_proto.MetaData)
+				metaData.App = appMetadata.App
+				metaData.Revision = appMetadata.Revision
+				service := map[string]*mesh_proto.ServiceInfo{}
+				for key, serviceInfo := range appMetadata.Services {
+					service[key] = &mesh_proto.ServiceInfo{
+						Name:     serviceInfo.Name,
+						Group:    serviceInfo.Group,
+						Version:  serviceInfo.Version,
+						Protocol: serviceInfo.Protocol,
+						Path:     serviceInfo.Path,
+						Params:   serviceInfo.Params,
+					}
+				}
+				metaData.Services = service
+				item.SetMeta(&resourceMetaObject{
+					Name:    app,
+					Version: revision,
+				})
+				err = resources.AddItem(item)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+	case mesh.DynamicConfigType:
+
+	case mesh.TagRouteType:
+
+	case mesh.ConditionRouteType:
+	default:
+		rootDir := getDubboCpPath(string(resources.GetItemType()))
+		names, err := c.regClient.GetChildren(rootDir)
+		if err != nil {
+			return err
+		}
+		for _, name := range names {
+			path := getDubboCpPath(string(resources.GetItemType()), name)
+			bytes, err := c.regClient.GetContent(path)
+			if err != nil {
+				return err
+			}
+			item := resources.NewItem()
+			if err = core_model.FromYAML(bytes, item.GetSpec()); err != nil {
+				return err
+			}
+			item.SetMeta(&resourceMetaObject{
+				Name:   name,
+				Labels: maps.Clone(opts.Labels),
+			})
+			err = resources.AddItem(item)
+			if err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
