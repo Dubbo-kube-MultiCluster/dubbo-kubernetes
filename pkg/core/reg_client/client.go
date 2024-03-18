@@ -19,4 +19,6 @@ package reg_client
 
 type RegClient interface {
 	GetChildren(path string) ([]string, error)
+	SetContent(path string, value []byte) error
+	GetContent(path string) ([]byte, error)
 }

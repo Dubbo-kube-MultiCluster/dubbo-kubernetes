@@ -23,6 +23,7 @@ import (
 )
 
 import (
+	mesh_proto "github.com/apache/dubbo-kubernetes/api/mesh/v1alpha1"
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 )
 
@@ -194,6 +195,12 @@ func (g *GetOptions) HashCode() string {
 func GetByPath(path string) GetOptionsFunc {
 	return func(opts *GetOptions) {
 		opts.Labels[PathLabel] = path
+	}
+}
+
+func GetByRevision(revision string) GetOptionsFunc {
+	return func(opts *GetOptions) {
+		opts.Labels[mesh_proto.Revision] = revision
 	}
 }
 

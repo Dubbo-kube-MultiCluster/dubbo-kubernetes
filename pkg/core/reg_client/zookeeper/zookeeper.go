@@ -18,13 +18,18 @@
 package zookeeper
 
 import (
+	"encoding/base64"
 	"strings"
 )
 
 import (
 	"dubbo.apache.org/dubbo-go/v3/common"
 
+	"github.com/dubbogo/go-zookeeper/zk"
+
 	gxzookeeper "github.com/dubbogo/gost/database/kv/zk"
+
+	"github.com/pkg/errors"
 )
 
 import (
@@ -51,6 +56,35 @@ func (z *zookeeperRegClient) GetChildren(path string) ([]string, error) {
 		return nil, err
 	}
 	return children, nil
+}
+
+func (z *zookeeperRegClient) SetContent(path string, value []byte) error {
+	valueBytes := []byte(base64.StdEncoding.EncodeToString(value))
+	err := z.client.CreateWithValue(path, valueBytes)
+	if err != nil {
+		if errors.Is(err, zk.ErrNodeExists) {
+			_, stat, _ := z.client.GetContent(path)
+			_, setErr := z.client.SetContent(path, valueBytes, stat.Version)
+			if setErr != nil {
+				return errors.WithStack(setErr)
+			}
+			return nil
+		}
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
+func (z *zookeeperRegClient) GetContent(path string) ([]byte, error) {
+	content, _, err := z.client.GetContent(path)
+	if err != nil {
+		return []byte{}, errors.WithStack(err)
+	}
+	decoded, err := base64.StdEncoding.DecodeString(string(content))
+	if err != nil {
+		return []byte{}, errors.WithStack(err)
+	}
+	return decoded, nil
 }
 
 type zookeeperRegClientFactory struct{}

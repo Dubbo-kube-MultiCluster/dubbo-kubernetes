@@ -36,6 +36,7 @@ const (
 	ID             = "id"
 	ServiceVersion = "serviceVersion"
 	ServiceGroup   = "serviceGroup"
+	Revision       = "revision"
 )
 
 type Base struct {

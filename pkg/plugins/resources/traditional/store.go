@@ -196,8 +196,9 @@ func (t *traditionalStore) Create(_ context.Context, resource core_model.Resourc
 			return err
 		}
 
-		// 使用配置中心
-		err = t.configCenter.PublishConfig(resource.GetMeta().GetName(), cpGroup, string(bytes))
+		path := "/" + cpGroup + opts.Name
+		// 使用RegClient
+		err = t.regClient.SetContent(path, bytes)
 		if err != nil {
 			return err
 		}
@@ -333,7 +334,7 @@ func (c *traditionalStore) Get(_ context.Context, resource core_model.Resource, 
 		mapping.ApplicationNames = items
 	case mesh.MetaDataType:
 		labels := opts.Labels
-		id := dubbo_identifier.NewSubscriberMetadataIdentifier(labels[mesh_proto.Service], "")
+		id := dubbo_identifier.NewSubscriberMetadataIdentifier(labels[mesh_proto.Application], labels[mesh_proto.Revision])
 		appMetadata, err := c.metadataReport.GetAppMetadata(id)
 		if err != nil {
 			return err
@@ -359,6 +360,19 @@ func (c *traditionalStore) Get(_ context.Context, resource core_model.Resource, 
 		}
 		resource.SetMeta(meta)
 	default:
+		path := "/" + cpGroup + opts.Name
+		value, err := c.regClient.GetContent(path)
+		if err != nil {
+			return err
+		}
+		if err := core_model.FromYAML(value, resource.GetSpec()); err != nil {
+			return err
+		}
+		meta := &resourceMetaObject{
+			Name: opts.Name,
+			Mesh: opts.Mesh,
+		}
+		resource.SetMeta(meta)
 	}
 	return nil
 }

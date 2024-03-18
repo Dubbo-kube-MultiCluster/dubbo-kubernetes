@@ -48,6 +48,14 @@ func (z *nacosRegClientReport) GetChildren(path string) ([]string, error) {
 	return nil, nil
 }
 
+func (z *nacosRegClientReport) SetContent(path string, value []byte) error {
+	return nil
+}
+
+func (z *nacosRegClientReport) GetContent(path string) ([]byte, error) {
+	return nil, nil
+}
+
 type nacosRegClientFactory struct{}
 
 func (n *nacosRegClientFactory) CreateRegClient(url *common.URL) reg_client.RegClient {
