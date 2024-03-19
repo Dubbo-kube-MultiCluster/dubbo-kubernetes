@@ -78,8 +78,8 @@ type GeneralConfig struct {
 type Config struct {
 	// General configuration
 	General *GeneralConfig `json:"general,omitempty"`
-	// Environment Type, can be either "kubernetes" or "universal"
-	Environment core.EnvironmentType `json:"environment,omitempty" envconfig:"dubbo_environment"`
+	// DeployMode Type, can be either "kubernetes" or "universal" and "half"
+	DeployMode core.DeployMode `json:"environment,omitempty" envconfig:"dubbo_deploymode"`
 	// Mode in which dubbo CP is running. Available values are: "standalone", "global", "zone"
 	Mode core.CpMode `json:"mode" envconfig:"dubbo_mode"`
 	// Configuration of Bootstrap Server, which provides bootstrap config to Dataplanes
@@ -88,7 +88,7 @@ type Config struct {
 	Store *store.StoreConfig `json:"store,omitempty"`
 	// Envoy XDS server configuration
 	XdsServer *xds.XdsServerConfig `json:"xdsServer,omitempty"`
-	// Environment-specific configuration
+	// DeployMode-specific configuration
 	Runtime *runtime.RuntimeConfig `json:"runtime,omitempty"`
 	// Multizone Config
 	Multizone *multizone.MultizoneConfig `json:"multizone,omitempty"`
@@ -144,7 +144,7 @@ func (c *Config) PostProcess() error {
 
 var DefaultConfig = func() Config {
 	return Config{
-		Environment: core.UniversalEnvironment,
+		DeployMode:  core.UniversalMode,
 		Mode:        core.Zone,
 		XdsServer:   xds.DefaultXdsServerConfig(),
 		Store:       store.DefaultStoreConfig(),
@@ -182,10 +182,10 @@ func (c *Config) Validate() error {
 	switch c.Mode {
 	case core.Global:
 	case core.Zone:
-		if c.Environment != core.KubernetesEnvironment && c.Environment != core.UniversalEnvironment {
-			return errors.Errorf("Environment should be either %s or %s", core.KubernetesEnvironment, core.UniversalEnvironment)
+		if c.DeployMode != core.KubernetesMode && c.DeployMode != core.UniversalMode && c.DeployMode != core.HalfHostMode {
+			return errors.Errorf("DeployMode should be either %s or %s or %s", core.KubernetesMode, core.UniversalMode, core.HalfHostMode)
 		}
-		if err := c.Runtime.Validate(c.Environment); err != nil {
+		if err := c.Runtime.Validate(c.DeployMode); err != nil {
 			return errors.Wrap(err, "Runtime validation failed")
 		}
 	}

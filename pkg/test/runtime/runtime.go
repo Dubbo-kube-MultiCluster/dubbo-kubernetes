@@ -52,6 +52,7 @@ type TestRuntimeInfo struct {
 	ClusterId  string
 	StartTime  time.Time
 	Mode       config_core.CpMode
+	DeployMode config_core.DeployMode
 }
 
 func (i *TestRuntimeInfo) GetMode() config_core.CpMode {
@@ -72,6 +73,10 @@ func (i *TestRuntimeInfo) GetClusterId() string {
 
 func (i *TestRuntimeInfo) GetStartTime() time.Time {
 	return i.StartTime
+}
+
+func (i *TestRuntimeInfo) GetDeployMode() config_core.DeployMode {
+	return i.DeployMode
 }
 
 func BuilderFor(appCtx context.Context, cfg dubbo_cp.Config) (*core_runtime.Builder, error) {

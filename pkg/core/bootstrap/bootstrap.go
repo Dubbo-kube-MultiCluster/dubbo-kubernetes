@@ -34,11 +34,11 @@ import (
 )
 
 import (
-	"github.com/apache/dubbo-kubernetes/pkg/admin"
 	dubbo_cp "github.com/apache/dubbo-kubernetes/pkg/config/app/dubbo-cp"
 	config_core "github.com/apache/dubbo-kubernetes/pkg/config/core"
 	"github.com/apache/dubbo-kubernetes/pkg/config/core/resources/store"
 	"github.com/apache/dubbo-kubernetes/pkg/core"
+	admin2 "github.com/apache/dubbo-kubernetes/pkg/core/admin"
 	config_manager "github.com/apache/dubbo-kubernetes/pkg/core/config/manager"
 	"github.com/apache/dubbo-kubernetes/pkg/core/consts"
 	"github.com/apache/dubbo-kubernetes/pkg/core/datasource"
@@ -51,7 +51,6 @@ import (
 	core_plugins "github.com/apache/dubbo-kubernetes/pkg/core/plugins"
 	dubbo_registry "github.com/apache/dubbo-kubernetes/pkg/core/registry"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
-	"github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/system"
 	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
 	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
@@ -82,8 +81,11 @@ func buildRuntime(appCtx context.Context, cfg dubbo_cp.Config) (core_runtime.Run
 			return nil, errors.Wrapf(err, "failed to run beforeBootstrap plugin:'%s'", plugin.Name())
 		}
 	}
-	if cfg.Environment == config_core.UniversalEnvironment {
+	// 定义store的状态
+	if cfg.DeployMode == config_core.UniversalMode || cfg.DeployMode == config_core.HalfHostMode {
 		cfg.Store.Type = store.Traditional
+	} else {
+		cfg.Store.Type = store.KubernetesStore
 	}
 	// 初始化传统微服务体系所需要的组件
 	if err := initializeTraditional(cfg, builder); err != nil {
@@ -93,9 +95,7 @@ func buildRuntime(appCtx context.Context, cfg dubbo_cp.Config) (core_runtime.Run
 		return nil, err
 	}
 
-	builder.ResourceStore().Customize(system.ConfigType, builder.ConfigStore())
-
-	initializeConfigManager(builder)
+	// 隐蔽了configStore, 后期再补全
 
 	builder.WithResourceValidators(core_runtime.ResourceValidators{})
 
@@ -116,7 +116,7 @@ func buildRuntime(appCtx context.Context, cfg dubbo_cp.Config) (core_runtime.Run
 	builder.WithDDSContext(kdsContext)
 
 	if cfg.Mode == config_core.Global {
-		kdsEnvoyAdminClient := admin.NewDDSEnvoyAdminClient(
+		kdsEnvoyAdminClient := admin2.NewDDSEnvoyAdminClient(
 			builder.DDSContext().EnvoyAdminRPCs,
 			cfg.Store.Type == store.KubernetesStore,
 		)
@@ -129,7 +129,7 @@ func buildRuntime(appCtx context.Context, cfg dubbo_cp.Config) (core_runtime.Run
 		)
 		builder.WithEnvoyAdminClient(forwardingClient)
 	} else {
-		builder.WithEnvoyAdminClient(admin.NewEnvoyAdminClient(
+		builder.WithEnvoyAdminClient(admin2.NewEnvoyAdminClient(
 			resourceManager,
 			builder.Config().GetEnvoyAdminPort(),
 		))
@@ -172,8 +172,8 @@ func Bootstrap(appCtx context.Context, cfg dubbo_cp.Config) (core_runtime.Runtim
 }
 
 func initializeTraditional(cfg dubbo_cp.Config, builder *core_runtime.Builder) error {
-	// 如果是k8s环境模式直接返回, 这里针对传统的微服务体系
-	if cfg.Environment == config_core.KubernetesEnvironment {
+	// 如果是k8s环境模式直接返回, 这里针对传统的微服务体系(包括纯vm和半托管)
+	if cfg.DeployMode == config_core.KubernetesMode {
 		return nil
 	}
 	address := cfg.Store.Traditional.ConfigCenter

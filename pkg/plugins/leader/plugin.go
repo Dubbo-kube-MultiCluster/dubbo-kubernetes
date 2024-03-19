@@ -29,8 +29,8 @@ import (
 )
 
 func NewLeaderElector(b *core_runtime.Builder) (component.LeaderElector, error) {
-	switch b.Config().Environment {
-	case core.UniversalEnvironment:
+	switch b.Config().DeployMode {
+	case core.UniversalMode:
 		//cfg := *b.Config().Store.Mysql
 		//db, err := common_mysql.ConnectToDb(cfg)
 		//if err != nil {
@@ -38,9 +38,8 @@ func NewLeaderElector(b *core_runtime.Builder) (component.LeaderElector, error) 
 		//}
 		//return leader_mysql.NewMysqlLeaderElector(db), nil
 		return memory.NewAlwaysLeaderElector(), nil
-	// In case of Kubernetes, Leader Elector is embedded in a Kubernetes ComponentManager
+	// In case of Kubernetes or half, Leader Elector is embedded in a Kubernetes ComponentManager
 	default:
 		return nil, errors.Errorf("no election leader for storage of type %s", b.Config().Store.Type)
 	}
-	return nil, nil
 }

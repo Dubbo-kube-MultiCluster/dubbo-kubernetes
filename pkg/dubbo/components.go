@@ -36,7 +36,7 @@ import (
 var log = core.Log.WithName("dubbo")
 
 func Setup(rt core_runtime.Runtime) error {
-	if rt.Config().Environment != core_env.KubernetesEnvironment {
+	if rt.Config().DeployMode != core_env.KubernetesMode {
 		return nil
 	}
 	cfg := rt.Config().DubboConfig

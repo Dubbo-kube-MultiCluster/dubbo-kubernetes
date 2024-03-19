@@ -50,7 +50,7 @@ func init() {
 }
 
 func (p *plugin) Customize(rt core_runtime.Runtime) error {
-	if rt.Config().Environment != config_core.KubernetesEnvironment {
+	if rt.Config().DeployMode != config_core.KubernetesMode {
 		return nil
 	}
 	mgr, ok := k8s_extensions.FromManagerContext(rt.Extensions())

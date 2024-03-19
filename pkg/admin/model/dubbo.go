@@ -16,22 +16,3 @@
  */
 
 package model
-
-import (
-	"time"
-)
-
-type Resources struct {
-	Name             string    `json:"name" gorm:"name"`
-	Namespace        string    `json:"namespace" gorm:"namespace"`
-	Mesh             string    `json:"mesh" gorm:"mesh"`
-	Type             string    `json:"type" gorm:"type"`
-	Version          int       `json:"version" gorm:"version"`
-	Spec             string    `json:"spec" gorm:"spec"`
-	Labels           string    `json:"labels" gorm:"labels"`
-	ModificationTime time.Time `json:"modification_time" gorm:"modification_time"`
-	CreateTime       time.Time `json:"create_time" gorm:"creation_time"`
-	OwnerName        string    `json:"owner_name" gorm:"owner_name"`
-	OwnerMesh        string    `json:"owner_mesh" gorm:"owner_mesh"`
-	OwnerType        string    `json:"owner_type" gorm:"owner_type"`
-}

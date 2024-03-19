@@ -34,7 +34,8 @@ func init() {
 }
 
 func (p *plugin) Customize(rt core_runtime.Runtime) error {
-	if rt.Config().Environment != config_core.UniversalEnvironment {
+	// 半托管和纯VM模式都应该用这个插件
+	if rt.Config().DeployMode == config_core.KubernetesMode {
 		return nil
 	}
 

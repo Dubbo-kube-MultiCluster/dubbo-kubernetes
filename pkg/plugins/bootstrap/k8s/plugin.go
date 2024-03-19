@@ -63,7 +63,8 @@ func init() {
 }
 
 func (p *plugin) BeforeBootstrap(b *core_runtime.Builder, cfg core_plugins.PluginConfig) error {
-	if b.Config().Environment != config_core.KubernetesEnvironment {
+	// 半托管模式和纯k8s模式都可以使用这一个插件
+	if b.Config().DeployMode == config_core.UniversalMode {
 		return nil
 	}
 	scheme, err := NewScheme()
@@ -174,7 +175,7 @@ func createSecretClient(appCtx context.Context, scheme *kube_runtime.Scheme, sys
 }
 
 func (p *plugin) AfterBootstrap(b *core_runtime.Builder, _ core_plugins.PluginConfig) error {
-	if b.Config().Environment != config_core.KubernetesEnvironment {
+	if b.Config().DeployMode != config_core.KubernetesMode {
 		return nil
 	}
 

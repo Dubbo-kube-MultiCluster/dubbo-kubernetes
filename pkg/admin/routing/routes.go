@@ -15,33 +15,4 @@
  * limitations under the License.
  */
 
-package events
-
-import (
-	"github.com/apache/dubbo-kubernetes/pkg/config/plugins/resources/mysql"
-	"github.com/apache/dubbo-kubernetes/pkg/core"
-	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
-	"github.com/apache/dubbo-kubernetes/pkg/events"
-)
-
-var log = core.Log.WithName("mysql-event-listener")
-
-type listener struct {
-	cfg mysql.MysqlStoreConfig
-	out events.Emitter
-}
-
-func NewListener(cfg mysql.MysqlStoreConfig, out events.Emitter) component.Component {
-	return &listener{
-		cfg: cfg,
-		out: out,
-	}
-}
-
-func (k *listener) Start(stop <-chan struct{}) error {
-	return nil
-}
-
-func (k *listener) NeedLeaderElection() bool {
-	return false
-}
+package routing

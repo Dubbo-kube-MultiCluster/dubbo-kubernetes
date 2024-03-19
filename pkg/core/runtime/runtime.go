@@ -30,9 +30,9 @@ import (
 )
 
 import (
-	"github.com/apache/dubbo-kubernetes/pkg/admin"
 	dubbo_cp "github.com/apache/dubbo-kubernetes/pkg/config/app/dubbo-cp"
 	"github.com/apache/dubbo-kubernetes/pkg/config/core"
+	"github.com/apache/dubbo-kubernetes/pkg/core/admin"
 	config_manager "github.com/apache/dubbo-kubernetes/pkg/core/config/manager"
 	"github.com/apache/dubbo-kubernetes/pkg/core/governance"
 	managers_dataplane "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/dataplane"
@@ -61,6 +61,7 @@ type RuntimeInfo interface {
 	GetClusterId() string
 	GetStartTime() time.Time
 	GetMode() core.CpMode
+	GetDeployMode() core.DeployMode
 }
 
 type RuntimeContext interface {
@@ -114,6 +115,7 @@ type runtimeInfo struct {
 	clusterId  string
 	startTime  time.Time
 	mode       core.CpMode
+	deployMode core.DeployMode
 }
 
 func (i *runtimeInfo) GetInstanceId() string {
@@ -138,6 +140,10 @@ func (i *runtimeInfo) GetStartTime() time.Time {
 
 func (i *runtimeInfo) GetMode() core.CpMode {
 	return i.mode
+}
+
+func (i *runtimeInfo) GetDeployMode() core.DeployMode {
+	return i.deployMode
 }
 
 var _ RuntimeContext = &runtimeContext{}

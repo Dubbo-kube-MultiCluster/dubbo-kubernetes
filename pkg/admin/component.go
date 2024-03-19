@@ -15,15 +15,21 @@
  * limitations under the License.
  */
 
-package api_server
+package admin
 
 import (
+	"github.com/apache/dubbo-kubernetes/pkg/admin/server"
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
 )
 
-var apiServerLog = core.Log.WithName("api-server")
+var adminServerLog = core.Log.WithName("admin")
 
 func Setup(rt core_runtime.Runtime) error {
+	adminServer := server.NewAdminServer()
+	if err := rt.Add(adminServer); err != nil {
+		adminServerLog.Error(err, "fail to start the admin server")
+		return err
+	}
 	return nil
 }

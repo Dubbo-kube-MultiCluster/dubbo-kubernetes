@@ -27,7 +27,7 @@ import (
 )
 
 import (
-	api_server "github.com/apache/dubbo-kubernetes/pkg/api-server"
+	"github.com/apache/dubbo-kubernetes/pkg/admin"
 	"github.com/apache/dubbo-kubernetes/pkg/config"
 	dubbo_cp "github.com/apache/dubbo-kubernetes/pkg/config/app/dubbo-cp"
 	config_core "github.com/apache/dubbo-kubernetes/pkg/config/core"
@@ -104,8 +104,8 @@ func newRunCmdWithOpts(opts dubbo_cmd.RunCmdOpts) *cobra.Command {
 					"minimim-open-files", minOpenFileLimit)
 			}
 
-			if err := api_server.Setup(rt); err != nil {
-				runLog.Error(err, "unable to set up api server")
+			if err := admin.Setup(rt); err != nil {
+				runLog.Error(err, "unable to set up admin")
 				return err
 			}
 			if err := dubbo.Setup(rt); err != nil {

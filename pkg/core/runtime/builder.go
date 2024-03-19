@@ -34,9 +34,9 @@ import (
 )
 
 import (
-	"github.com/apache/dubbo-kubernetes/pkg/admin"
 	dubbo_cp "github.com/apache/dubbo-kubernetes/pkg/config/app/dubbo-cp"
 	"github.com/apache/dubbo-kubernetes/pkg/core"
+	"github.com/apache/dubbo-kubernetes/pkg/core/admin"
 	config_manager "github.com/apache/dubbo-kubernetes/pkg/core/config/manager"
 	"github.com/apache/dubbo-kubernetes/pkg/core/datasource"
 	"github.com/apache/dubbo-kubernetes/pkg/core/dns/lookup"
@@ -127,6 +127,7 @@ func BuilderFor(appCtx context.Context, cfg dubbo_cp.Config) (*Builder, error) {
 			instanceId: fmt.Sprintf("%s-%s", hostname, suffix),
 			startTime:  time.Now(),
 			mode:       cfg.Mode,
+			deployMode: cfg.DeployMode,
 		},
 		appCtx: appCtx,
 	}, nil

@@ -15,23 +15,18 @@
  * limitations under the License.
  */
 
-package mysql
+package server
 
-import (
-	"github.com/apache/dubbo-kubernetes/pkg/config/plugins/resources/mysql"
-	core_plugins "github.com/apache/dubbo-kubernetes/pkg/core/plugins"
-	common_mysql "github.com/apache/dubbo-kubernetes/pkg/plugins/common/mysql"
-	"github.com/apache/dubbo-kubernetes/pkg/plugins/resources/mysql/model"
-)
+type AdminServer struct{}
 
-func MigrateDb(cfg mysql.MysqlStoreConfig) (core_plugins.DbVersion, error) {
-	db, err := common_mysql.ConnectToDb(cfg)
-	if err != nil {
-		return 0, err
-	}
-	err = db.AutoMigrate(model.Resources{})
-	if err != nil {
-		return 0, err
-	}
-	return 0, nil
+func NewAdminServer() *AdminServer {
+	return &AdminServer{}
+}
+
+func (a *AdminServer) Start(stop <-chan struct{}) error {
+	return nil
+}
+
+func (a *AdminServer) NeedLeaderElection() bool {
+	return false
 }

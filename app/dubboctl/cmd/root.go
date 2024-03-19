@@ -69,7 +69,7 @@ func getRootCmd(args []string) *cobra.Command {
 		Name: "dubboctl",
 	}
 
-	// Environment Variables
+	// DeployMode Variables
 	// Evaluated first after static defaults, set all flags to be associated with
 	// a version prefixed by "DUBBO_"
 	viper.AutomaticEnv()        // read in environment variables for DUBBO_<flag>
