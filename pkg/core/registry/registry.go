@@ -18,7 +18,6 @@
 package registry
 
 import (
-	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
 	"net/url"
 )
 
@@ -33,6 +32,7 @@ import (
 import (
 	"github.com/apache/dubbo-kubernetes/pkg/core/consts"
 	"github.com/apache/dubbo-kubernetes/pkg/core/logger"
+	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
 )
 
 type Registry struct {

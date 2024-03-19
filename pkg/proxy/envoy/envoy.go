@@ -20,13 +20,6 @@ package envoy
 import (
 	"context"
 	"fmt"
-	"github.com/Masterminds/semver/v3"
-	"github.com/apache/dubbo-kubernetes/pkg/config/app/dubboctl"
-	"github.com/apache/dubbo-kubernetes/pkg/core"
-	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model/rest"
-	command_utils "github.com/apache/dubbo-kubernetes/pkg/proxy/command"
-	"github.com/apache/dubbo-kubernetes/pkg/util/files"
-	"github.com/pkg/errors"
 	"io"
 	"os"
 	"os/exec"
@@ -37,6 +30,20 @@ import (
 	"strings"
 	"sync"
 	"time"
+)
+
+import (
+	"github.com/Masterminds/semver/v3"
+
+	"github.com/pkg/errors"
+)
+
+import (
+	"github.com/apache/dubbo-kubernetes/pkg/config/app/dubboctl"
+	"github.com/apache/dubbo-kubernetes/pkg/core"
+	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model/rest"
+	command_utils "github.com/apache/dubbo-kubernetes/pkg/proxy/command"
+	"github.com/apache/dubbo-kubernetes/pkg/util/files"
 )
 
 var runLog = core.Log.WithName("dubbo-proxy").WithName("run").WithName("envoy")
@@ -82,6 +89,7 @@ func New(opts Opts) (*Envoy, error) {
 	}
 	return &Envoy{opts: opts}, nil
 }
+
 func GenerateBootstrapFile(cfg dubboctl.DataplaneRuntime, config []byte) (string, error) {
 	configFile := filepath.Join(cfg.ConfigDir, "bootstrap.yaml")
 	if err := writeFile(configFile, config, 0o600); err != nil {
@@ -89,6 +97,7 @@ func GenerateBootstrapFile(cfg dubboctl.DataplaneRuntime, config []byte) (string
 	}
 	return configFile, nil
 }
+
 func writeFile(filename string, data []byte, perm os.FileMode) error {
 	if err := os.MkdirAll(filepath.Dir(filename), 0o755); err != nil {
 		return err
@@ -209,6 +218,7 @@ func GetEnvoyVersion(binaryPath string) (*EnvoyVersion, error) {
 		Version: parts[1],
 	}, nil
 }
+
 func VersionCompatible(expectedVersion string, envoyVersion string) (bool, error) {
 	ver, err := semver.NewVersion(envoyVersion)
 	if err != nil {

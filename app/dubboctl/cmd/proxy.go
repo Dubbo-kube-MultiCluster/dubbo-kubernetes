@@ -25,6 +25,8 @@ import (
 )
 
 import (
+	envoy_bootstrap_v3 "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
+
 	"github.com/pkg/errors"
 
 	"github.com/spf13/cobra"
@@ -43,7 +45,6 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/proxy/envoy"
 	"github.com/apache/dubbo-kubernetes/pkg/util/proto"
 	"github.com/apache/dubbo-kubernetes/pkg/util/template"
-	envoy_bootstrap_v3 "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
 )
 
 var runLog = controlPlaneLog.WithName("proxy")

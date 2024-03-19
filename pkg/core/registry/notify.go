@@ -19,8 +19,14 @@ package registry
 
 import (
 	"context"
+)
+
+import (
 	dubboRegistry "dubbo.apache.org/dubbo-go/v3/registry"
 	"dubbo.apache.org/dubbo-go/v3/remoting"
+)
+
+import (
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
 )
 
