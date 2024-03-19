@@ -28,7 +28,6 @@ import (
 
 import (
 	api_server "github.com/apache/dubbo-kubernetes/pkg/api-server"
-	"github.com/apache/dubbo-kubernetes/pkg/clusterid"
 	"github.com/apache/dubbo-kubernetes/pkg/config"
 	dubbo_cp "github.com/apache/dubbo-kubernetes/pkg/config/app/dubbo-cp"
 	config_core "github.com/apache/dubbo-kubernetes/pkg/config/core"
@@ -40,7 +39,6 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/diagnostics"
 	dp_server "github.com/apache/dubbo-kubernetes/pkg/dp-server"
 	"github.com/apache/dubbo-kubernetes/pkg/dubbo"
-	"github.com/apache/dubbo-kubernetes/pkg/gc"
 	"github.com/apache/dubbo-kubernetes/pkg/hds"
 	"github.com/apache/dubbo-kubernetes/pkg/intercp"
 	"github.com/apache/dubbo-kubernetes/pkg/util/os"
@@ -137,16 +135,8 @@ func newRunCmdWithOpts(opts dubbo_cmd.RunCmdOpts) *cobra.Command {
 				runLog.Error(err, "unable to set up Global DDS")
 				return err
 			}
-			if err := clusterid.Setup(rt); err != nil {
-				runLog.Error(err, "unable to set up clusterID")
-				return err
-			}
 			if err := diagnostics.SetupServer(rt); err != nil {
 				runLog.Error(err, "unable to set up Diagnostics server")
-				return err
-			}
-			if err := gc.Setup(rt); err != nil {
-				runLog.Error(err, "unable to set up GC")
 				return err
 			}
 			if err := intercp.Setup(rt); err != nil {

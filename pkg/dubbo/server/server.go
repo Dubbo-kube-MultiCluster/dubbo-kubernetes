@@ -45,13 +45,13 @@ const (
 var _ component.Component = &Server{}
 
 type Server struct {
-	config     snp.SNPServerConfig
+	config     snp.DubboServerConfig
 	grpcServer *grpc.Server
 	instanceId string
 }
 
 func NewServer(
-	config snp.SNPServerConfig,
+	config snp.DubboServerConfig,
 ) *Server {
 	grpcOptions := []grpc.ServerOption{
 		grpc.MaxConcurrentStreams(grpcMaxConcurrentStreams),

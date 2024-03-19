@@ -18,6 +18,17 @@
 package bootstrap
 
 import (
+	_ "dubbo.apache.org/dubbo-go/v3/config_center/nacos"
+	_ "dubbo.apache.org/dubbo-go/v3/config_center/zookeeper"
+	_ "dubbo.apache.org/dubbo-go/v3/metadata/report/nacos"
+	_ "dubbo.apache.org/dubbo-go/v3/metadata/report/zookeeper"
+	_ "dubbo.apache.org/dubbo-go/v3/registry/nacos"
+	_ "dubbo.apache.org/dubbo-go/v3/registry/zookeeper"
+)
+
+import (
+	_ "github.com/apache/dubbo-kubernetes/pkg/core/reg_client/nacos"
+	_ "github.com/apache/dubbo-kubernetes/pkg/core/reg_client/zookeeper"
 	_ "github.com/apache/dubbo-kubernetes/pkg/plugins/bootstrap/k8s"
 	_ "github.com/apache/dubbo-kubernetes/pkg/plugins/bootstrap/universal"
 	_ "github.com/apache/dubbo-kubernetes/pkg/plugins/config/k8s"
@@ -25,5 +36,6 @@ import (
 	_ "github.com/apache/dubbo-kubernetes/pkg/plugins/policies"
 	_ "github.com/apache/dubbo-kubernetes/pkg/plugins/resources/k8s"
 	_ "github.com/apache/dubbo-kubernetes/pkg/plugins/resources/memory"
+	_ "github.com/apache/dubbo-kubernetes/pkg/plugins/resources/traditional"
 	_ "github.com/apache/dubbo-kubernetes/pkg/plugins/runtime/k8s"
 )

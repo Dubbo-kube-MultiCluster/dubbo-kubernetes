@@ -81,14 +81,14 @@ func buildRuntime(appCtx context.Context, cfg dubbo_cp.Config) (core_runtime.Run
 			return nil, errors.Wrapf(err, "failed to run beforeBootstrap plugin:'%s'", plugin.Name())
 		}
 	}
+	if cfg.Environment == config_core.UniversalEnvironment {
+		cfg.Store.Type = store.Traditional
+	}
 	// 初始化传统微服务体系所需要的组件
 	if err := initializeTraditional(cfg, builder); err != nil {
 		return nil, err
 	}
 	if err := initializeResourceStore(cfg, builder); err != nil {
-		return nil, err
-	}
-	if err := initializeConfigStore(cfg, builder); err != nil {
 		return nil, err
 	}
 
@@ -341,6 +341,8 @@ func initializeConfigStore(cfg dubbo_cp.Config, builder *core_runtime.Builder) e
 	case store.KubernetesStore:
 		pluginName = core_plugins.Kubernetes
 	case store.MemoryStore:
+		pluginName = core_plugins.Universal
+	case store.Traditional:
 		pluginName = core_plugins.Universal
 	default:
 		return errors.Errorf("unknown store type %s", cfg.Store.Type)

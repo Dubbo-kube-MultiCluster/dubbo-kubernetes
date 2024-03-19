@@ -18,8 +18,11 @@
 package registry
 
 import (
-	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	"time"
+)
+
+import (
+	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 )
 
 type resourceMetaObject struct {

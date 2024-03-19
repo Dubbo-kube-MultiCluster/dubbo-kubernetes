@@ -33,8 +33,8 @@ import (
 
 func DefaultServiceNameMappingConfig() SNPConfig {
 	return SNPConfig{
-		Server: SNPServerConfig{
-			Port:            57384,
+		Server: DubboServerConfig{
+			Port:            57386,
 			TlsMinVersion:   "TLSv1_2",
 			TlsCipherSuites: []string{},
 		},
@@ -44,7 +44,7 @@ func DefaultServiceNameMappingConfig() SNPConfig {
 type SNPConfig struct {
 	ServiceMapping ServiceMapping `json:"serviceMapping"`
 	// Service Name Mapping server configuration
-	Server SNPServerConfig `json:"server"`
+	Server DubboServerConfig `json:"server"`
 }
 
 func (s *SNPConfig) Validate() error {
@@ -58,7 +58,7 @@ func (s *SNPConfig) Validate() error {
 	return nil
 }
 
-type SNPServerConfig struct {
+type DubboServerConfig struct {
 	// Port on which Service Name Mapping server will listen
 	Port uint16 `json:"port" envconfig:"dubbo_snp_server_port"`
 	// TlsMinVersion defines the minimum TLS version to be used
@@ -69,7 +69,7 @@ type SNPServerConfig struct {
 	TlsCipherSuites []string `json:"tlsCipherSuites" envconfig:"dubbo_snp_server_tls_cipher_suites"`
 }
 
-func (s *SNPServerConfig) Validate() error {
+func (s *DubboServerConfig) Validate() error {
 	var errs error
 	if s.Port == 0 {
 		errs = multierr.Append(errs, errors.New(".Port cannot be zero"))

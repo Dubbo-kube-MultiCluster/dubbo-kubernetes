@@ -25,6 +25,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/core"
 	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
+	"github.com/apache/dubbo-kubernetes/pkg/plugins/leader/memory"
 )
 
 func NewLeaderElector(b *core_runtime.Builder) (component.LeaderElector, error) {
@@ -36,6 +37,7 @@ func NewLeaderElector(b *core_runtime.Builder) (component.LeaderElector, error) 
 		//	return nil, errors.Wrap(err, "cloud not connect to mysql")
 		//}
 		//return leader_mysql.NewMysqlLeaderElector(db), nil
+		return memory.NewAlwaysLeaderElector(), nil
 	// In case of Kubernetes, Leader Elector is embedded in a Kubernetes ComponentManager
 	default:
 		return nil, errors.Errorf("no election leader for storage of type %s", b.Config().Store.Type)

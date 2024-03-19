@@ -101,8 +101,6 @@ func BuilderFor(appCtx context.Context, cfg dubbo_cp.Config) (*core_runtime.Buil
 	builder.WithEventBus(eventBus)
 	builder.WithDpServer(server.NewDpServer(*cfg.DpServer))
 
-	initializeConfigManager(builder)
-
 	err = initializeMeshCache(builder)
 	if err != nil {
 		return nil, err
