@@ -77,6 +77,4 @@ func (m MetadataServer) MetadataSync(stream mesh_proto.MetadataService_MetadataS
 	return nil
 }
 
-func (s *MetadataServer) debounce(stopCh <-chan struct{}, pushFn func(m *RegisterRequest)) {
-
-}
+func (s *MetadataServer) debounce(stopCh <-chan struct{}, pushFn func(m *RegisterRequest)) {}
