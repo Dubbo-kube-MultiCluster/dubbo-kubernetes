@@ -35,7 +35,7 @@ import (
 
 import (
 	mesh_proto "github.com/apache/dubbo-kubernetes/api/mesh/v1alpha1"
-	"github.com/apache/dubbo-kubernetes/pkg/config/snp"
+	"github.com/apache/dubbo-kubernetes/pkg/config/dubbo"
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	core_mesh "github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
@@ -56,7 +56,7 @@ type SnpServer struct {
 	mesh_proto.ServiceNameMappingServiceServer
 
 	localZone string
-	config    snp.ServiceMapping
+	config    dubbo.DubboConfig
 	queue     chan *RegisterRequest
 	pusher    pusher.Pusher
 
@@ -78,7 +78,7 @@ func (s *SnpServer) NeedLeaderElection() bool {
 
 func NewSnpServer(
 	ctx context.Context,
-	config snp.ServiceMapping,
+	config dubbo.DubboConfig,
 	pusher pusher.Pusher,
 	resourceManager manager.ResourceManager,
 	transactions core_store.Transactions,
@@ -278,7 +278,7 @@ func (s *SnpServer) debounce(stopCh <-chan struct{}, pushFn func(m *RegisterRequ
 			}
 			debouncedEvents++
 
-			req = req.Merge(r)
+			req = req.merge(r)
 		case <-timeChan:
 			if free {
 				pushWorker()

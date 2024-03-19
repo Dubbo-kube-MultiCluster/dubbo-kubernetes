@@ -16,3 +16,5 @@
  */
 
 package metadata
+
+type RegisterRequest struct{}

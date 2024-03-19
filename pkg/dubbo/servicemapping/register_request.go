@@ -29,7 +29,7 @@ type RegisterRequest struct {
 	ConfigsUpdated map[core_model.ResourceKey]map[string]struct{}
 }
 
-func (q *RegisterRequest) Merge(req *RegisterRequest) *RegisterRequest {
+func (q *RegisterRequest) merge(req *RegisterRequest) *RegisterRequest {
 	if q == nil {
 		return req
 	}

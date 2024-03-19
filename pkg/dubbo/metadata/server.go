@@ -36,6 +36,7 @@ const queueSize = 100
 type MetadataServer struct {
 	mesh_proto.MetadataServiceServer
 
+	queue  chan *RegisterRequest
 	pusher pusher.Pusher
 
 	ctx             context.Context
@@ -66,9 +67,16 @@ func NewMetadataServe(
 }
 
 func (m *MetadataServer) MetadataRegister(ctx context.Context, req *mesh_proto.MetaDataRegisterRequest) (*mesh_proto.MetaDataRegisterResponse, error) {
-	return nil, nil
+	return &mesh_proto.MetaDataRegisterResponse{
+		Success: false,
+		Message: "success",
+	}, nil
 }
 
 func (m MetadataServer) MetadataSync(stream mesh_proto.MetadataService_MetadataSyncServer) error {
 	return nil
+}
+
+func (s *MetadataServer) debounce(stopCh <-chan struct{}, pushFn func(m *RegisterRequest)) {
+
 }

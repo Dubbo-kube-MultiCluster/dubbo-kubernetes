@@ -28,9 +28,9 @@ import (
 	core_mesh "github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
-	metadata2 "github.com/apache/dubbo-kubernetes/pkg/dubbo/metadata"
+	dubbo_metadata "github.com/apache/dubbo-kubernetes/pkg/dubbo/metadata"
 	"github.com/apache/dubbo-kubernetes/pkg/dubbo/pusher"
-	"github.com/apache/dubbo-kubernetes/pkg/dubbo/servicemapping"
+	dubbo_mapping "github.com/apache/dubbo-kubernetes/pkg/dubbo/servicemapping"
 )
 
 var log = core.Log.WithName("dubbo")
@@ -39,7 +39,7 @@ func Setup(rt core_runtime.Runtime) error {
 	if rt.Config().Environment != core_env.KubernetesEnvironment {
 		return nil
 	}
-	cfg := rt.Config().ServiceNameMapping
+	cfg := rt.Config().DubboConfig
 
 	dubboPusher := pusher.NewPusher(rt.ResourceManager(), rt.EventBus(), func() *time.Ticker {
 		// todo: should configured by config in the future
@@ -50,9 +50,9 @@ func Setup(rt core_runtime.Runtime) error {
 	})
 
 	// register ServiceNameMappingService
-	serviceMapping := servicemapping.NewSnpServer(
+	serviceMapping := dubbo_mapping.NewSnpServer(
 		rt.AppContext(),
-		cfg.ServiceMapping,
+		cfg,
 		dubboPusher,
 		rt.ResourceManager(),
 		rt.Transactions(),
@@ -61,7 +61,7 @@ func Setup(rt core_runtime.Runtime) error {
 	mesh_proto.RegisterServiceNameMappingServiceServer(rt.DpServer().GrpcServer(), serviceMapping)
 
 	// register MetadataService
-	metadata := metadata2.NewMetadataServe(
+	metadata := dubbo_metadata.NewMetadataServe(
 		rt.AppContext(),
 		dubboPusher,
 		rt.ResourceManager(),
