@@ -23,10 +23,12 @@ import (
 
 import (
 	mesh_proto "github.com/apache/dubbo-kubernetes/api/mesh/v1alpha1"
+	core_env "github.com/apache/dubbo-kubernetes/pkg/config/core"
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	core_mesh "github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
+	metadata2 "github.com/apache/dubbo-kubernetes/pkg/dubbo/metadata"
 	"github.com/apache/dubbo-kubernetes/pkg/dubbo/pusher"
 	"github.com/apache/dubbo-kubernetes/pkg/dubbo/servicemapping"
 )
@@ -34,23 +36,37 @@ import (
 var log = core.Log.WithName("dubbo")
 
 func Setup(rt core_runtime.Runtime) error {
+	if rt.Config().Environment != core_env.KubernetesEnvironment {
+		return nil
+	}
 	cfg := rt.Config().ServiceNameMapping
 
-	snpPusher := pusher.NewPusher(rt.ResourceManager(), rt.EventBus(), func() *time.Ticker {
+	dubboPusher := pusher.NewPusher(rt.ResourceManager(), rt.EventBus(), func() *time.Ticker {
 		// todo: should configured by config in the future
 		return time.NewTicker(time.Minute * 10)
-	}, []core_model.ResourceType{core_mesh.MappingType})
+	}, []core_model.ResourceType{
+		core_mesh.MappingType,
+		core_mesh.MetaDataType,
+	})
 
 	// register ServiceNameMappingService
 	serviceMapping := servicemapping.NewSnpServer(
 		rt.AppContext(),
 		cfg.ServiceMapping,
-		snpPusher,
+		dubboPusher,
 		rt.ResourceManager(),
 		rt.Transactions(),
 		rt.Config().Multizone.Zone.Name,
 	)
 	mesh_proto.RegisterServiceNameMappingServiceServer(rt.DpServer().GrpcServer(), serviceMapping)
 
-	return rt.Add(snpPusher, serviceMapping)
+	// register MetadataService
+	metadata := metadata2.NewMetadataServe(
+		rt.AppContext(),
+		dubboPusher,
+		rt.ResourceManager(),
+		rt.Transactions(),
+	)
+	mesh_proto.RegisterMetadataServiceServer(rt.DpServer().GrpcServer(), metadata)
+	return rt.Add(dubboPusher, serviceMapping, metadata)
 }

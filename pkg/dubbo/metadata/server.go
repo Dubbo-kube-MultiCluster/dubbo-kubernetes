@@ -26,6 +26,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
+	"github.com/apache/dubbo-kubernetes/pkg/dubbo/pusher"
 )
 
 var log = core.Log.WithName("dubbo").WithName("server").WithName("metadata")
@@ -33,7 +34,9 @@ var log = core.Log.WithName("dubbo").WithName("server").WithName("metadata")
 const queueSize = 100
 
 type MetadataServer struct {
-	mesh_proto.ServiceNameMappingServiceServer
+	mesh_proto.MetadataServiceServer
+
+	pusher pusher.Pusher
 
 	ctx             context.Context
 	resourceManager manager.ResourceManager
@@ -46,4 +49,26 @@ func (s *MetadataServer) Start(stop <-chan struct{}) error {
 
 func (s *MetadataServer) NeedLeaderElection() bool {
 	return false
+}
+
+func NewMetadataServe(
+	ctx context.Context,
+	pusher pusher.Pusher,
+	resourceManager manager.ResourceManager,
+	transactions core_store.Transactions,
+) *MetadataServer {
+	return &MetadataServer{
+		pusher:          pusher,
+		ctx:             ctx,
+		resourceManager: resourceManager,
+		transactions:    transactions,
+	}
+}
+
+func (m *MetadataServer) MetadataRegister(ctx context.Context, req *mesh_proto.MetaDataRegisterRequest) (*mesh_proto.MetaDataRegisterResponse, error) {
+	return nil, nil
+}
+
+func (m MetadataServer) MetadataSync(stream mesh_proto.MetadataService_MetadataSyncServer) error {
+	return nil
 }
