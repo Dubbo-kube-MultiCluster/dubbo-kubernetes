@@ -180,7 +180,6 @@ require (
 	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/dubbogo/grpc-go v1.42.10 // indirect
-	github.com/dubbogo/tools v1.0.9 // indirect
 	github.com/dubbogo/triple v1.2.2-rc3 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
