@@ -886,6 +886,122 @@ func init() {
 }
 
 const (
+	RateLimitType model.ResourceType = "RateLimit"
+)
+
+var _ model.Resource = &RateLimitResource{}
+
+type RateLimitResource struct {
+	Meta model.ResourceMeta
+	Spec *mesh_proto.RateLimit
+}
+
+func NewRateLimitResource() *RateLimitResource {
+	return &RateLimitResource{
+		Spec: &mesh_proto.RateLimit{},
+	}
+}
+
+func (t *RateLimitResource) GetMeta() model.ResourceMeta {
+	return t.Meta
+}
+
+func (t *RateLimitResource) SetMeta(m model.ResourceMeta) {
+	t.Meta = m
+}
+
+func (t *RateLimitResource) GetSpec() model.ResourceSpec {
+	return t.Spec
+}
+
+func (t *RateLimitResource) Sources() []*mesh_proto.Selector {
+	return t.Spec.GetSources()
+}
+
+func (t *RateLimitResource) Destinations() []*mesh_proto.Selector {
+	return t.Spec.GetDestinations()
+}
+
+func (t *RateLimitResource) SetSpec(spec model.ResourceSpec) error {
+	protoType, ok := spec.(*mesh_proto.RateLimit)
+	if !ok {
+		return fmt.Errorf("invalid type %T for Spec", spec)
+	} else {
+		if protoType == nil {
+			t.Spec = &mesh_proto.RateLimit{}
+		} else {
+			t.Spec = protoType
+		}
+		return nil
+	}
+}
+
+func (t *RateLimitResource) Descriptor() model.ResourceTypeDescriptor {
+	return RateLimitResourceTypeDescriptor
+}
+
+var _ model.ResourceList = &RateLimitResourceList{}
+
+type RateLimitResourceList struct {
+	Items      []*RateLimitResource
+	Pagination model.Pagination
+}
+
+func (l *RateLimitResourceList) GetItems() []model.Resource {
+	res := make([]model.Resource, len(l.Items))
+	for i, elem := range l.Items {
+		res[i] = elem
+	}
+	return res
+}
+
+func (l *RateLimitResourceList) GetItemType() model.ResourceType {
+	return RateLimitType
+}
+
+func (l *RateLimitResourceList) NewItem() model.Resource {
+	return NewRateLimitResource()
+}
+
+func (l *RateLimitResourceList) AddItem(r model.Resource) error {
+	if trr, ok := r.(*RateLimitResource); ok {
+		l.Items = append(l.Items, trr)
+		return nil
+	} else {
+		return model.ErrorInvalidItemType((*RateLimitResource)(nil), r)
+	}
+}
+
+func (l *RateLimitResourceList) GetPagination() *model.Pagination {
+	return &l.Pagination
+}
+
+func (l *RateLimitResourceList) SetPagination(p model.Pagination) {
+	l.Pagination = p
+}
+
+var RateLimitResourceTypeDescriptor = model.ResourceTypeDescriptor{
+	Name:                RateLimitType,
+	Resource:            NewRateLimitResource(),
+	ResourceList:        &RateLimitResourceList{},
+	ReadOnly:            false,
+	AdminOnly:           false,
+	Scope:               model.ScopeMesh,
+	WsPath:              "rate-limits",
+	DubboctlArg:         "rate-limit",
+	DubboctlListArg:     "rate-limits",
+	AllowToInspect:      true,
+	IsPolicy:            true,
+	SingularDisplayName: "Rate Limit",
+	PluralDisplayName:   "Rate Limits",
+	IsExperimental:      false,
+}
+
+func init() {
+	registry.RegisterType(RateLimitResourceTypeDescriptor)
+}
+
+const (
 	TagRouteType model.ResourceType = "TagRoute"
 )
 
@@ -992,6 +1108,122 @@ var TagRouteResourceTypeDescriptor = model.ResourceTypeDescriptor{
 
 func init() {
 	registry.RegisterType(TagRouteResourceTypeDescriptor)
+}
+
+const (
+	TrafficRouteType model.ResourceType = "TrafficRoute"
+)
+
+var _ model.Resource = &TrafficRouteResource{}
+
+type TrafficRouteResource struct {
+	Meta model.ResourceMeta
+	Spec *mesh_proto.TrafficRoute
+}
+
+func NewTrafficRouteResource() *TrafficRouteResource {
+	return &TrafficRouteResource{
+		Spec: &mesh_proto.TrafficRoute{},
+	}
+}
+
+func (t *TrafficRouteResource) GetMeta() model.ResourceMeta {
+	return t.Meta
+}
+
+func (t *TrafficRouteResource) SetMeta(m model.ResourceMeta) {
+	t.Meta = m
+}
+
+func (t *TrafficRouteResource) GetSpec() model.ResourceSpec {
+	return t.Spec
+}
+
+func (t *TrafficRouteResource) Sources() []*mesh_proto.Selector {
+	return t.Spec.GetSources()
+}
+
+func (t *TrafficRouteResource) Destinations() []*mesh_proto.Selector {
+	return t.Spec.GetDestinations()
+}
+
+func (t *TrafficRouteResource) SetSpec(spec model.ResourceSpec) error {
+	protoType, ok := spec.(*mesh_proto.TrafficRoute)
+	if !ok {
+		return fmt.Errorf("invalid type %T for Spec", spec)
+	} else {
+		if protoType == nil {
+			t.Spec = &mesh_proto.TrafficRoute{}
+		} else {
+			t.Spec = protoType
+		}
+		return nil
+	}
+}
+
+func (t *TrafficRouteResource) Descriptor() model.ResourceTypeDescriptor {
+	return TrafficRouteResourceTypeDescriptor
+}
+
+var _ model.ResourceList = &TrafficRouteResourceList{}
+
+type TrafficRouteResourceList struct {
+	Items      []*TrafficRouteResource
+	Pagination model.Pagination
+}
+
+func (l *TrafficRouteResourceList) GetItems() []model.Resource {
+	res := make([]model.Resource, len(l.Items))
+	for i, elem := range l.Items {
+		res[i] = elem
+	}
+	return res
+}
+
+func (l *TrafficRouteResourceList) GetItemType() model.ResourceType {
+	return TrafficRouteType
+}
+
+func (l *TrafficRouteResourceList) NewItem() model.Resource {
+	return NewTrafficRouteResource()
+}
+
+func (l *TrafficRouteResourceList) AddItem(r model.Resource) error {
+	if trr, ok := r.(*TrafficRouteResource); ok {
+		l.Items = append(l.Items, trr)
+		return nil
+	} else {
+		return model.ErrorInvalidItemType((*TrafficRouteResource)(nil), r)
+	}
+}
+
+func (l *TrafficRouteResourceList) GetPagination() *model.Pagination {
+	return &l.Pagination
+}
+
+func (l *TrafficRouteResourceList) SetPagination(p model.Pagination) {
+	l.Pagination = p
+}
+
+var TrafficRouteResourceTypeDescriptor = model.ResourceTypeDescriptor{
+	Name:                TrafficRouteType,
+	Resource:            NewTrafficRouteResource(),
+	ResourceList:        &TrafficRouteResourceList{},
+	ReadOnly:            false,
+	AdminOnly:           false,
+	Scope:               model.ScopeMesh,
+	WsPath:              "",
+	DubboctlArg:         "",
+	DubboctlListArg:     "",
+	AllowToInspect:      false,
+	IsPolicy:            true,
+	SingularDisplayName: "Traffic Route",
+	PluralDisplayName:   "Traffic Routes",
+	IsExperimental:      false,
+}
+
+func init() {
+	registry.RegisterType(TrafficRouteResourceTypeDescriptor)
 }
 
 const (
