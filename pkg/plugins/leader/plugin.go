@@ -25,22 +25,22 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/core"
 	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
-	common_mysql "github.com/apache/dubbo-kubernetes/pkg/plugins/common/mysql"
-	leader_mysql "github.com/apache/dubbo-kubernetes/pkg/plugins/leader/mysql"
+	"github.com/apache/dubbo-kubernetes/pkg/plugins/leader/memory"
 )
 
 func NewLeaderElector(b *core_runtime.Builder) (component.LeaderElector, error) {
 	switch b.Config().Environment {
 	case core.UniversalEnvironment:
-		cfg := *b.Config().Store.Mysql
-		db, err := common_mysql.ConnectToDb(cfg)
-		if err != nil {
-			return nil, errors.Wrap(err, "cloud not connect to mysql")
-		}
-		return leader_mysql.NewMysqlLeaderElector(db), nil
-
+		//cfg := *b.Config().Store.Mysql
+		//db, err := common_mysql.ConnectToDb(cfg)
+		//if err != nil {
+		//	return nil, errors.Wrap(err, "cloud not connect to mysql")
+		//}
+		//return leader_mysql.NewMysqlLeaderElector(db), nil
+		return memory.NewAlwaysLeaderElector(), nil
 	// In case of Kubernetes, Leader Elector is embedded in a Kubernetes ComponentManager
 	default:
 		return nil, errors.Errorf("no election leader for storage of type %s", b.Config().Store.Type)
 	}
+	return nil, nil
 }

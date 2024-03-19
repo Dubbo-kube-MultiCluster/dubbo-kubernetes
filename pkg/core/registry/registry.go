@@ -19,6 +19,7 @@ package registry
 
 import (
 	"net/url"
+	"sync"
 )
 
 import (
@@ -55,8 +56,7 @@ func (r *Registry) Delegate() dubboRegistry.Registry {
 	return r.delegate
 }
 
-func (r *Registry) Subscribe(metadataReport report.MetadataReport, resourceManager core_manager.ResourceManager) error {
-	subscribeUrl := &common.URL{}
+func (r *Registry) Subscribe(metadataReport report.MetadataReport, resourceManager core_manager.ResourceManager, cache *sync.Map) error {
 	queryParams := url.Values{
 		consts.InterfaceKey:  {consts.AnyValue},
 		consts.GroupKey:      {consts.AnyValue},
@@ -69,10 +69,10 @@ func (r *Registry) Subscribe(metadataReport report.MetadataReport, resourceManag
 		consts.EnabledKey: {consts.AnyValue},
 		consts.CheckKey:   {"false"},
 	}
-	subscribeUrl, _ = common.NewURL(common.GetLocalIp()+":0",
+	subscribeUrl, _ := common.NewURL(common.GetLocalIp()+":0",
 		common.WithProtocol(consts.AdminProtocol),
 		common.WithParams(queryParams))
-	listener := NewNotifyListener(resourceManager)
+	listener := NewNotifyListener(resourceManager, cache)
 	go func() {
 		err := r.delegate.Subscribe(subscribeUrl, listener)
 		if err != nil {

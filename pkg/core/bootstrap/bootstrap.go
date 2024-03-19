@@ -21,31 +21,35 @@ import (
 	"context"
 	"net/url"
 	"strings"
+	"sync"
 )
 
 import (
 	"dubbo.apache.org/dubbo-go/v3/common"
 	"dubbo.apache.org/dubbo-go/v3/common/extension"
+	"dubbo.apache.org/dubbo-go/v3/config/instance"
 	"dubbo.apache.org/dubbo-go/v3/config_center"
 
 	"github.com/pkg/errors"
 )
 
 import (
+	"github.com/apache/dubbo-kubernetes/pkg/admin"
 	dubbo_cp "github.com/apache/dubbo-kubernetes/pkg/config/app/dubbo-cp"
 	config_core "github.com/apache/dubbo-kubernetes/pkg/config/core"
 	"github.com/apache/dubbo-kubernetes/pkg/config/core/resources/store"
-	"github.com/apache/dubbo-kubernetes/pkg/config/registry"
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	config_manager "github.com/apache/dubbo-kubernetes/pkg/core/config/manager"
 	"github.com/apache/dubbo-kubernetes/pkg/core/consts"
 	"github.com/apache/dubbo-kubernetes/pkg/core/datasource"
+	"github.com/apache/dubbo-kubernetes/pkg/core/extensions"
+	"github.com/apache/dubbo-kubernetes/pkg/core/governance"
 	"github.com/apache/dubbo-kubernetes/pkg/core/logger"
 	dataplane_managers "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/dataplane"
 	mapping_managers "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/mapping"
 	metadata_managers "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/metadata"
 	core_plugins "github.com/apache/dubbo-kubernetes/pkg/core/plugins"
-	registry2 "github.com/apache/dubbo-kubernetes/pkg/core/registry"
+	dubbo_registry "github.com/apache/dubbo-kubernetes/pkg/core/registry"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/system"
 	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
@@ -54,7 +58,6 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
 	dds_context "github.com/apache/dubbo-kubernetes/pkg/dds/context"
 	"github.com/apache/dubbo-kubernetes/pkg/dp-server/server"
-	"github.com/apache/dubbo-kubernetes/pkg/dubbo"
 	"github.com/apache/dubbo-kubernetes/pkg/events"
 	"github.com/apache/dubbo-kubernetes/pkg/intercp"
 	"github.com/apache/dubbo-kubernetes/pkg/intercp/catalog"
@@ -79,14 +82,14 @@ func buildRuntime(appCtx context.Context, cfg dubbo_cp.Config) (core_runtime.Run
 			return nil, errors.Wrapf(err, "failed to run beforeBootstrap plugin:'%s'", plugin.Name())
 		}
 	}
+	if cfg.Environment == config_core.UniversalEnvironment {
+		cfg.Store.Type = store.Traditional
+	}
 	// 初始化传统微服务体系所需要的组件
 	if err := initializeTraditional(cfg, builder); err != nil {
 		return nil, err
 	}
 	if err := initializeResourceStore(cfg, builder); err != nil {
-		return nil, err
-	}
-	if err := initializeConfigStore(cfg, builder); err != nil {
 		return nil, err
 	}
 
@@ -105,6 +108,7 @@ func buildRuntime(appCtx context.Context, cfg dubbo_cp.Config) (core_runtime.Run
 	leaderInfoComponent := &component.LeaderInfoComponent{}
 	builder.WithLeaderInfo(leaderInfoComponent)
 
+	builder.WithDataplaneCache(&sync.Map{})
 	builder.WithDpServer(server.NewDpServer(*cfg.DpServer))
 
 	resourceManager := builder.ResourceManager()
@@ -112,7 +116,7 @@ func buildRuntime(appCtx context.Context, cfg dubbo_cp.Config) (core_runtime.Run
 	builder.WithDDSContext(kdsContext)
 
 	if cfg.Mode == config_core.Global {
-		kdsEnvoyAdminClient := dubbo.NewDDSEnvoyAdminClient(
+		kdsEnvoyAdminClient := admin.NewDDSEnvoyAdminClient(
 			builder.DDSContext().EnvoyAdminRPCs,
 			cfg.Store.Type == store.KubernetesStore,
 		)
@@ -125,7 +129,7 @@ func buildRuntime(appCtx context.Context, cfg dubbo_cp.Config) (core_runtime.Run
 		)
 		builder.WithEnvoyAdminClient(forwardingClient)
 	} else {
-		builder.WithEnvoyAdminClient(dubbo.NewEnvoyAdminClient(
+		builder.WithEnvoyAdminClient(admin.NewEnvoyAdminClient(
 			resourceManager,
 			builder.Config().GetEnvoyAdminPort(),
 		))
@@ -172,9 +176,9 @@ func initializeTraditional(cfg dubbo_cp.Config, builder *core_runtime.Builder) e
 	if cfg.Environment == config_core.KubernetesEnvironment {
 		return nil
 	}
-	address := cfg.Tradition.ConfigCenter
-	registryAddress := cfg.Tradition.Registry.Address
-	metadataReportAddress := cfg.Tradition.MetadataReport.Address
+	address := cfg.Store.Traditional.ConfigCenter
+	registryAddress := cfg.Store.Traditional.Registry.Address
+	metadataReportAddress := cfg.Store.Traditional.MetadataReport.Address
 	c, addrUrl := getValidAddressConfig(address, registryAddress)
 	configCenter := newConfigCenter(c, addrUrl)
 	properties, err := configCenter.GetProperties(consts.DubboPropertyKey)
@@ -200,12 +204,21 @@ func initializeTraditional(cfg dubbo_cp.Config, builder *core_runtime.Builder) e
 			panic(err)
 		}
 
+		fac := extensions.GetRegClientFactory(addrUrl.Protocol)
+		if fac != nil {
+			regClient := fac.CreateRegClient(addrUrl)
+			builder.WithRegClient(regClient)
+		} else {
+			logger.Sugar().Infof("Metadata of type %v not registered.", addrUrl.Protocol)
+		}
+
 		registryCenter, err := extension.GetRegistry(c.GetProtocol(), addrUrl)
 		if err != nil {
 			return err
 		}
+		builder.WithGovernanceConfig(governance.NewGovernanceConfig(configCenter, registryCenter, c.GetProtocol()))
 		builder.WithRegistryCenter(registryCenter)
-		delegate, err := extension.GetRegistry(c.GetProtocol(), addrUrl)
+		delegate, err := extension.GetRegistry(addrUrl.Protocol, addrUrl)
 		if err != nil {
 			logger.Error("Error initialize registry instance.")
 			return err
@@ -219,7 +232,8 @@ func initializeTraditional(cfg dubbo_cp.Config, builder *core_runtime.Builder) e
 			logger.Error("Error initialize service discovery instance.")
 			return err
 		}
-		adminRegistry := registry2.NewRegistry(delegate, sdDelegate)
+		builder.WithServiceDiscovery(sdDelegate)
+		adminRegistry := dubbo_registry.NewRegistry(delegate, sdDelegate)
 		builder.WithAdminRegistry(adminRegistry)
 	}
 	if len(metadataReportAddress) > 0 {
@@ -233,16 +247,20 @@ func initializeTraditional(cfg dubbo_cp.Config, builder *core_runtime.Builder) e
 		metadataReport := factory.CreateMetadataReport(addrUrl)
 		builder.WithMetadataReport(metadataReport)
 	}
+	// 设置MetadataReportUrl
+	instance.SetMetadataReportUrl(addrUrl)
+	// 设置MetadataReportInstance
+	instance.SetMetadataReportInstanceByReg(addrUrl)
 
 	return nil
 }
 
-func getValidAddressConfig(address string, registryAddress string) (registry.AddressConfig, *common.URL) {
+func getValidAddressConfig(address string, registryAddress string) (store.AddressConfig, *common.URL) {
 	if len(address) <= 0 && len(registryAddress) <= 0 {
 		panic("Must at least specify `admin.config-center.address` or `admin.registry.address`!")
 	}
 
-	var c registry.AddressConfig
+	var c store.AddressConfig
 	if len(address) > 0 {
 		logger.Infof("Specified config center address is %s", address)
 		c = newAddressConfig(address)
@@ -258,8 +276,8 @@ func getValidAddressConfig(address string, registryAddress string) (registry.Add
 	return c, configUrl
 }
 
-func newAddressConfig(address string) registry.AddressConfig {
-	cfg := registry.AddressConfig{}
+func newAddressConfig(address string) store.AddressConfig {
+	cfg := store.AddressConfig{}
 	cfg.Address = address
 	var err error
 	cfg.Url, err = url.Parse(address)
@@ -269,7 +287,7 @@ func newAddressConfig(address string) registry.AddressConfig {
 	return cfg
 }
 
-func newConfigCenter(c registry.AddressConfig, url *common.URL) config_center.DynamicConfiguration {
+func newConfigCenter(c store.AddressConfig, url *common.URL) config_center.DynamicConfiguration {
 	factory, err := extension.GetConfigCenterFactory(c.GetProtocol())
 	if err != nil {
 		logger.Info(err.Error())
@@ -291,8 +309,8 @@ func initializeResourceStore(cfg dubbo_cp.Config, builder *core_runtime.Builder)
 	case store.KubernetesStore:
 		pluginName = core_plugins.Kubernetes
 		pluginConfig = nil
-	case store.ZookeeperStore:
-		pluginName = core_plugins.Zookeeper
+	case store.Traditional:
+		pluginName = core_plugins.Traditional
 		pluginConfig = nil
 	case store.MemoryStore:
 		pluginName = core_plugins.Memory
@@ -329,6 +347,8 @@ func initializeConfigStore(cfg dubbo_cp.Config, builder *core_runtime.Builder) e
 	case store.KubernetesStore:
 		pluginName = core_plugins.Kubernetes
 	case store.MemoryStore:
+		pluginName = core_plugins.Universal
+	case store.Traditional:
 		pluginName = core_plugins.Universal
 	default:
 		return errors.Errorf("unknown store type %s", cfg.Store.Type)

@@ -33,12 +33,11 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/core/resources/store"
 	"github.com/apache/dubbo-kubernetes/pkg/config/diagnostics"
 	dp_server "github.com/apache/dubbo-kubernetes/pkg/config/dp-server"
+	"github.com/apache/dubbo-kubernetes/pkg/config/dubbo"
 	"github.com/apache/dubbo-kubernetes/pkg/config/eventbus"
 	"github.com/apache/dubbo-kubernetes/pkg/config/intercp"
 	"github.com/apache/dubbo-kubernetes/pkg/config/multizone"
 	"github.com/apache/dubbo-kubernetes/pkg/config/plugins/runtime"
-	"github.com/apache/dubbo-kubernetes/pkg/config/registry"
-	"github.com/apache/dubbo-kubernetes/pkg/config/snp"
 	config_types "github.com/apache/dubbo-kubernetes/pkg/config/types"
 	"github.com/apache/dubbo-kubernetes/pkg/config/xds"
 	"github.com/apache/dubbo-kubernetes/pkg/config/xds/bootstrap"
@@ -89,8 +88,6 @@ type Config struct {
 	Store *store.StoreConfig `json:"store,omitempty"`
 	// Envoy XDS server configuration
 	XdsServer *xds.XdsServerConfig `json:"xdsServer,omitempty"`
-	// 走传统微服务模式下需要这个东西
-	Tradition *registry.Registry `json:"tradition,omitempty"`
 	// Environment-specific configuration
 	Runtime *runtime.RuntimeConfig `json:"runtime,omitempty"`
 	// Multizone Config
@@ -106,7 +103,7 @@ type Config struct {
 	// Intercommunication CP configuration
 	InterCp intercp.InterCpConfig `json:"interCp"`
 	// SNP configuration
-	ServiceNameMapping    snp.SNPConfig         `json:"snp"`
+	DubboConfig           dubbo.DubboConfig     `json:"dubbo_config"`
 	DDSEventBasedWatchdog DDSEventBasedWatchdog `json:"dds_event_based_watchdog"`
 }
 
@@ -147,19 +144,19 @@ func (c *Config) PostProcess() error {
 
 var DefaultConfig = func() Config {
 	return Config{
-		Environment:        core.KubernetesEnvironment,
-		Mode:               core.Zone,
-		XdsServer:          xds.DefaultXdsServerConfig(),
-		Store:              store.DefaultStoreConfig(),
-		Runtime:            runtime.DefaultRuntimeConfig(),
-		General:            DefaultGeneralConfig(),
-		Defaults:           DefaultDefaultsConfig(),
-		Multizone:          multizone.DefaultMultizoneConfig(),
-		Diagnostics:        diagnostics.DefaultDiagnosticsConfig(),
-		DpServer:           dp_server.DefaultDpServerConfig(),
-		InterCp:            intercp.DefaultInterCpConfig(),
-		ServiceNameMapping: snp.DefaultServiceNameMappingConfig(),
-		EventBus:           eventbus.Default(),
+		Environment: core.UniversalEnvironment,
+		Mode:        core.Zone,
+		XdsServer:   xds.DefaultXdsServerConfig(),
+		Store:       store.DefaultStoreConfig(),
+		Runtime:     runtime.DefaultRuntimeConfig(),
+		General:     DefaultGeneralConfig(),
+		Defaults:    DefaultDefaultsConfig(),
+		Multizone:   multizone.DefaultMultizoneConfig(),
+		Diagnostics: diagnostics.DefaultDiagnosticsConfig(),
+		DpServer:    dp_server.DefaultDpServerConfig(),
+		InterCp:     intercp.DefaultInterCpConfig(),
+		DubboConfig: dubbo.DefaultServiceNameMappingConfig(),
+		EventBus:    eventbus.Default(),
 	}
 }
 

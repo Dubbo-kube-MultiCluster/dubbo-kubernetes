@@ -17,11 +17,8 @@ service ServiceNameMappingService {
   // other case (exists zk/nacos), data plane search in zk/nacos.
   //
   // data plane and control plane keep a streaming link:
-  // 1. when Mapping Resource updated, control plane sync Mapping Resource to
+  // when Mapping Resource updated, control plane sync Mapping Resource to
   // data plane.
-  // 2. data plane could request Mapping Request, control plane would response
-  // Mapping information to data plane. In the after, control plane will sync
-  // Mapping Resource according to earlier Mapping Request.
   rpc MappingSync(stream MappingSyncRequest)
       returns (stream MappingSyncResponse);
 }
@@ -36,16 +33,15 @@ message MappingRegisterResponse {
   string message = 2;
 }
 
-message MappingSyncRequest { repeated string interfaceNames = 1; }
+message MappingSyncRequest {
+  string nonce = 1;
+  string interfaceName = 2;
+}
 
 message MappingSyncResponse {
-  // if not success, mappings' each applicationNames is empty.
-  // Data plane should send many MappingSyncRequests again (according to
-  // interfaceNames).
-  repeated Mapping mappings = 1;
-  repeated string interfaceNames = 2;
-  bool success = 3;
-  string message = 4;
+  string nonce = 1;
+  int64 revision = 2;
+  repeated Mapping mappings = 3;
 }
 
 message Mapping {

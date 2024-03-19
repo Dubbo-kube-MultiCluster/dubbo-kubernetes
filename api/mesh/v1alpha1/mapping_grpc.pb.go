@@ -4,6 +4,9 @@ package v1alpha1
 
 import (
 	context "context"
+)
+
+import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -26,11 +29,8 @@ type ServiceNameMappingServiceClient interface {
 	// other case (exists zk/nacos), data plane search in zk/nacos.
 	//
 	// data plane and control plane keep a streaming link:
-	// 1. when Mapping Resource updated, control plane sync Mapping Resource to
+	// when Mapping Resource updated, control plane sync Mapping Resource to
 	// data plane.
-	// 2. data plane could request Mapping Request, control plane would response
-	// Mapping information to data plane. In the after, control plane will sync
-	// Mapping Resource according to earlier Mapping Request.
 	MappingSync(ctx context.Context, opts ...grpc.CallOption) (ServiceNameMappingService_MappingSyncClient, error)
 }
 
@@ -94,11 +94,8 @@ type ServiceNameMappingServiceServer interface {
 	// other case (exists zk/nacos), data plane search in zk/nacos.
 	//
 	// data plane and control plane keep a streaming link:
-	// 1. when Mapping Resource updated, control plane sync Mapping Resource to
+	// when Mapping Resource updated, control plane sync Mapping Resource to
 	// data plane.
-	// 2. data plane could request Mapping Request, control plane would response
-	// Mapping information to data plane. In the after, control plane will sync
-	// Mapping Resource according to earlier Mapping Request.
 	MappingSync(ServiceNameMappingService_MappingSyncServer) error
 	mustEmbedUnimplementedServiceNameMappingServiceServer()
 }

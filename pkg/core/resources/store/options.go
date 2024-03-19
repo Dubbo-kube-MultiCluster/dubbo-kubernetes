@@ -23,6 +23,7 @@ import (
 )
 
 import (
+	mesh_proto "github.com/apache/dubbo-kubernetes/api/mesh/v1alpha1"
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 )
 
@@ -84,6 +85,8 @@ func CreateWithLabels(labels map[string]string) CreateOptionsFunc {
 }
 
 type UpdateOptions struct {
+	Name             string
+	Mesh             string
 	ModificationTime time.Time
 	Labels           map[string]string
 }
@@ -91,6 +94,17 @@ type UpdateOptions struct {
 func ModifiedAt(modificationTime time.Time) UpdateOptionsFunc {
 	return func(opts *UpdateOptions) {
 		opts.ModificationTime = modificationTime
+	}
+}
+
+func UpdateBy(key core_model.ResourceKey) CreateOptionsFunc {
+	return CreateByKey(key.Name, key.Mesh)
+}
+
+func UpdateByKey(name, mesh string) CreateOptionsFunc {
+	return func(opts *CreateOptions) {
+		opts.Name = name
+		opts.Mesh = mesh
 	}
 }
 
@@ -194,6 +208,12 @@ func (g *GetOptions) HashCode() string {
 func GetByPath(path string) GetOptionsFunc {
 	return func(opts *GetOptions) {
 		opts.Labels[PathLabel] = path
+	}
+}
+
+func GetByRevision(revision string) GetOptionsFunc {
+	return func(opts *GetOptions) {
+		opts.Labels[mesh_proto.Revision] = revision
 	}
 }
 

@@ -24,25 +24,25 @@ import (
 
 import (
 	mesh_proto "github.com/apache/dubbo-kubernetes/api/mesh/v1alpha1"
+	"github.com/apache/dubbo-kubernetes/pkg/admin"
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/registry"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
-	"github.com/apache/dubbo-kubernetes/pkg/dubbo"
 )
 
 var serverLog = core.Log.WithName("intercp").WithName("catalog").WithName("server")
 
 type server struct {
-	adminClient dubbo.EnvoyAdminClient
+	adminClient admin.EnvoyAdminClient
 	resManager  manager.ReadOnlyResourceManager
 	mesh_proto.UnimplementedInterCPEnvoyAdminForwardServiceServer
 }
 
 var _ mesh_proto.InterCPEnvoyAdminForwardServiceServer = &server{}
 
-func NewServer(adminClient dubbo.EnvoyAdminClient, resManager manager.ReadOnlyResourceManager) mesh_proto.InterCPEnvoyAdminForwardServiceServer {
+func NewServer(adminClient admin.EnvoyAdminClient, resManager manager.ReadOnlyResourceManager) mesh_proto.InterCPEnvoyAdminForwardServiceServer {
 	return &server{
 		adminClient: adminClient,
 		resManager:  resManager,

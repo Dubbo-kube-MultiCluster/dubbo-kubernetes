@@ -24,23 +24,26 @@ import (
 )
 
 import (
+	"dubbo.apache.org/dubbo-go/v3/config_center"
 	"dubbo.apache.org/dubbo-go/v3/metadata/report"
 	dubboRegistry "dubbo.apache.org/dubbo-go/v3/registry"
 )
 
 import (
+	"github.com/apache/dubbo-kubernetes/pkg/admin"
 	dubbo_cp "github.com/apache/dubbo-kubernetes/pkg/config/app/dubbo-cp"
 	"github.com/apache/dubbo-kubernetes/pkg/config/core"
 	config_manager "github.com/apache/dubbo-kubernetes/pkg/core/config/manager"
+	"github.com/apache/dubbo-kubernetes/pkg/core/governance"
 	managers_dataplane "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/dataplane"
 	managers_mesh "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/mesh"
+	"github.com/apache/dubbo-kubernetes/pkg/core/reg_client"
 	"github.com/apache/dubbo-kubernetes/pkg/core/registry"
 	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
 	dds_context "github.com/apache/dubbo-kubernetes/pkg/dds/context"
 	dp_server "github.com/apache/dubbo-kubernetes/pkg/dp-server/server"
-	"github.com/apache/dubbo-kubernetes/pkg/dubbo"
 	"github.com/apache/dubbo-kubernetes/pkg/events"
 	xds_runtime "github.com/apache/dubbo-kubernetes/pkg/xds/runtime"
 )
@@ -67,15 +70,20 @@ type RuntimeContext interface {
 	ReadOnlyResourceManager() core_manager.ReadOnlyResourceManager
 	ConfigStore() core_store.ResourceStore
 	Extensions() context.Context
-	EnvoyAdminClient() dubbo.EnvoyAdminClient
+	EnvoyAdminClient() admin.EnvoyAdminClient
 	ConfigManager() config_manager.ConfigManager
 	LeaderInfo() component.LeaderInfo
 	EventBus() events.EventBus
 	DpServer() *dp_server.DpServer
+	DataplaneCache() *sync.Map
 	DDSContext() *dds_context.Context
 	RegistryCenter() dubboRegistry.Registry
+	ServiceDiscovery() dubboRegistry.ServiceDiscovery
 	MetadataReportCenter() report.MetadataReport
+	Governance() governance.GovernanceConfig
+	ConfigCenter() config_center.DynamicConfiguration
 	AdminRegistry() *registry.Registry
+	RegClient() reg_client.RegClient
 	ResourceValidators() ResourceValidators
 	// AppContext returns a context.Context which tracks the lifetime of the apps, it gets cancelled when the app is starting to shutdown.
 	AppContext() context.Context
@@ -141,18 +149,43 @@ type runtimeContext struct {
 	cs                   core_store.ResourceStore
 	rom                  core_manager.ReadOnlyResourceManager
 	ext                  context.Context
-	eac                  dubbo.EnvoyAdminClient
+	eac                  admin.EnvoyAdminClient
 	configm              config_manager.ConfigManager
 	xds                  xds_runtime.XDSRuntimeContext
 	leadInfo             component.LeaderInfo
 	erf                  events.EventBus
 	dps                  *dp_server.DpServer
+	dCache               *sync.Map
 	rv                   ResourceValidators
 	ddsctx               *dds_context.Context
 	registryCenter       dubboRegistry.Registry
 	metadataReportCenter report.MetadataReport
+	configCenter         config_center.DynamicConfiguration
 	adminRegistry        *registry.Registry
+	governance           governance.GovernanceConfig
 	appCtx               context.Context
+	regClient            reg_client.RegClient
+	serviceDiscovery     dubboRegistry.ServiceDiscovery
+}
+
+func (b *runtimeContext) RegClient() reg_client.RegClient {
+	return b.regClient
+}
+
+func (b *runtimeContext) ServiceDiscovery() dubboRegistry.ServiceDiscovery {
+	return b.serviceDiscovery
+}
+
+func (b *runtimeContext) DataplaneCache() *sync.Map {
+	return b.dCache
+}
+
+func (b *runtimeContext) Governance() governance.GovernanceConfig {
+	return b.governance
+}
+
+func (b *runtimeContext) ConfigCenter() config_center.DynamicConfiguration {
+	return b.configCenter
 }
 
 func (b *runtimeContext) AdminRegistry() *registry.Registry {
@@ -167,7 +200,7 @@ func (b *runtimeContext) MetadataReportCenter() report.MetadataReport {
 	return b.metadataReportCenter
 }
 
-func (rc *runtimeContext) EnvoyAdminClient() dubbo.EnvoyAdminClient {
+func (rc *runtimeContext) EnvoyAdminClient() admin.EnvoyAdminClient {
 	return rc.eac
 }
 
