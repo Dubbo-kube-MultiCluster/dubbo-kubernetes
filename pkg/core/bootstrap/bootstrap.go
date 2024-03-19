@@ -231,6 +231,7 @@ func initializeTraditional(cfg dubbo_cp.Config, builder *core_runtime.Builder) e
 			logger.Error("Error initialize service discovery instance.")
 			return err
 		}
+		builder.WithServiceDiscovery(sdDelegate)
 		adminRegistry := dubbo_registry.NewRegistry(delegate, sdDelegate)
 		builder.WithAdminRegistry(adminRegistry)
 	}

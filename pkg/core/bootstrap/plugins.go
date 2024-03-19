@@ -20,6 +20,7 @@ package bootstrap
 import (
 	_ "dubbo.apache.org/dubbo-go/v3/config_center/nacos"
 	_ "dubbo.apache.org/dubbo-go/v3/config_center/zookeeper"
+	_ "dubbo.apache.org/dubbo-go/v3/imports"
 	_ "dubbo.apache.org/dubbo-go/v3/metadata/report/nacos"
 	_ "dubbo.apache.org/dubbo-go/v3/metadata/report/zookeeper"
 	_ "dubbo.apache.org/dubbo-go/v3/metadata/service/local"
