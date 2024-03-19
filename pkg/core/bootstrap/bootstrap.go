@@ -48,7 +48,7 @@ import (
 	mapping_managers "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/mapping"
 	metadata_managers "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/metadata"
 	core_plugins "github.com/apache/dubbo-kubernetes/pkg/core/plugins"
-	registry2 "github.com/apache/dubbo-kubernetes/pkg/core/registry"
+	dubbo_registry "github.com/apache/dubbo-kubernetes/pkg/core/registry"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/system"
 	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
@@ -217,7 +217,7 @@ func initializeTraditional(cfg dubbo_cp.Config, builder *core_runtime.Builder) e
 		}
 		builder.WithGovernanceConfig(governance.NewGovernanceConfig(configCenter, registryCenter, c.GetProtocol()))
 		builder.WithRegistryCenter(registryCenter)
-		delegate, err := extension.GetRegistry(c.GetProtocol(), addrUrl)
+		delegate, err := extension.GetRegistry(addrUrl.Protocol, addrUrl)
 		if err != nil {
 			logger.Error("Error initialize registry instance.")
 			return err
@@ -231,7 +231,7 @@ func initializeTraditional(cfg dubbo_cp.Config, builder *core_runtime.Builder) e
 			logger.Error("Error initialize service discovery instance.")
 			return err
 		}
-		adminRegistry := registry2.NewRegistry(delegate, sdDelegate)
+		adminRegistry := dubbo_registry.NewRegistry(delegate, sdDelegate)
 		builder.WithAdminRegistry(adminRegistry)
 	}
 	if len(metadataReportAddress) > 0 {

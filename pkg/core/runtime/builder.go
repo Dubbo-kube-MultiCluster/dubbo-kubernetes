@@ -65,6 +65,7 @@ type BuilderContext interface {
 	RegClient() reg_client.RegClient
 	MetadataReportCenter() report.MetadataReport
 	AdminRegistry() *registry.Registry
+	ServiceDiscovery() dubboRegistry.ServiceDiscovery
 	ConfigCenter() config_center.DynamicConfiguration
 	Governance() governance.GovernanceConfig
 	Extensions() context.Context
@@ -109,6 +110,7 @@ type Builder struct {
 	appCtx               context.Context
 	dCache               *sync.Map
 	regClient            reg_client.RegClient
+	serviceDiscover      dubboRegistry.ServiceDiscovery
 	*runtimeInfo
 }
 
@@ -255,6 +257,11 @@ func (b *Builder) WithAdminRegistry(ag *registry.Registry) *Builder {
 	return b
 }
 
+func (b *Builder) WithServiceDiscovery(discovery dubboRegistry.ServiceDiscovery) *Builder {
+	b.serviceDiscover = discovery
+	return b
+}
+
 func (b *Builder) Build() (Runtime, error) {
 	if b.cm == nil {
 		return nil, errors.Errorf("ComponentManager has not been configured")
@@ -304,6 +311,7 @@ func (b *Builder) Build() (Runtime, error) {
 			dCache:               b.dCache,
 			dps:                  b.dps,
 			eac:                  b.eac,
+			serviceDiscovery:     b.serviceDiscover,
 			rv:                   b.rv,
 			appCtx:               b.appCtx,
 			regClient:            b.regClient,
@@ -330,6 +338,10 @@ func (b *Builder) AdminRegistry() *registry.Registry {
 
 func (b *Builder) ConfigCenter() config_center.DynamicConfiguration {
 	return b.configCenter
+}
+
+func (b *Builder) ServiceDiscovery() dubboRegistry.ServiceDiscovery {
+	return b.serviceDiscover
 }
 
 func (b *Builder) RegistryCenter() dubboRegistry.Registry {

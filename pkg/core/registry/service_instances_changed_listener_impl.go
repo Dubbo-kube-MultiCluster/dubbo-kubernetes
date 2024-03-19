@@ -209,11 +209,11 @@ func GetMetadataInfo(instance registry.ServiceInstance, revision string) (*commo
 	if metadataStorageType == dubboconstant.RemoteMetadataStorageType {
 		remoteMetadataServiceImpl, err := extension.GetRemoteMetadataService()
 		if err != nil {
-			return nil, err
+			return &common.MetadataInfo{}, err
 		}
 		metadataInfo, err = remoteMetadataServiceImpl.GetMetadata(instance)
 		if err != nil {
-			return nil, err
+			return &common.MetadataInfo{}, err
 		}
 	} else {
 		var err error
@@ -222,7 +222,7 @@ func GetMetadataInfo(instance registry.ServiceInstance, revision string) (*commo
 		defer metadataService.(*local.MetadataServiceProxy).Invoker.Destroy()
 		metadataInfo, err = metadataService.GetMetadataInfo(revision)
 		if err != nil {
-			return nil, err
+			return &common.MetadataInfo{}, err
 		}
 	}
 	return metadataInfo, nil

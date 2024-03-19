@@ -22,6 +22,8 @@ import (
 	_ "dubbo.apache.org/dubbo-go/v3/config_center/zookeeper"
 	_ "dubbo.apache.org/dubbo-go/v3/metadata/report/nacos"
 	_ "dubbo.apache.org/dubbo-go/v3/metadata/report/zookeeper"
+	_ "dubbo.apache.org/dubbo-go/v3/metadata/service/local"
+	_ "dubbo.apache.org/dubbo-go/v3/metadata/service/remote"
 	_ "dubbo.apache.org/dubbo-go/v3/registry/nacos"
 	_ "dubbo.apache.org/dubbo-go/v3/registry/zookeeper"
 )
@@ -38,4 +40,5 @@ import (
 	_ "github.com/apache/dubbo-kubernetes/pkg/plugins/resources/memory"
 	_ "github.com/apache/dubbo-kubernetes/pkg/plugins/resources/traditional"
 	_ "github.com/apache/dubbo-kubernetes/pkg/plugins/runtime/k8s"
+	_ "github.com/apache/dubbo-kubernetes/pkg/plugins/runtime/universal"
 )

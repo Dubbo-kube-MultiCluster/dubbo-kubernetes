@@ -78,6 +78,7 @@ type RuntimeContext interface {
 	DataplaneCache() *sync.Map
 	DDSContext() *dds_context.Context
 	RegistryCenter() dubboRegistry.Registry
+	ServiceDiscovery() dubboRegistry.ServiceDiscovery
 	MetadataReportCenter() report.MetadataReport
 	Governance() governance.GovernanceConfig
 	ConfigCenter() config_center.DynamicConfiguration
@@ -164,10 +165,15 @@ type runtimeContext struct {
 	governance           governance.GovernanceConfig
 	appCtx               context.Context
 	regClient            reg_client.RegClient
+	serviceDiscovery     dubboRegistry.ServiceDiscovery
 }
 
 func (b *runtimeContext) RegClient() reg_client.RegClient {
 	return b.regClient
+}
+
+func (b *runtimeContext) ServiceDiscovery() dubboRegistry.ServiceDiscovery {
+	return b.serviceDiscovery
 }
 
 func (b *runtimeContext) DataplaneCache() *sync.Map {
