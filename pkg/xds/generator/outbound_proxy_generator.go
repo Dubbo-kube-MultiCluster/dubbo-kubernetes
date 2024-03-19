@@ -19,7 +19,6 @@ package generator
 
 import (
 	"context"
-	"fmt"
 )
 
 import (
@@ -114,6 +113,8 @@ func (OutboundProxyGenerator) generateLDS(ctx xds_context.Context, proxy *model.
 	filterChainBuilder := func() *envoy_listeners.FilterChainBuilder {
 		filterChainBuilder := envoy_listeners.NewFilterChainBuilder(proxy.APIVersion, envoy_common.AnonymousResource)
 		switch protocol {
+		case core_mesh.ProtocolTriple:
+			// TODO: implement the logic of Triple
 		case core_mesh.ProtocolGRPC:
 			filterChainBuilder.
 				Configure(envoy_listeners.HttpConnectionManager(serviceName, false)).
@@ -154,9 +155,7 @@ func (g OutboundProxyGenerator) generateCDS(ctx xds_context.Context, services en
 
 	for _, serviceName := range services.Sorted() {
 		service := services[serviceName]
-		// TODO: healthCheck and circuitBreaker is not implemented yet
 		protocol := ctx.Mesh.GetServiceProtocol(serviceName)
-		// tlsReady := service.TLSReady()
 
 		for _, c := range service.Clusters() {
 			cluster := c.(*envoy_common.ClusterImpl)
@@ -268,99 +267,7 @@ func (OutboundProxyGenerator) determineRoutes(
 ) envoy_common.Routes {
 	var routes envoy_common.Routes
 
-	route := proxy.Routing.TrafficRoutes[oface]
-	if route == nil {
-		if len(proxy.Policies.TrafficRoutes) > 0 {
-			outboundLog.Info("there is no selected TrafficRoute for the outbound interface, which means that the traffic won't be routed.", "dataplane", proxy.Dataplane.Meta.GetName(), "mesh", proxy.Dataplane.Meta.GetMesh(), "outbound", oface)
-		}
-		return nil
-	}
-
-	rateLimit := proxy.Policies.RateLimitsOutbound[oface]
-
-	clustersFromSplit := func(splits []*mesh_proto.TrafficRoute_Split) []envoy_common.Cluster {
-		var clusters []envoy_common.Cluster
-		for _, destination := range splits {
-			service := destination.Destination[mesh_proto.ServiceTag]
-			if destination.GetWeight().GetValue() == 0 {
-				// 0 assumes no traffic is passed there. Envoy doesn't support 0 weight, so instead of passing it to Envoy we just skip such cluster.
-				continue
-			}
-
-			name, _ := tags.Tags(destination.Destination).DestinationClusterName(nil)
-
-			if mesh, ok := destination.Destination[mesh_proto.MeshTag]; ok {
-				// The name should be distinct to the service & mesh combination
-				name = fmt.Sprintf("%s_%s", name, mesh)
-			}
-
-			// We assume that all the targets are either ExternalServices or not
-			// therefore we check only the first one
-			var isExternalService bool
-			if endpoints := proxy.Routing.OutboundTargets[service]; len(endpoints) > 0 {
-				isExternalService = endpoints[0].IsExternalService()
-			}
-			if endpoints := proxy.Routing.ExternalServiceOutboundTargets[service]; len(endpoints) > 0 {
-				isExternalService = true
-			}
-
-			allTags := tags.Tags(destination.Destination)
-			cluster := envoy_common.NewCluster(
-				envoy_common.WithService(service),
-				envoy_common.WithName(name),
-				envoy_common.WithWeight(destination.GetWeight().GetValue()),
-				// The mesh tag is set here if this destination is generated
-				// from a MeshGateway virtual outbound and is not part of the
-				// service tags
-				envoy_common.WithTags(allTags.WithoutTags(mesh_proto.MeshTag)),
-				// TODO: add LB and timeout
-				envoy_common.WithExternalService(isExternalService),
-			)
-
-			if mesh, ok := destination.Destination[mesh_proto.MeshTag]; ok {
-				cluster.SetMesh(mesh)
-			}
-
-			if name, ok := clusterCache[allTags.String()]; ok {
-				cluster.SetName(name)
-			} else {
-				clusterCache[allTags.String()] = cluster.Name()
-			}
-
-			clusters = append(clusters, cluster)
-		}
-		return clusters
-	}
-
-	// match and modify is not implemented yet
-	appendRoute := func(routes envoy_common.Routes, clusters []envoy_common.Cluster,
-	) envoy_common.Routes {
-		if len(clusters) == 0 {
-			return routes
-		}
-
-		hasExternal := false
-		for _, cluster := range clusters {
-			if cluster.IsExternalService() {
-				hasExternal = true
-				break
-			}
-		}
-
-		var rlSpec *mesh_proto.RateLimit
-		if hasExternal && !hasEgress && rateLimit != nil {
-			rlSpec = rateLimit.Spec
-		} // otherwise rate limit is applied on the inbound side
-
-		return append(routes, envoy_common.Route{
-			RateLimit: rlSpec,
-			Clusters:  clusters,
-		})
-	}
-
-	if defaultDestination := route.Spec.GetConf().GetSplitWithDestination(); len(defaultDestination) != 0 {
-		routes = appendRoute(routes, clustersFromSplit(defaultDestination))
-	}
+	// TODO: gather all the clusters for the outbound interface
 
 	return routes
 }

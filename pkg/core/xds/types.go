@@ -37,9 +37,6 @@ type APIVersion string
 // StreamID represents a stream opened by XDS
 type StreamID = int64
 
-// RouteMap holds the most specific TrafficRoute for each outbound interface of a Dataplane.
-type RouteMap map[mesh_proto.OutboundInterface]*core_mesh.TrafficRouteResource
-
 type ProxyId struct {
 	mesh string
 	name string
@@ -106,9 +103,6 @@ type EndpointList []Endpoint
 
 // EndpointMap holds routing-related information about a set of endpoints grouped by service name.
 type EndpointMap map[ServiceName][]Endpoint
-
-// OutboundRateLimitsMap holds the RateLimitResource for each OutboundInterface
-type OutboundRateLimitsMap map[mesh_proto.OutboundInterface]*core_mesh.RateLimitResource
 
 // SocketAddressProtocol is the L4 protocol the listener should bind to
 type SocketAddressProtocol int32
@@ -179,7 +173,6 @@ type ZoneIngressProxy struct {
 }
 
 type Routing struct {
-	TrafficRoutes   RouteMap
 	OutboundTargets EndpointMap
 	// ExternalServiceOutboundTargets contains endpoint map for direct access of external services (without egress)
 	// Since we take into account TrafficPermission to exclude external services from the map,
