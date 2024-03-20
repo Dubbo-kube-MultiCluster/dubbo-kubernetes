@@ -45,13 +45,18 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/core/extensions"
 	"github.com/apache/dubbo-kubernetes/pkg/core/governance"
 	"github.com/apache/dubbo-kubernetes/pkg/core/logger"
+	"github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/condition_route"
 	dataplane_managers "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/dataplane"
+	"github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/dynamic_config"
 	mapping_managers "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/mapping"
+	mesh_managers "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/mesh"
 	metadata_managers "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/metadata"
+	"github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/tag_route"
 	core_plugins "github.com/apache/dubbo-kubernetes/pkg/core/plugins"
 	dubbo_registry "github.com/apache/dubbo-kubernetes/pkg/core/registry"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
 	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
+	"github.com/apache/dubbo-kubernetes/pkg/core/resources/registry"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
 	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
@@ -371,15 +376,52 @@ func initializeResourceManager(cfg dubbo_cp.Config, builder *core_runtime.Builde
 
 	customizableManager.Customize(
 		mesh.DataplaneType,
-		dataplane_managers.NewDataplaneManager())
+		dataplane_managers.NewDataplaneManager(
+			builder.ResourceStore(),
+			cfg.Multizone.Zone.Name,
+		))
 
 	customizableManager.Customize(
 		mesh.MappingType,
-		mapping_managers.NewMappingManager())
+		mapping_managers.NewMappingManager(
+			builder.ResourceStore(),
+		))
 
 	customizableManager.Customize(
 		mesh.MetaDataType,
-		metadata_managers.NewMetadataManager())
+		metadata_managers.NewMetadataManager(
+			builder.ResourceStore(),
+		))
+
+	customizableManager.Customize(
+		mesh.ConditionRouteType,
+		condition_route.NewConditionRouteManager(
+			builder.ResourceStore(),
+		))
+
+	customizableManager.Customize(
+		mesh.TagRouteType,
+		tag_route.NewTagRouteManager(
+			builder.ResourceStore(),
+		))
+
+	customizableManager.Customize(
+		mesh.DynamicConfigType,
+		dynamic_config.NewDynamicConfigManager(
+			builder.ResourceStore(),
+		))
+
+	customizableManager.Customize(
+		mesh.MeshType,
+		mesh_managers.NewMeshManager(
+			builder.ResourceStore(),
+			customizableManager,
+			registry.Global(),
+			builder.ResourceValidators().Mesh,
+			builder.Extensions(),
+			cfg,
+		),
+	)
 
 	builder.WithResourceManager(customizableManager)
 

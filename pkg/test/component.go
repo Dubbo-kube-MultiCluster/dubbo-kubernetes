@@ -15,21 +15,18 @@
  * limitations under the License.
  */
 
-package metadata
+package test
 
 import (
-	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
-	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
+	"github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
+	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
 )
 
-type metadataManager struct {
-	core_manager.ResourceManager
-	store core_store.ResourceStore
-}
-
-func NewMetadataManager(store core_store.ResourceStore) core_manager.ResourceManager {
-	return &metadataManager{
-		ResourceManager: core_manager.NewResourceManager(store),
-		store:           store,
+func Setup(rt core_runtime.Runtime) error {
+	manager := rt.ResourceManager()
+	mapping := mesh.NewMappingResource()
+	if err := manager.Get(rt.AppContext(), mapping); err != nil {
+		return err
 	}
+	return nil
 }

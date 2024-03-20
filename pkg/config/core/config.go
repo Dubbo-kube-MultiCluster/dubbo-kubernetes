@@ -38,16 +38,15 @@ const (
 type CpMode = string
 
 const (
-	// Deprecated: use zone
-	Standalone CpMode = "standalone"
-	Zone       CpMode = "zone"
-	Global     CpMode = "global"
+	Zone   CpMode = "zone"
+	Global CpMode = "global"
+	Test   CpMode = "test"
 )
 
 // ValidateCpMode to check modes of dubbo-cp
 func ValidateCpMode(mode CpMode) error {
-	if mode != Standalone && mode != Zone && mode != Global {
-		return errors.Errorf("invalid mode. Available modes: %s, %s, %s", Standalone, Zone, Global)
+	if mode != Zone && mode != Global && mode != Test {
+		return errors.Errorf("invalid mode. Available modes: %s, %s, %s", Zone, Global, Test)
 	}
 	return nil
 }

@@ -19,6 +19,8 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/apache/dubbo-kubernetes/pkg/config/core"
+	"github.com/apache/dubbo-kubernetes/pkg/test"
 	"time"
 )
 
@@ -30,7 +32,6 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/admin"
 	"github.com/apache/dubbo-kubernetes/pkg/config"
 	dubbo_cp "github.com/apache/dubbo-kubernetes/pkg/config/app/dubbo-cp"
-	config_core "github.com/apache/dubbo-kubernetes/pkg/config/core"
 	"github.com/apache/dubbo-kubernetes/pkg/core/bootstrap"
 	dubbo_cmd "github.com/apache/dubbo-kubernetes/pkg/core/cmd"
 	dds_global "github.com/apache/dubbo-kubernetes/pkg/dds/global"
@@ -70,12 +71,6 @@ func newRunCmdWithOpts(opts dubbo_cmd.RunCmdOpts) *cobra.Command {
 				return err
 			}
 
-			// nolint:staticcheck
-			if cfg.Mode == config_core.Standalone {
-				runLog.Info(`[WARNING] "standalone" mode is deprecated. Changing it to "zone". Set dubbo_MODE to "zone" as "standalone" will be removed in the future.`)
-				cfg.Mode = config_core.Zone
-			}
-
 			gracefulCtx, ctx := opts.SetupSignalHandler()
 			rt, err := bootstrap.Bootstrap(gracefulCtx, cfg)
 			if err != nil {
@@ -102,6 +97,13 @@ func newRunCmdWithOpts(opts dubbo_cmd.RunCmdOpts) *cobra.Command {
 			if limit, _ := os.CurrentFileLimit(); limit < minOpenFileLimit {
 				runLog.Info("for better performance, raise the open file limit",
 					"minimim-open-files", minOpenFileLimit)
+			}
+
+			if rt.GetMode() == core.Test {
+				if err := test.Setup(rt); err != nil {
+					runLog.Error(err, "unable to set up test")
+					return err
+				}
 			}
 
 			if err := admin.Setup(rt); err != nil {

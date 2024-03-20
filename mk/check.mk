@@ -36,7 +36,7 @@ golangci-lint-fmt:
 
 .PHONY: dubbogofmt
 dubbogofmt: $(GO_BIN)/imports-formatter
-	GOROOT=$(shell go env GOROOT) $(CI_TOOLS_BIN_DIR)/imports-formatter
+	GOROOT=$(shell go env GOROOT) $(GO_BIN)/imports-formatter
 
 $(GO_BIN)/imports-formatter:
 	$(GO_INSTALL) github.com/dubbogo/tools/cmd/imports-formatter@latest

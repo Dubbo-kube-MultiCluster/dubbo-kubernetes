@@ -15,20 +15,20 @@
  * limitations under the License.
  */
 
-package metadata
+package condition_route
 
 import (
 	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
 )
 
-type metadataManager struct {
+type conditionRouteManager struct {
 	core_manager.ResourceManager
 	store core_store.ResourceStore
 }
 
-func NewMetadataManager(store core_store.ResourceStore) core_manager.ResourceManager {
-	return &metadataManager{
+func NewConditionRouteManager(store core_store.ResourceStore) core_manager.ResourceManager {
+	return &conditionRouteManager{
 		ResourceManager: core_manager.NewResourceManager(store),
 		store:           store,
 	}
