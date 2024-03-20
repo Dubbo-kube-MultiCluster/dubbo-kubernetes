@@ -376,27 +376,40 @@ func initializeResourceManager(cfg dubbo_cp.Config, builder *core_runtime.Builde
 
 	customizableManager.Customize(
 		mesh.DataplaneType,
-		dataplane_managers.NewDataplaneManager())
+		dataplane_managers.NewDataplaneManager(
+			builder.ResourceStore(),
+			cfg.Multizone.Zone.Name,
+		))
 
 	customizableManager.Customize(
 		mesh.MappingType,
-		mapping_managers.NewMappingManager())
+		mapping_managers.NewMappingManager(
+			builder.ResourceStore(),
+		))
 
 	customizableManager.Customize(
 		mesh.MetaDataType,
-		metadata_managers.NewMetadataManager())
+		metadata_managers.NewMetadataManager(
+			builder.ResourceStore(),
+		))
 
 	customizableManager.Customize(
 		mesh.ConditionRouteType,
-		condition_route.NewConditionRouteManager())
+		condition_route.NewConditionRouteManager(
+			builder.ResourceStore(),
+		))
 
 	customizableManager.Customize(
 		mesh.TagRouteType,
-		tag_route.NewTagRouteManager())
+		tag_route.NewTagRouteManager(
+			builder.ResourceStore(),
+		))
 
 	customizableManager.Customize(
 		mesh.DynamicConfigType,
-		dynamic_config.NewDynamicConfigManager())
+		dynamic_config.NewDynamicConfigManager(
+			builder.ResourceStore(),
+		))
 
 	customizableManager.Customize(
 		mesh.MeshType,

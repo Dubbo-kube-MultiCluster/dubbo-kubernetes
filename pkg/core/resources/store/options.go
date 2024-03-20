@@ -49,6 +49,36 @@ func NewCreateOptions(fs ...CreateOptionsFunc) *CreateOptions {
 	return opts
 }
 
+func CreateByApplication(app string) CreateOptionsFunc {
+	return func(opts *CreateOptions) {
+		opts.Labels[mesh_proto.Application] = app
+	}
+}
+
+func CreateByService(service string) CreateOptionsFunc {
+	return func(opts *CreateOptions) {
+		opts.Labels[mesh_proto.Service] = service
+	}
+}
+
+func CreateByID(id string) CreateOptionsFunc {
+	return func(opts *CreateOptions) {
+		opts.Labels[mesh_proto.ID] = id
+	}
+}
+
+func CreateByServiceVersion(serviceVersion string) CreateOptionsFunc {
+	return func(opts *CreateOptions) {
+		opts.Labels[mesh_proto.ServiceVersion] = serviceVersion
+	}
+}
+
+func CreateByServiceGroup(serviceGroup string) CreateOptionsFunc {
+	return func(opts *CreateOptions) {
+		opts.Labels[mesh_proto.ServiceGroup] = serviceGroup
+	}
+}
+
 func CreateByPath(path string) CreateOptionsFunc {
 	return func(opts *CreateOptions) {
 		opts.Labels[PathLabel] = path
@@ -97,12 +127,38 @@ func ModifiedAt(modificationTime time.Time) UpdateOptionsFunc {
 	}
 }
 
-func UpdateBy(key core_model.ResourceKey) CreateOptionsFunc {
-	return CreateByKey(key.Name, key.Mesh)
+func UpdateByApplication(app string) UpdateOptionsFunc {
+	return func(opts *UpdateOptions) {
+		opts.Labels[mesh_proto.Application] = app
+	}
 }
 
-func UpdateByKey(name, mesh string) CreateOptionsFunc {
-	return func(opts *CreateOptions) {
+func UpdateByService(service string) UpdateOptionsFunc {
+	return func(opts *UpdateOptions) {
+		opts.Labels[mesh_proto.Service] = service
+	}
+}
+
+func UpdateByID(id string) UpdateOptionsFunc {
+	return func(opts *UpdateOptions) {
+		opts.Labels[mesh_proto.ID] = id
+	}
+}
+
+func UpdateByServiceVersion(serviceVersion string) UpdateOptionsFunc {
+	return func(opts *UpdateOptions) {
+		opts.Labels[mesh_proto.ServiceVersion] = serviceVersion
+	}
+}
+
+func UpdateByServiceGroup(serviceGroup string) UpdateOptionsFunc {
+	return func(opts *UpdateOptions) {
+		opts.Labels[mesh_proto.ServiceGroup] = serviceGroup
+	}
+}
+
+func UpdateByKey(name, mesh string) UpdateOptionsFunc {
+	return func(opts *UpdateOptions) {
 		opts.Name = name
 		opts.Mesh = mesh
 	}
@@ -149,6 +205,36 @@ func NewDeleteOptions(fs ...DeleteOptionsFunc) *DeleteOptions {
 func DeleteByPath(path string) DeleteOptionsFunc {
 	return func(opts *DeleteOptions) {
 		opts.Labels[PathLabel] = path
+	}
+}
+
+func DeleteByApplication(app string) DeleteOptionsFunc {
+	return func(opts *DeleteOptions) {
+		opts.Labels[mesh_proto.Application] = app
+	}
+}
+
+func DeleteByService(service string) DeleteOptionsFunc {
+	return func(opts *DeleteOptions) {
+		opts.Labels[mesh_proto.Service] = service
+	}
+}
+
+func DeleteByID(id string) DeleteOptionsFunc {
+	return func(opts *DeleteOptions) {
+		opts.Labels[mesh_proto.ID] = id
+	}
+}
+
+func DeleteByServiceVersion(serviceVersion string) DeleteOptionsFunc {
+	return func(opts *DeleteOptions) {
+		opts.Labels[mesh_proto.ServiceVersion] = serviceVersion
+	}
+}
+
+func DeleteByServiceGroup(serviceGroup string) DeleteOptionsFunc {
+	return func(opts *DeleteOptions) {
+		opts.Labels[mesh_proto.ServiceGroup] = serviceGroup
 	}
 }
 
@@ -214,6 +300,36 @@ func GetByPath(path string) GetOptionsFunc {
 func GetByRevision(revision string) GetOptionsFunc {
 	return func(opts *GetOptions) {
 		opts.Labels[mesh_proto.Revision] = revision
+	}
+}
+
+func GetByApplication(app string) GetOptionsFunc {
+	return func(opts *GetOptions) {
+		opts.Labels[mesh_proto.Application] = app
+	}
+}
+
+func GetByService(service string) GetOptionsFunc {
+	return func(opts *GetOptions) {
+		opts.Labels[mesh_proto.Service] = service
+	}
+}
+
+func GetByID(id string) GetOptionsFunc {
+	return func(opts *GetOptions) {
+		opts.Labels[mesh_proto.ID] = id
+	}
+}
+
+func GetByServiceVersion(serviceVersion string) GetOptionsFunc {
+	return func(opts *GetOptions) {
+		opts.Labels[mesh_proto.ServiceVersion] = serviceVersion
+	}
+}
+
+func GetByServiceGroup(serviceGroup string) GetOptionsFunc {
+	return func(opts *GetOptions) {
+		opts.Labels[mesh_proto.ServiceGroup] = serviceGroup
 	}
 }
 

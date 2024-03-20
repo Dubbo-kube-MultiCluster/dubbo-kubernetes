@@ -18,39 +18,18 @@
 package condition_route
 
 import (
-	"context"
-)
-
-import (
 	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
-	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
 )
 
 type conditionRouteManager struct {
 	core_manager.ResourceManager
+	store core_store.ResourceStore
 }
 
-func NewConditionRouteManager() core_manager.ResourceManager {
-	return nil
-}
-
-func (m *conditionRouteManager) Create(ctx context.Context, r model.Resource, opts ...core_store.CreateOptionsFunc) error {
-	return nil
-}
-
-func (m *conditionRouteManager) Update(ctx context.Context, r model.Resource, opts ...core_store.UpdateOptionsFunc) error {
-	return nil
-}
-
-func (m *conditionRouteManager) Delete(ctx context.Context, r model.Resource, opts ...core_store.DeleteOptionsFunc) error {
-	return nil
-}
-
-func (m *conditionRouteManager) Get(ctx context.Context, r model.Resource, opts ...core_store.GetOptionsFunc) error {
-	return nil
-}
-
-func (m *conditionRouteManager) List(ctx context.Context, r model.ResourceList, opts ...core_store.ListOptionsFunc) error {
-	return nil
+func NewConditionRouteManager(store core_store.ResourceStore) core_manager.ResourceManager {
+	return &conditionRouteManager{
+		ResourceManager: core_manager.NewResourceManager(store),
+		store:           store,
+	}
 }

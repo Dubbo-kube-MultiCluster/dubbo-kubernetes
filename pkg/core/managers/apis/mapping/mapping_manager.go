@@ -22,35 +22,42 @@ import (
 )
 
 import (
+	"github.com/apache/dubbo-kubernetes/pkg/core"
+	core_mesh "github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
 	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
-	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
+	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
 )
 
 type mappingManager struct {
 	core_manager.ResourceManager
+	store core_store.ResourceStore
 }
 
-func NewMappingManager() core_manager.ResourceManager {
-	return nil
+func NewMappingManager(store core_store.ResourceStore) core_manager.ResourceManager {
+	return &mappingManager{
+		ResourceManager: core_manager.NewResourceManager(store),
+		store:           store,
+	}
 }
 
-func (m *mappingManager) Create(ctx context.Context, r model.Resource, opts ...core_store.CreateOptionsFunc) error {
-	return nil
+func (m *mappingManager) Create(ctx context.Context, r core_model.Resource, fs ...core_store.CreateOptionsFunc) error {
+	if err := core_model.Validate(r); err != nil {
+		return err
+	}
+	opts := core_store.NewCreateOptions(fs...)
+	owner := core_mesh.NewMeshResource()
+	if err := m.store.Get(ctx, owner, core_store.GetByKey(opts.Mesh, core_model.NoMesh)); err != nil {
+		return core_manager.MeshNotFound(opts.Mesh)
+	}
+
+	return m.store.Create(ctx, r, append(fs, core_store.CreatedAt(core.Now()))...)
 }
 
-func (m *mappingManager) Update(ctx context.Context, r model.Resource, opts ...core_store.UpdateOptionsFunc) error {
-	return nil
-}
-
-func (m *mappingManager) Delete(ctx context.Context, r model.Resource, opts ...core_store.DeleteOptionsFunc) error {
-	return nil
-}
-
-func (m *mappingManager) Get(ctx context.Context, r model.Resource, opts ...core_store.GetOptionsFunc) error {
-	return nil
-}
-
-func (m *mappingManager) List(ctx context.Context, r model.ResourceList, opts ...core_store.ListOptionsFunc) error {
-	return nil
+func (m *mappingManager) Update(ctx context.Context, r core_model.Resource, fs ...core_store.UpdateOptionsFunc) error {
+	owner := core_mesh.NewMeshResource()
+	if err := m.store.Get(ctx, owner, core_store.GetByKey(r.GetMeta().GetMesh(), core_model.NoMesh)); err != nil {
+		return core_manager.MeshNotFound(r.GetMeta().GetMesh())
+	}
+	return m.ResourceManager.Update(ctx, r, fs...)
 }

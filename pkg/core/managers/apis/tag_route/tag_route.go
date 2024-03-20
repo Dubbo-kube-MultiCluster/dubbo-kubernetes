@@ -18,39 +18,18 @@
 package tag_route
 
 import (
-	"context"
-)
-
-import (
 	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
-	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
 )
 
 type tagRouteManager struct {
 	core_manager.ResourceManager
+	store core_store.ResourceStore
 }
 
-func NewTagRouteManager() core_manager.ResourceManager {
-	return nil
-}
-
-func (m *tagRouteManager) Create(ctx context.Context, r model.Resource, opts ...core_store.CreateOptionsFunc) error {
-	return nil
-}
-
-func (m *tagRouteManager) Update(ctx context.Context, r model.Resource, opts ...core_store.UpdateOptionsFunc) error {
-	return nil
-}
-
-func (m *tagRouteManager) Delete(ctx context.Context, r model.Resource, opts ...core_store.DeleteOptionsFunc) error {
-	return nil
-}
-
-func (m *tagRouteManager) Get(ctx context.Context, r model.Resource, opts ...core_store.GetOptionsFunc) error {
-	return nil
-}
-
-func (m *tagRouteManager) List(ctx context.Context, r model.ResourceList, opts ...core_store.ListOptionsFunc) error {
-	return nil
+func NewTagRouteManager(store core_store.ResourceStore) core_manager.ResourceManager {
+	return &tagRouteManager{
+		ResourceManager: core_manager.NewResourceManager(store),
+		store:           store,
+	}
 }

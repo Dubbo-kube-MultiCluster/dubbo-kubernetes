@@ -18,39 +18,18 @@
 package dynamic_config
 
 import (
-	"context"
-)
-
-import (
 	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
-	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
 )
 
 type dynamicConfigManager struct {
 	core_manager.ResourceManager
+	store core_store.ResourceStore
 }
 
-func NewDynamicConfigManager() core_manager.ResourceManager {
-	return nil
-}
-
-func (m *dynamicConfigManager) Create(ctx context.Context, r model.Resource, opts ...core_store.CreateOptionsFunc) error {
-	return nil
-}
-
-func (m *dynamicConfigManager) Update(ctx context.Context, r model.Resource, opts ...core_store.UpdateOptionsFunc) error {
-	return nil
-}
-
-func (m *dynamicConfigManager) Delete(ctx context.Context, r model.Resource, opts ...core_store.DeleteOptionsFunc) error {
-	return nil
-}
-
-func (m *dynamicConfigManager) Get(ctx context.Context, r model.Resource, opts ...core_store.GetOptionsFunc) error {
-	return nil
-}
-
-func (m *dynamicConfigManager) List(ctx context.Context, r model.ResourceList, opts ...core_store.ListOptionsFunc) error {
-	return nil
+func NewDynamicConfigManager(store core_store.ResourceStore) core_manager.ResourceManager {
+	return &dynamicConfigManager{
+		ResourceManager: core_manager.NewResourceManager(store),
+		store:           store,
+	}
 }

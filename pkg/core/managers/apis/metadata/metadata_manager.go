@@ -18,39 +18,18 @@
 package metadata
 
 import (
-	"context"
-)
-
-import (
 	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
-	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
 )
 
 type metadataManager struct {
 	core_manager.ResourceManager
+	store core_store.ResourceStore
 }
 
-func NewMetadataManager() core_manager.ResourceManager {
-	return nil
-}
-
-func (m *metadataManager) Create(ctx context.Context, r model.Resource, opts ...core_store.CreateOptionsFunc) error {
-	return nil
-}
-
-func (m *metadataManager) Update(ctx context.Context, r model.Resource, opts ...core_store.UpdateOptionsFunc) error {
-	return nil
-}
-
-func (m *metadataManager) Delete(ctx context.Context, r model.Resource, opts ...core_store.DeleteOptionsFunc) error {
-	return nil
-}
-
-func (m *metadataManager) Get(ctx context.Context, r model.Resource, opts ...core_store.GetOptionsFunc) error {
-	return nil
-}
-
-func (m *metadataManager) List(ctx context.Context, r model.ResourceList, opts ...core_store.ListOptionsFunc) error {
-	return nil
+func NewMetadataManager(store core_store.ResourceStore) core_manager.ResourceManager {
+	return &metadataManager{
+		ResourceManager: core_manager.NewResourceManager(store),
+		store:           store,
+	}
 }
