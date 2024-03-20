@@ -87,7 +87,6 @@ func (m *meshManager) List(ctx context.Context, list core_model.ResourceList, fs
 }
 
 func (m *meshManager) Create(ctx context.Context, resource core_model.Resource, fs ...core_store.CreateOptionsFunc) error {
-	//opts := core_store.NewCreateOptions(fs...)
 	mesh, err := m.mesh(resource)
 	if err != nil {
 		return err
@@ -110,8 +109,6 @@ func (m *meshManager) Delete(ctx context.Context, resource core_model.Resource, 
 	if err != nil {
 		return err
 	}
-	//opts := core_store.NewDeleteOptions(fs...)
-
 	//if !m.unsafeDelete {
 	//	if err := m.meshValidator.ValidateDelete(ctx, opts.Name); err != nil {
 	//		return err
