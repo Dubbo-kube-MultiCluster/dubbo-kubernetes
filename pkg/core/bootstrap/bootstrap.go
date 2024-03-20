@@ -49,12 +49,14 @@ import (
 	dataplane_managers "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/dataplane"
 	"github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/dynamic_config"
 	mapping_managers "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/mapping"
+	mesh_managers "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/mesh"
 	metadata_managers "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/metadata"
 	"github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/tag_route"
 	core_plugins "github.com/apache/dubbo-kubernetes/pkg/core/plugins"
 	dubbo_registry "github.com/apache/dubbo-kubernetes/pkg/core/registry"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
 	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
+	"github.com/apache/dubbo-kubernetes/pkg/core/resources/registry"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
 	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
@@ -395,6 +397,18 @@ func initializeResourceManager(cfg dubbo_cp.Config, builder *core_runtime.Builde
 	customizableManager.Customize(
 		mesh.DynamicConfigType,
 		dynamic_config.NewDynamicConfigManager())
+
+	customizableManager.Customize(
+		mesh.MeshType,
+		mesh_managers.NewMeshManager(
+			builder.ResourceStore(),
+			customizableManager,
+			registry.Global(),
+			builder.ResourceValidators().Mesh,
+			builder.Extensions(),
+			cfg,
+		),
+	)
 
 	builder.WithResourceManager(customizableManager)
 

@@ -13,9 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# 可选 k8s half universal
+deploy_mode: universal
 runtime:
   kubernetes:
     admissionServer:
       address: 127.0.0.1
       port: 5443
-      certDir: # 填写certDir目录
+      certDir: test/cert
