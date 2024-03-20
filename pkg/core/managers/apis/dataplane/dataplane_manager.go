@@ -28,6 +28,7 @@ import (
 import (
 	mesh_proto "github.com/apache/dubbo-kubernetes/api/mesh/v1alpha1"
 	"github.com/apache/dubbo-kubernetes/pkg/core"
+	"github.com/apache/dubbo-kubernetes/pkg/core/logger"
 	core_mesh "github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
 	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
@@ -49,23 +50,10 @@ func NewDataplaneManager(store core_store.ResourceStore, zone string) core_manag
 }
 
 func (m *dataplaneManager) Create(ctx context.Context, r core_model.Resource, fs ...core_store.CreateOptionsFunc) error {
-	if err := core_model.Validate(r); err != nil {
-		return err
-	}
-	opts := core_store.NewCreateOptions(fs...)
-	owner := core_mesh.NewMeshResource()
-	if err := m.store.Get(ctx, owner, core_store.GetByKey(opts.Mesh, core_model.NoMesh)); err != nil {
-		return core_manager.MeshNotFound(opts.Mesh)
-	}
-
 	return m.store.Create(ctx, r, append(fs, core_store.CreatedAt(core.Now()))...)
 }
 
 func (m *dataplaneManager) Update(ctx context.Context, r core_model.Resource, fs ...core_store.UpdateOptionsFunc) error {
-	owner := core_mesh.NewMeshResource()
-	if err := m.store.Get(ctx, owner, core_store.GetByKey(r.GetMeta().GetMesh(), core_model.NoMesh)); err != nil {
-		return core_manager.MeshNotFound(r.GetMeta().GetMesh())
-	}
 	return m.ResourceManager.Update(ctx, r, fs...)
 }
 
@@ -73,6 +61,11 @@ func (m *dataplaneManager) Get(ctx context.Context, r core_model.Resource, opts 
 	dataplane, err := m.dataplane(r)
 	if err != nil {
 		return err
+	}
+	options := core_store.NewGetOptions(opts...)
+	if options.Labels[mesh_proto.Application] == "" || options.Labels[mesh_proto.Revision] == "" {
+		logger.Sugar().Error("需要携带application和revision才能查询")
+		return nil
 	}
 	if err := m.store.Get(ctx, dataplane, opts...); err != nil {
 		return err

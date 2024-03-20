@@ -92,6 +92,8 @@ func buildRuntime(appCtx context.Context, cfg dubbo_cp.Config) (core_runtime.Run
 	} else {
 		cfg.Store.Type = store.KubernetesStore
 	}
+	// 初始化cache
+	builder.WithDataplaneCache(&sync.Map{})
 	// 初始化传统微服务体系所需要的组件
 	if err := initializeTraditional(cfg, builder); err != nil {
 		return nil, err
@@ -113,7 +115,6 @@ func buildRuntime(appCtx context.Context, cfg dubbo_cp.Config) (core_runtime.Run
 	leaderInfoComponent := &component.LeaderInfoComponent{}
 	builder.WithLeaderInfo(leaderInfoComponent)
 
-	builder.WithDataplaneCache(&sync.Map{})
 	builder.WithDpServer(server.NewDpServer(*cfg.DpServer))
 
 	resourceManager := builder.ResourceManager()

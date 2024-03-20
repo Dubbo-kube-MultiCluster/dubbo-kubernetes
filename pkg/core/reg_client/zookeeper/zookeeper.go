@@ -18,7 +18,6 @@
 package zookeeper
 
 import (
-	"encoding/base64"
 	"strings"
 )
 
@@ -59,12 +58,11 @@ func (z *zookeeperRegClient) GetChildren(path string) ([]string, error) {
 }
 
 func (z *zookeeperRegClient) SetContent(path string, value []byte) error {
-	valueBytes := []byte(base64.StdEncoding.EncodeToString(value))
-	err := z.client.CreateWithValue(path, valueBytes)
+	err := z.client.CreateWithValue(path, value)
 	if err != nil {
 		if errors.Is(err, zk.ErrNodeExists) {
 			_, stat, _ := z.client.GetContent(path)
-			_, setErr := z.client.SetContent(path, valueBytes, stat.Version)
+			_, setErr := z.client.SetContent(path, value, stat.Version)
 			if setErr != nil {
 				return errors.WithStack(setErr)
 			}
@@ -80,11 +78,7 @@ func (z *zookeeperRegClient) GetContent(path string) ([]byte, error) {
 	if err != nil {
 		return []byte{}, errors.WithStack(err)
 	}
-	decoded, err := base64.StdEncoding.DecodeString(string(content))
-	if err != nil {
-		return []byte{}, errors.WithStack(err)
-	}
-	return decoded, nil
+	return content, nil
 }
 
 func (z *zookeeperRegClient) DeleteContent(path string) error {

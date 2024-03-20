@@ -23,7 +23,6 @@ import (
 
 import (
 	"github.com/apache/dubbo-kubernetes/pkg/core"
-	core_mesh "github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
 	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
@@ -42,22 +41,9 @@ func NewMappingManager(store core_store.ResourceStore) core_manager.ResourceMana
 }
 
 func (m *mappingManager) Create(ctx context.Context, r core_model.Resource, fs ...core_store.CreateOptionsFunc) error {
-	if err := core_model.Validate(r); err != nil {
-		return err
-	}
-	opts := core_store.NewCreateOptions(fs...)
-	owner := core_mesh.NewMeshResource()
-	if err := m.store.Get(ctx, owner, core_store.GetByKey(opts.Mesh, core_model.NoMesh)); err != nil {
-		return core_manager.MeshNotFound(opts.Mesh)
-	}
-
 	return m.store.Create(ctx, r, append(fs, core_store.CreatedAt(core.Now()))...)
 }
 
 func (m *mappingManager) Update(ctx context.Context, r core_model.Resource, fs ...core_store.UpdateOptionsFunc) error {
-	owner := core_mesh.NewMeshResource()
-	if err := m.store.Get(ctx, owner, core_store.GetByKey(r.GetMeta().GetMesh(), core_model.NoMesh)); err != nil {
-		return core_manager.MeshNotFound(r.GetMeta().GetMesh())
-	}
 	return m.ResourceManager.Update(ctx, r, fs...)
 }
