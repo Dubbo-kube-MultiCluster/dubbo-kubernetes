@@ -15,38 +15,18 @@
  * limitations under the License.
  */
 
-package core
+package test
 
 import (
-	"github.com/pkg/errors"
+	"github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
+	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
 )
 
-// DeployMode 部署模型
-// 1. 纯Kubernetes
-// 2. 半托管, 使用Kubernetes做平台, 服务注册的模型仍然使用zookeeper
-// 3. vm, 使用vm机器传统服务注册模型
-type DeployMode = string
-
-const (
-	KubernetesMode DeployMode = "k8s"       // 全托管
-	HalfHostMode   DeployMode = "half"      // 半托管
-	UniversalMode  DeployMode = "universal" // vm传统
-)
-
-// Control Plane mode
-
-type CpMode = string
-
-const (
-	Zone   CpMode = "zone"
-	Global CpMode = "global"
-	Test   CpMode = "test"
-)
-
-// ValidateCpMode to check modes of dubbo-cp
-func ValidateCpMode(mode CpMode) error {
-	if mode != Zone && mode != Global && mode != Test {
-		return errors.Errorf("invalid mode. Available modes: %s, %s, %s", Zone, Global, Test)
+func Setup(rt core_runtime.Runtime) error {
+	manager := rt.ResourceManager()
+	mapping := mesh.NewMappingResource()
+	if err := manager.Get(rt.AppContext(), mapping); err != nil {
+		return err
 	}
 	return nil
 }
