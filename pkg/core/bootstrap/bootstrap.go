@@ -45,9 +45,12 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/core/extensions"
 	"github.com/apache/dubbo-kubernetes/pkg/core/governance"
 	"github.com/apache/dubbo-kubernetes/pkg/core/logger"
+	"github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/condition_route"
 	dataplane_managers "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/dataplane"
+	"github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/dynamic_config"
 	mapping_managers "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/mapping"
 	metadata_managers "github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/metadata"
+	"github.com/apache/dubbo-kubernetes/pkg/core/managers/apis/tag_route"
 	core_plugins "github.com/apache/dubbo-kubernetes/pkg/core/plugins"
 	dubbo_registry "github.com/apache/dubbo-kubernetes/pkg/core/registry"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
@@ -380,6 +383,18 @@ func initializeResourceManager(cfg dubbo_cp.Config, builder *core_runtime.Builde
 	customizableManager.Customize(
 		mesh.MetaDataType,
 		metadata_managers.NewMetadataManager())
+
+	customizableManager.Customize(
+		mesh.ConditionRouteType,
+		condition_route.NewConditionRouteManager())
+
+	customizableManager.Customize(
+		mesh.TagRouteType,
+		tag_route.NewTagRouteManager())
+
+	customizableManager.Customize(
+		mesh.DynamicConfigType,
+		dynamic_config.NewDynamicConfigManager())
 
 	builder.WithResourceManager(customizableManager)
 
