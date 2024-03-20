@@ -33,6 +33,7 @@ import (
 	core_xds "github.com/apache/dubbo-kubernetes/pkg/core/xds"
 	"github.com/apache/dubbo-kubernetes/pkg/plugins/policies/core/ordered"
 	xds_context "github.com/apache/dubbo-kubernetes/pkg/xds/context"
+	xds_topology "github.com/apache/dubbo-kubernetes/pkg/xds/topology"
 )
 
 type DataplaneProxyBuilder struct {
@@ -46,7 +47,9 @@ func (p *DataplaneProxyBuilder) Build(ctx context.Context, key core_model.Resour
 		return nil, core_store.ErrorResourceNotFound(core_mesh.DataplaneType, key.Name, key.Mesh)
 	}
 
-	matchedPolicies, err := p.matchPolicies(meshContext, dp, nil)
+	routing, destinations := p.resolveRouting(ctx, meshContext, dp)
+
+	matchedPolicies, err := p.matchPolicies(meshContext, dp, destinations)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not match policies")
 	}
@@ -55,9 +58,29 @@ func (p *DataplaneProxyBuilder) Build(ctx context.Context, key core_model.Resour
 		APIVersion: p.APIVersion,
 		Policies:   *matchedPolicies,
 		Dataplane:  dp,
+		Routing:    *routing,
 		Zone:       p.Zone,
 	}
 	return proxy, nil
+}
+
+func (p *DataplaneProxyBuilder) resolveRouting(
+	ctx context.Context,
+	meshContext xds_context.MeshContext,
+	dataplane *core_mesh.DataplaneResource,
+) (*core_xds.Routing, core_xds.DestinationMap) {
+	// TODO: external services
+	endpointMap := core_xds.EndpointMap{}
+
+	// create a map of selectors to match other dataplanes reachable via given routes
+	destinations := xds_topology.BuildDestinationMap(dataplane)
+
+	routing := &core_xds.Routing{
+		OutboundTargets:                meshContext.EndpointMap,
+		ExternalServiceOutboundTargets: endpointMap,
+	}
+
+	return routing, destinations
 }
 
 func (p *DataplaneProxyBuilder) matchPolicies(meshContext xds_context.MeshContext, dataplane *core_mesh.DataplaneResource, outboundSelectors core_xds.DestinationMap) (*core_xds.MatchedPolicies, error) {
