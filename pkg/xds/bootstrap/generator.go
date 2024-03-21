@@ -6,6 +6,7 @@ import (
 	"encoding/pem"
 	"os"
 	"sort"
+	"strings"
 )
 
 import (
@@ -15,10 +16,11 @@ import (
 )
 
 import (
+	"github.com/apache/dubbo-kubernetes/pkg/xds/bootstrap/types"
+
 	mesh_proto "github.com/apache/dubbo-kubernetes/api/mesh/v1alpha1"
 	xds_config "github.com/apache/dubbo-kubernetes/pkg/config/xds"
 	bootstrap_config "github.com/apache/dubbo-kubernetes/pkg/config/xds/bootstrap"
-	"github.com/apache/dubbo-kubernetes/pkg/config/xds/bootstrap/types"
 	core_mesh "github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
 	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model/rest"
@@ -210,12 +212,22 @@ func (b *bootstrapGenerator) xdsHost(request types.BootstrapRequest) string {
 
 var DpTokenRequired = errors.New("Dataplane Token is required. Generate token using 'dubboctl generate dataplane-token > /path/file' and provide it via --dataplane-token-file=/path/file argument to Dubbo DP")
 
+var NotCA = errors.New("A data plane proxy is trying to verify the control plane using the certificate which is not a certificate authority (basic constraint 'CA' is set to 'false').\n" +
+	"Provide CA that was used to sign a certificate used in the control plane by using 'dubbo-dp run --ca-cert-file=file' or via KUMA_CONTROL_PLANE_CA_CERT_FILE")
+
 func SANMismatchErr(host string, sans []string) error {
 	return errors.Errorf("A data plane proxy is trying to connect to the control plane using %q address, but the certificate in the control plane has the following SANs %q. "+
 		"Either change the --cp-address in dubbo-dp to one of those or execute the following steps:\n"+
 		"1) Generate a new certificate with the address you are trying to use. It is recommended to use trusted Certificate Authority, but you can also generate self-signed certificates using 'dubboctl generate tls-certificate --type=server --cp-hostname=%s'\n"+
 		"2) Set DUBBO_GENERAL_TLS_CERT_FILE and DUBBO_GENERAL_TLS_KEY_FILE or the equivalent in Dubbo CP config file to the new certificate.\n"+
 		"3) Restart the control plane to read the new certificate and start dubbo-dp.", host, sans, host)
+}
+
+func ISSANMismatchErr(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.HasPrefix(err.Error(), "A data plane proxy is trying to connect to the control plane using")
 }
 
 // caCert gets CA cert that was used to signed cert that DP server is protected with.

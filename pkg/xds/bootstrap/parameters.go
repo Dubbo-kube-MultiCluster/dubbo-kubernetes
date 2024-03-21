@@ -23,7 +23,7 @@ import (
 
 import (
 	mesh_proto "github.com/apache/dubbo-kubernetes/api/mesh/v1alpha1"
-	"github.com/apache/dubbo-kubernetes/pkg/config/xds/bootstrap/types"
+	"github.com/apache/dubbo-kubernetes/pkg/xds/bootstrap/types"
 )
 
 type DubboDpBootstrap struct {
