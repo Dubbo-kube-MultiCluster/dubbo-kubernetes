@@ -60,6 +60,15 @@ func (x *XdsServerConfig) Validate() error {
 	return nil
 }
 
+type Proxy struct {
+	// Gateway holds data plane wide configuration for MeshGateway proxies
+	Gateway Gateway `json:"gateway"`
+}
+
+type Gateway struct {
+	GlobalDownstreamMaxConnections uint64 `json:"globalDownstreamMaxConnections" envconfig:"kuma_proxy_gateway_global_downstream_max_connections"`
+}
+
 func DefaultXdsServerConfig() *XdsServerConfig {
 	return &XdsServerConfig{
 		DataplaneConfigurationRefreshInterval: config_types.Duration{Duration: 1 * time.Second},

@@ -117,4 +117,43 @@ message DiscoveryServiceStats {
 }
 
 // Version defines version of Dubbo
-message Version { string version = 1; }
+message Version {
+  // Version of Dubbo Dataplane
+  DubboDpVersion DubboDp = 1;
+
+  // Version of Envoy
+  EnvoyVersion envoy = 2;
+
+  // Versions of other dependencies, i.e. CoreDNS
+  map<string, string> dependencies = 3;
+
+}
+
+message DubboDpVersion {
+
+  // Version number of Dubbo Dataplane
+  string version = 1;
+
+  // Git tag of Dubbo Dataplane version
+  string gitTag = 2;
+
+  // Git commit of Dubbo Dataplane version
+  string gitCommit = 3;
+
+  // Build date of Dubbo Dataplane version
+  string buildDate = 4;
+
+  // True iff Dubbo DP version is compatible with Dubbo CP version
+  bool DubboCpCompatible = 5;
+}
+message EnvoyVersion {
+
+  // Version number of Envoy
+  string version = 1;
+
+  // Full build tag of Envoy version
+  string build = 2;
+
+  // True iff Envoy version is compatible with Dubbo DP version
+  bool DubboDpCompatible = 3;
+}
