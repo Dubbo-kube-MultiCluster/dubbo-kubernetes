@@ -45,6 +45,7 @@ const (
 	FieldDynamicMetadata            = "dynamicMetadata"
 	FieldDataplaneProxyType         = "dataplane.proxyType"
 	FieldPrefixDependenciesVersion  = "version.dependencies"
+	FieldVersion                    = "version"
 	FieldFeatures                   = "features"
 	FieldWorkdir                    = "workdir"
 	FieldAccessLogSocketPath        = "accessLogSocketPath"
