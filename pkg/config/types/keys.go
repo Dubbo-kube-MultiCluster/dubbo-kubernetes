@@ -15,28 +15,42 @@
  * limitations under the License.
  */
 
-package xds
+package types
 
 import (
-	"github.com/apache/dubbo-kubernetes/pkg/xds/bootstrap"
 	"github.com/pkg/errors"
 )
 
-import (
-	config_core "github.com/apache/dubbo-kubernetes/pkg/config/core"
-	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
-	"github.com/apache/dubbo-kubernetes/pkg/xds/server"
-)
+type PublicKey struct {
+	// ID of key used to issue token.
+	KID string `json:"kid"`
+	// File with a public key encoded in PEM format.
+	KeyFile string `json:"keyFile,omitempty"`
+	// Public key encoded in PEM format.
+	Key string `json:"key,omitempty"`
+}
 
-func Setup(rt core_runtime.Runtime) error {
-	if rt.Config().Mode == config_core.Global {
-		return nil
+type MeshedPublicKey struct {
+	PublicKey
+	Mesh string `json:"mesh"`
+}
+
+func (p PublicKey) Validate() error {
+	if p.KID == "" {
+		return errors.New(".KID is required")
 	}
-	if err := server.RegisterXDS(rt); err != nil {
-		return errors.Wrap(err, "could not register XDS")
+	if p.KeyFile == "" && p.Key == "" {
+		return errors.New("either .KeyFile or .Key has to be defined")
 	}
-	if err := bootstrap.RegisterBootstrap(rt); err != nil {
-		return errors.Wrap(err, "could not register Bootstrap")
+	if p.KeyFile != "" && p.Key != "" {
+		return errors.New("both .KeyFile or .Key cannot be defined")
+	}
+	return nil
+}
+
+func (m MeshedPublicKey) Validate() error {
+	if err := m.PublicKey.Validate(); err != nil {
+		return err
 	}
 	return nil
 }

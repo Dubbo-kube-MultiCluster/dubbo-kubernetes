@@ -19,9 +19,6 @@ package registry
 
 import (
 	"context"
-	"fmt"
-	"hash/crc32"
-	"sort"
 	"strconv"
 	"sync"
 )
@@ -46,12 +43,14 @@ const (
 type NotifyListener struct {
 	manager.ResourceManager
 	dataplaneCache *sync.Map
+	discovery      dubboRegistry.ServiceDiscovery
 }
 
-func NewNotifyListener(manager manager.ResourceManager, cache *sync.Map) *NotifyListener {
+func NewNotifyListener(manager manager.ResourceManager, cache *sync.Map, discovery dubboRegistry.ServiceDiscovery) *NotifyListener {
 	return &NotifyListener{
 		manager,
 		cache,
+		discovery,
 	}
 }
 
@@ -76,26 +75,15 @@ func (l *NotifyListener) NotifyAll(events []*dubboRegistry.ServiceEvent, f func(
 
 func (l *NotifyListener) deleteDataplane(ctx context.Context, url *common.URL) error {
 	app := url.GetParam(constant.ApplicationKey, "")
-	// 根据该url的特征计算一个哈希值
-	candidates := make([]string, 0, 8)
-	iface := url.GetParam(constant.InterfaceKey, "")
-	ms := url.Methods
-	if len(ms) == 0 {
-		candidates = append(candidates, iface)
-	} else {
-		for _, m := range ms {
-			candidates = append(candidates, iface+constant.KeySeparator+m)
+	address := url.Address()
+	var revision string
+	instances := l.discovery.GetInstances(app)
+	for _, instance := range instances {
+		if instance.GetAddress() == address {
+			revision = instance.GetMetadata()[constant.ExportedServicesRevisionPropertyName]
 		}
 	}
-	sort.Strings(candidates)
-
-	// it's nearly impossible to be overflow
-	res := uint64(0)
-	for _, c := range candidates {
-		res += uint64(crc32.ChecksumIEEE([]byte(c)))
-	}
-	hash := fmt.Sprint(res)
-	key := getDataplaneKey(app, hash)
+	key := getDataplaneKey(app, revision)
 
 	l.dataplaneCache.Delete(key)
 	return nil
@@ -103,26 +91,15 @@ func (l *NotifyListener) deleteDataplane(ctx context.Context, url *common.URL) e
 
 func (l *NotifyListener) createOrUpdateDataplane(ctx context.Context, url *common.URL) error {
 	app := url.GetParam(constant.ApplicationKey, "")
-	// 根据该url的特征计算一个哈希值
-	candidates := make([]string, 0, 8)
-	iface := url.GetParam(constant.InterfaceKey, "")
-	ms := url.Methods
-	if len(ms) == 0 {
-		candidates = append(candidates, iface)
-	} else {
-		for _, m := range ms {
-			candidates = append(candidates, iface+constant.KeySeparator+m)
+	address := url.Address()
+	var revision string
+	instances := l.discovery.GetInstances(app)
+	for _, instance := range instances {
+		if instance.GetAddress() == address {
+			revision = instance.GetMetadata()[constant.ExportedServicesRevisionPropertyName]
 		}
 	}
-	sort.Strings(candidates)
-
-	// it's nearly impossible to be overflow
-	res := uint64(0)
-	for _, c := range candidates {
-		res += uint64(crc32.ChecksumIEEE([]byte(c)))
-	}
-	hash := fmt.Sprint(res)
-	key := getDataplaneKey(app, hash)
+	key := getDataplaneKey(app, revision)
 
 	dataplaneResource := mesh.NewDataplaneResource()
 	dataplaneResource.Spec.Networking = &mesh_proto.Dataplane_Networking{}
@@ -164,6 +141,6 @@ func OutboundInterfacesFor(ctx context.Context, url *common.URL) ([]*mesh_proto.
 	return outbounds, nil
 }
 
-func getDataplaneKey(app string, hash string) string {
-	return app + keySeparator + hash
+func getDataplaneKey(app string, revision string) string {
+	return app + keySeparator + revision
 }

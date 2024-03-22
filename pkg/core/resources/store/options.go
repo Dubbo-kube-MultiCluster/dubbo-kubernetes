@@ -42,7 +42,9 @@ type CreateOptions struct {
 type CreateOptionsFunc func(*CreateOptions)
 
 func NewCreateOptions(fs ...CreateOptionsFunc) *CreateOptions {
-	opts := &CreateOptions{}
+	opts := &CreateOptions{
+		Labels: map[string]string{},
+	}
 	for _, f := range fs {
 		f(opts)
 	}
@@ -179,7 +181,9 @@ func UpdateWithLabels(labels map[string]string) UpdateOptionsFunc {
 type UpdateOptionsFunc func(*UpdateOptions)
 
 func NewUpdateOptions(fs ...UpdateOptionsFunc) *UpdateOptions {
-	opts := &UpdateOptions{}
+	opts := &UpdateOptions{
+		Labels: map[string]string{},
+	}
 	for _, f := range fs {
 		f(opts)
 	}
@@ -195,7 +199,9 @@ type DeleteOptions struct {
 type DeleteOptionsFunc func(*DeleteOptions)
 
 func NewDeleteOptions(fs ...DeleteOptionsFunc) *DeleteOptions {
-	opts := &DeleteOptions{}
+	opts := &DeleteOptions{
+		Labels: map[string]string{},
+	}
 	for _, f := range fs {
 		f(opts)
 	}
@@ -280,7 +286,9 @@ type GetOptions struct {
 type GetOptionsFunc func(*GetOptions)
 
 func NewGetOptions(fs ...GetOptionsFunc) *GetOptions {
-	opts := &GetOptions{}
+	opts := &GetOptions{
+		Labels: map[string]string{},
+	}
 	for _, f := range fs {
 		f(opts)
 	}
@@ -375,7 +383,10 @@ type ListOptions struct {
 type ListOptionsFunc func(*ListOptions)
 
 func NewListOptions(fs ...ListOptionsFunc) *ListOptions {
-	opts := &ListOptions{}
+	opts := &ListOptions{
+		Labels:       map[string]string{},
+		ResourceKeys: map[core_model.ResourceKey]struct{}{},
+	}
 	for _, f := range fs {
 		f(opts)
 	}

@@ -27,24 +27,42 @@ func GenerateCpGroupPath(resourceName string, name string) string {
 
 func getMappingPath(keys ...string) string {
 	rootDir := pathSeparator + dubboGroup + pathSeparator + mappingGroup + pathSeparator
-	for _, key := range keys {
-		rootDir += fmt.Sprintf("%s%s", key, pathSeparator)
+	for i := 0; i < len(keys); i++ {
+		if i == len(keys)-1 {
+			// 遍历到了最后一个元素
+			rootDir += keys[i]
+		} else {
+			rootDir += fmt.Sprintf("%s%s", keys[i], pathSeparator)
+		}
 	}
 	return rootDir
 }
 
 func getMetadataPath(keys ...string) string {
+	if len(keys) == 0 {
+		return pathSeparator + dubboGroup + pathSeparator + metadataGroup
+	}
 	rootDir := pathSeparator + dubboGroup + pathSeparator + metadataGroup + pathSeparator
-	for _, key := range keys {
-		rootDir += fmt.Sprintf("%s%s", key, pathSeparator)
+	for i := 0; i < len(keys); i++ {
+		if i == len(keys)-1 {
+			// 遍历到了最后一个元素
+			rootDir += keys[i]
+		} else {
+			rootDir += fmt.Sprintf("%s%s", keys[i], pathSeparator)
+		}
 	}
 	return rootDir
 }
 
 func getDubboCpPath(keys ...string) string {
 	rootDir := pathSeparator + cpGroup + pathSeparator
-	for _, key := range keys {
-		rootDir += fmt.Sprintf("%s%s", key, pathSeparator)
+	for i := 0; i < len(keys); i++ {
+		if i == len(keys)-1 {
+			// 遍历到了最后一个元素
+			rootDir += keys[i]
+		} else {
+			rootDir += fmt.Sprintf("%s%s", keys[i], pathSeparator)
+		}
 	}
 	return rootDir
 }

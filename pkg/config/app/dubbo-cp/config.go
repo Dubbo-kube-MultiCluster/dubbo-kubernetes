@@ -96,6 +96,8 @@ type Config struct {
 	Defaults *Defaults `json:"defaults,omitempty"`
 	// Diagnostics configuration
 	Diagnostics *diagnostics.DiagnosticsConfig `json:"diagnostics,omitempty"`
+	// Proxy holds configuration for proxies
+	Proxy xds.Proxy `json:"proxy"`
 	// Dataplane Server configuration
 	DpServer *dp_server.DpServerConfig `json:"dpServer"`
 	// EventBus is a configuration of the event bus which is local to one instance of CP.

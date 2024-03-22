@@ -46,10 +46,19 @@ func NewSubscriptionStatus(now time.Time) *DiscoverySubscriptionStatus {
 
 func NewVersion() *Version {
 	return &Version{
-		Version: "1.0.0",
+		DubboDp: &DubboDpVersion{
+			Version:   "",
+			GitTag:    "",
+			GitCommit: "",
+			BuildDate: "",
+		},
+		Envoy: &EnvoyVersion{
+			Version: "",
+			Build:   "",
+		},
+		Dependencies: map[string]string{},
 	}
 }
-
 func (x *DataplaneInsight) IsOnline() bool {
 	for _, s := range x.GetSubscriptions() {
 		if s.GetConnectTime() != nil && s.GetDisconnectTime() == nil {

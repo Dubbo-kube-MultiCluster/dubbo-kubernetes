@@ -15,28 +15,17 @@
  * limitations under the License.
  */
 
-package xds
+package bootstrap
 
 import (
-	"github.com/apache/dubbo-kubernetes/pkg/xds/bootstrap"
-	"github.com/pkg/errors"
+	envoy_bootstrap_v3 "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
 )
 
 import (
-	config_core "github.com/apache/dubbo-kubernetes/pkg/config/core"
-	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
-	"github.com/apache/dubbo-kubernetes/pkg/xds/server"
+	"github.com/apache/dubbo-kubernetes/pkg/config/xds"
 )
 
-func Setup(rt core_runtime.Runtime) error {
-	if rt.Config().Mode == config_core.Global {
-		return nil
-	}
-	if err := server.RegisterXDS(rt); err != nil {
-		return errors.Wrap(err, "could not register XDS")
-	}
-	if err := bootstrap.RegisterBootstrap(rt); err != nil {
-		return errors.Wrap(err, "could not register Bootstrap")
-	}
-	return nil
+func genConfig(parameters configParameters, proxyConfig xds.Proxy, enableReloadableTokens bool) (*envoy_bootstrap_v3.Bootstrap, error) {
+
+	return nil, nil
 }

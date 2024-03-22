@@ -323,7 +323,20 @@ func (t *traditionalStore) Update(ctx context.Context, resource core_model.Resou
 		appNames := mapping.ApplicationNames
 		serviceInterface := mapping.InterfaceName
 		for _, app := range appNames {
-			err := t.metadataReport.RegisterServiceAppMapping(serviceInterface, mappingGroup, app)
+			path := getMappingPath(serviceInterface)
+			// 先使用regClient判断是否存在, 如果存在的话就先删除再更新
+			bytes, err := t.regClient.GetContent(path)
+			if err != nil {
+				return err
+			}
+			if len(bytes) != 0 {
+				// 说明有内容, 需要先删除
+				err := t.regClient.DeleteContent(path)
+				if err != nil {
+					return err
+				}
+			}
+			err = t.metadataReport.RegisterServiceAppMapping(serviceInterface, mappingGroup, app)
 			if err != nil {
 				return err
 			}
@@ -337,6 +350,18 @@ func (t *traditionalStore) Update(ctx context.Context, resource core_model.Resou
 				Application: metadata.GetApp(),
 				Group:       dubboGroup,
 			},
+		}
+		// 先判断identifier是否存在, 如果存在到话需要将其删除
+		content, err := t.regClient.GetContent(getMetadataPath(metadata.GetApp(), metadata.GetRevision()))
+		if err != nil {
+			return err
+		}
+		if len(content) != 0 {
+			// 如果不为空, 先删除
+			err := t.regClient.DeleteContent(getMetadataPath(metadata.GetApp(), metadata.GetRevision()))
+			if err != nil {
+				return err
+			}
 		}
 		services := map[string]*common.ServiceInfo{}
 		// 把metadata赋值到services中
@@ -355,7 +380,7 @@ func (t *traditionalStore) Update(ctx context.Context, resource core_model.Resou
 			Revision: metadata.GetRevision(),
 			Services: services,
 		}
-		err := t.metadataReport.PublishAppMetadata(identifier, info)
+		err = t.metadataReport.PublishAppMetadata(identifier, info)
 		if err != nil {
 			return err
 		}
@@ -386,7 +411,7 @@ func (t *traditionalStore) Delete(ctx context.Context, resource core_model.Resou
 
 	switch resource.Descriptor().Name {
 	case mesh.DataplaneType:
-		t.dCache.Delete(ccache.GenerateDCacheKey(opts.Name, opts.Mesh))
+		// 不支持删除
 	case mesh.TagRouteType:
 		labels := opts.Labels
 		base := mesh_proto.Base{
@@ -485,7 +510,10 @@ func (c *traditionalStore) Get(_ context.Context, resource core_model.Resource, 
 
 	switch resource.Descriptor().Name {
 	case mesh.DataplaneType:
-		value, ok := c.dCache.Load(ccache.GenerateDCacheKey(opts.Name, opts.Mesh))
+		app := opts.Labels[mesh_proto.Application]
+		revision := opts.Labels[mesh_proto.Revision]
+		key := ccache.GetDataplaneKey(app, revision)
+		value, ok := c.dCache.Load(key)
 		if !ok {
 			return nil
 		}
@@ -495,6 +523,10 @@ func (c *traditionalStore) Get(_ context.Context, resource core_model.Resource, 
 		if err != nil {
 			return err
 		}
+		resource.SetMeta(&resourceMetaObject{
+			Name: key,
+			Mesh: opts.Mesh,
+		})
 	case mesh.TagRouteType:
 		labels := opts.Labels
 		base := mesh_proto.Base{
@@ -515,6 +547,10 @@ func (c *traditionalStore) Get(_ context.Context, resource core_model.Resource, 
 				return errors.Wrap(err, "failed to convert json to spec")
 			}
 		}
+		resource.SetMeta(&resourceMetaObject{
+			Name: opts.Name,
+			Mesh: opts.Mesh,
+		})
 	case mesh.ConditionRouteType:
 		labels := opts.Labels
 		base := mesh_proto.Base{
@@ -535,6 +571,10 @@ func (c *traditionalStore) Get(_ context.Context, resource core_model.Resource, 
 				return errors.Wrap(err, "failed to convert json to spec")
 			}
 		}
+		resource.SetMeta(&resourceMetaObject{
+			Name: opts.Name,
+			Mesh: opts.Mesh,
+		})
 	case mesh.DynamicConfigType:
 		labels := opts.Labels
 		base := mesh_proto.Base{
@@ -555,6 +595,10 @@ func (c *traditionalStore) Get(_ context.Context, resource core_model.Resource, 
 				return errors.Wrap(err, "failed to convert json to spec")
 			}
 		}
+		resource.SetMeta(&resourceMetaObject{
+			Name: opts.Name,
+			Mesh: opts.Mesh,
+		})
 	case mesh.MappingType:
 		// Get通过Key获取, 不设置listener
 		key := opts.Name
@@ -575,9 +619,22 @@ func (c *traditionalStore) Get(_ context.Context, resource core_model.Resource, 
 			items = append(items, fmt.Sprintf("%v", k))
 		}
 		mapping.ApplicationNames = items
+		resource.SetMeta(&resourceMetaObject{
+			Name: opts.Name,
+			Mesh: opts.Mesh,
+		})
 	case mesh.MetaDataType:
 		labels := opts.Labels
-		id := dubbo_identifier.NewSubscriberMetadataIdentifier(labels[mesh_proto.Application], labels[mesh_proto.Revision])
+		revision := labels[mesh_proto.Revision]
+		app := labels[mesh_proto.Application]
+		if revision == "" {
+			children, err := c.regClient.GetChildren(getMetadataPath(app))
+			if err != nil {
+				return err
+			}
+			revision = children[0]
+		}
+		id := dubbo_identifier.NewSubscriberMetadataIdentifier(app, revision)
 		appMetadata, err := c.metadataReport.GetAppMetadata(id)
 		if err != nil {
 			return err
@@ -597,6 +654,10 @@ func (c *traditionalStore) Get(_ context.Context, resource core_model.Resource, 
 			}
 		}
 		metaData.Services = service
+		resource.SetMeta(&resourceMetaObject{
+			Name: opts.Name,
+			Mesh: opts.Mesh,
+		})
 	default:
 		path := GenerateCpGroupPath(string(resource.Descriptor().Name), opts.Name)
 		value, err := c.regClient.GetContent(path)
@@ -606,11 +667,11 @@ func (c *traditionalStore) Get(_ context.Context, resource core_model.Resource, 
 		if err := core_model.FromYAML(value, resource.GetSpec()); err != nil {
 			return err
 		}
+		resource.SetMeta(&resourceMetaObject{
+			Name: opts.Name,
+			Mesh: opts.Mesh,
+		})
 	}
-	resource.SetMeta(&resourceMetaObject{
-		Name: opts.Name,
-		Mesh: opts.Mesh,
-	})
 	return nil
 }
 
@@ -623,7 +684,9 @@ func (c *traditionalStore) List(_ context.Context, resources core_model.Resource
 		c.dCache.Range(func(key, value any) bool {
 			item := resources.NewItem()
 			r := value.(core_model.Resource)
-			item.SetMeta(r.GetMeta())
+			item.SetMeta(&resourceMetaObject{
+				Name: key.(string),
+			})
 			err := item.SetSpec(r.GetSpec())
 			if err != nil {
 				return false
@@ -635,12 +698,12 @@ func (c *traditionalStore) List(_ context.Context, resources core_model.Resource
 		})
 	case mesh.MappingType:
 		// 1. 首先获取到所有到key
-		path := getMappingPath()
-		keys, err := c.regClient.GetChildren(path)
+		keys, err := c.metadataReport.GetConfigKeysByGroup(mappingGroup)
 		if err != nil {
 			return err
 		}
-		for _, key := range keys {
+		for _, key := range keys.Values() {
+			key := key.(string)
 			// 通过key得到所有的mapping映射关系
 			set, err := c.metadataReport.GetServiceAppMapping(key, mappingGroup, nil)
 			if err != nil {
@@ -677,6 +740,10 @@ func (c *traditionalStore) List(_ context.Context, resources core_model.Resource
 			revisions, err := c.regClient.GetChildren(path)
 			if err != nil {
 				return err
+			}
+			if revisions[0] == "provider" ||
+				revisions[0] == "consumer" {
+				continue
 			}
 			for _, revision := range revisions {
 				id := dubbo_identifier.NewSubscriberMetadataIdentifier(app, revision)

@@ -19,8 +19,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/apache/dubbo-kubernetes/pkg/config/core"
-	"github.com/apache/dubbo-kubernetes/pkg/test"
 	"time"
 )
 
@@ -32,6 +30,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/admin"
 	"github.com/apache/dubbo-kubernetes/pkg/config"
 	dubbo_cp "github.com/apache/dubbo-kubernetes/pkg/config/app/dubbo-cp"
+	"github.com/apache/dubbo-kubernetes/pkg/config/core"
 	"github.com/apache/dubbo-kubernetes/pkg/core/bootstrap"
 	dubbo_cmd "github.com/apache/dubbo-kubernetes/pkg/core/cmd"
 	dds_global "github.com/apache/dubbo-kubernetes/pkg/dds/global"
@@ -42,6 +41,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/dubbo"
 	"github.com/apache/dubbo-kubernetes/pkg/hds"
 	"github.com/apache/dubbo-kubernetes/pkg/intercp"
+	"github.com/apache/dubbo-kubernetes/pkg/test"
 	"github.com/apache/dubbo-kubernetes/pkg/util/os"
 	dubbo_version "github.com/apache/dubbo-kubernetes/pkg/version"
 	"github.com/apache/dubbo-kubernetes/pkg/xds"

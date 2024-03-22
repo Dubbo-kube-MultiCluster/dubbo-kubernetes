@@ -369,7 +369,12 @@ type Version struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Version string `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`
+	// Version of Dubbo Dataplane
+	DubboDp *DubboDpVersion `protobuf:"bytes,1,opt,name=DubboDp,proto3" json:"DubboDp,omitempty"`
+	// Version of Envoy
+	Envoy *EnvoyVersion `protobuf:"bytes,2,opt,name=envoy,proto3" json:"envoy,omitempty"`
+	// Versions of other dependencies, i.e. CoreDNS
+	Dependencies map[string]string `protobuf:"bytes,3,rep,name=dependencies,proto3" json:"dependencies,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
 func (x *Version) Reset() {
@@ -404,11 +409,175 @@ func (*Version) Descriptor() ([]byte, []int) {
 	return file_api_mesh_v1alpha1_dataplane_insight_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *Version) GetVersion() string {
+func (x *Version) GetDubboDp() *DubboDpVersion {
+	if x != nil {
+		return x.DubboDp
+	}
+	return nil
+}
+
+func (x *Version) GetEnvoy() *EnvoyVersion {
+	if x != nil {
+		return x.Envoy
+	}
+	return nil
+}
+
+func (x *Version) GetDependencies() map[string]string {
+	if x != nil {
+		return x.Dependencies
+	}
+	return nil
+}
+
+type DubboDpVersion struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Version number of Dubbo Dataplane
+	Version string `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`
+	// Git tag of Dubbo Dataplane version
+	GitTag string `protobuf:"bytes,2,opt,name=gitTag,proto3" json:"gitTag,omitempty"`
+	// Git commit of Dubbo Dataplane version
+	GitCommit string `protobuf:"bytes,3,opt,name=gitCommit,proto3" json:"gitCommit,omitempty"`
+	// Build date of Dubbo Dataplane version
+	BuildDate string `protobuf:"bytes,4,opt,name=buildDate,proto3" json:"buildDate,omitempty"`
+	// True iff Dubbo DP version is compatible with Dubbo CP version
+	DubboCpCompatible bool `protobuf:"varint,5,opt,name=DubboCpCompatible,proto3" json:"DubboCpCompatible,omitempty"`
+}
+
+func (x *DubboDpVersion) Reset() {
+	*x = DubboDpVersion{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_mesh_v1alpha1_dataplane_insight_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DubboDpVersion) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DubboDpVersion) ProtoMessage() {}
+
+func (x *DubboDpVersion) ProtoReflect() protoreflect.Message {
+	mi := &file_api_mesh_v1alpha1_dataplane_insight_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DubboDpVersion.ProtoReflect.Descriptor instead.
+func (*DubboDpVersion) Descriptor() ([]byte, []int) {
+	return file_api_mesh_v1alpha1_dataplane_insight_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *DubboDpVersion) GetVersion() string {
 	if x != nil {
 		return x.Version
 	}
 	return ""
+}
+
+func (x *DubboDpVersion) GetGitTag() string {
+	if x != nil {
+		return x.GitTag
+	}
+	return ""
+}
+
+func (x *DubboDpVersion) GetGitCommit() string {
+	if x != nil {
+		return x.GitCommit
+	}
+	return ""
+}
+
+func (x *DubboDpVersion) GetBuildDate() string {
+	if x != nil {
+		return x.BuildDate
+	}
+	return ""
+}
+
+func (x *DubboDpVersion) GetDubboCpCompatible() bool {
+	if x != nil {
+		return x.DubboCpCompatible
+	}
+	return false
+}
+
+type EnvoyVersion struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Version number of Envoy
+	Version string `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`
+	// Full build tag of Envoy version
+	Build string `protobuf:"bytes,2,opt,name=build,proto3" json:"build,omitempty"`
+	// True iff Envoy version is compatible with Dubbo DP version
+	DubboDpCompatible bool `protobuf:"varint,3,opt,name=DubboDpCompatible,proto3" json:"DubboDpCompatible,omitempty"`
+}
+
+func (x *EnvoyVersion) Reset() {
+	*x = EnvoyVersion{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_mesh_v1alpha1_dataplane_insight_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *EnvoyVersion) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EnvoyVersion) ProtoMessage() {}
+
+func (x *EnvoyVersion) ProtoReflect() protoreflect.Message {
+	mi := &file_api_mesh_v1alpha1_dataplane_insight_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EnvoyVersion.ProtoReflect.Descriptor instead.
+func (*EnvoyVersion) Descriptor() ([]byte, []int) {
+	return file_api_mesh_v1alpha1_dataplane_insight_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *EnvoyVersion) GetVersion() string {
+	if x != nil {
+		return x.Version
+	}
+	return ""
+}
+
+func (x *EnvoyVersion) GetBuild() string {
+	if x != nil {
+		return x.Build
+	}
+	return ""
+}
+
+func (x *EnvoyVersion) GetDubboDpCompatible() bool {
+	if x != nil {
+		return x.DubboDpCompatible
+	}
+	return false
 }
 
 // MTLS defines insights for mTLS
@@ -433,7 +602,7 @@ type DataplaneInsight_MTLS struct {
 func (x *DataplaneInsight_MTLS) Reset() {
 	*x = DataplaneInsight_MTLS{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_api_mesh_v1alpha1_dataplane_insight_proto_msgTypes[5]
+		mi := &file_api_mesh_v1alpha1_dataplane_insight_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -446,7 +615,7 @@ func (x *DataplaneInsight_MTLS) String() string {
 func (*DataplaneInsight_MTLS) ProtoMessage() {}
 
 func (x *DataplaneInsight_MTLS) ProtoReflect() protoreflect.Message {
-	mi := &file_api_mesh_v1alpha1_dataplane_insight_proto_msgTypes[5]
+	mi := &file_api_mesh_v1alpha1_dataplane_insight_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -612,13 +781,46 @@ var file_api_mesh_v1alpha1_dataplane_insight_proto_rawDesc = []byte{
 	0x65, 0x64, 0x67, 0x65, 0x64, 0x12, 0x2d, 0x0a, 0x12, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
 	0x65, 0x73, 0x5f, 0x72, 0x65, 0x6a, 0x65, 0x63, 0x74, 0x65, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28,
 	0x04, 0x52, 0x11, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x73, 0x52, 0x65, 0x6a, 0x65,
-	0x63, 0x74, 0x65, 0x64, 0x22, 0x23, 0x0a, 0x07, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12,
-	0x18, 0x0a, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x42, 0x36, 0x5a, 0x34, 0x67, 0x69, 0x74,
-	0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x61, 0x70, 0x61, 0x63, 0x68, 0x65, 0x2f, 0x64,
-	0x75, 0x62, 0x62, 0x6f, 0x2d, 0x6b, 0x75, 0x62, 0x65, 0x72, 0x6e, 0x65, 0x74, 0x65, 0x73, 0x2f,
-	0x61, 0x70, 0x69, 0x2f, 0x6d, 0x65, 0x73, 0x68, 0x2f, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61,
-	0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x63, 0x74, 0x65, 0x64, 0x22, 0x96, 0x02, 0x0a, 0x07, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e,
+	0x12, 0x3d, 0x0a, 0x07, 0x44, 0x75, 0x62, 0x62, 0x6f, 0x44, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x23, 0x2e, 0x64, 0x75, 0x62, 0x62, 0x6f, 0x2e, 0x6d, 0x65, 0x73, 0x68, 0x2e, 0x76,
+	0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x44, 0x75, 0x62, 0x62, 0x6f, 0x44, 0x70, 0x56,
+	0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x07, 0x44, 0x75, 0x62, 0x62, 0x6f, 0x44, 0x70, 0x12,
+	0x37, 0x0a, 0x05, 0x65, 0x6e, 0x76, 0x6f, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21,
+	0x2e, 0x64, 0x75, 0x62, 0x62, 0x6f, 0x2e, 0x6d, 0x65, 0x73, 0x68, 0x2e, 0x76, 0x31, 0x61, 0x6c,
+	0x70, 0x68, 0x61, 0x31, 0x2e, 0x45, 0x6e, 0x76, 0x6f, 0x79, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f,
+	0x6e, 0x52, 0x05, 0x65, 0x6e, 0x76, 0x6f, 0x79, 0x12, 0x52, 0x0a, 0x0c, 0x64, 0x65, 0x70, 0x65,
+	0x6e, 0x64, 0x65, 0x6e, 0x63, 0x69, 0x65, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x2e,
+	0x2e, 0x64, 0x75, 0x62, 0x62, 0x6f, 0x2e, 0x6d, 0x65, 0x73, 0x68, 0x2e, 0x76, 0x31, 0x61, 0x6c,
+	0x70, 0x68, 0x61, 0x31, 0x2e, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x2e, 0x44, 0x65, 0x70,
+	0x65, 0x6e, 0x64, 0x65, 0x6e, 0x63, 0x69, 0x65, 0x73, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x0c,
+	0x64, 0x65, 0x70, 0x65, 0x6e, 0x64, 0x65, 0x6e, 0x63, 0x69, 0x65, 0x73, 0x1a, 0x3f, 0x0a, 0x11,
+	0x44, 0x65, 0x70, 0x65, 0x6e, 0x64, 0x65, 0x6e, 0x63, 0x69, 0x65, 0x73, 0x45, 0x6e, 0x74, 0x72,
+	0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03,
+	0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0xac, 0x01,
+	0x0a, 0x0e, 0x44, 0x75, 0x62, 0x62, 0x6f, 0x44, 0x70, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e,
+	0x12, 0x18, 0x0a, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x16, 0x0a, 0x06, 0x67, 0x69,
+	0x74, 0x54, 0x61, 0x67, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x67, 0x69, 0x74, 0x54,
+	0x61, 0x67, 0x12, 0x1c, 0x0a, 0x09, 0x67, 0x69, 0x74, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x67, 0x69, 0x74, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74,
+	0x12, 0x1c, 0x0a, 0x09, 0x62, 0x75, 0x69, 0x6c, 0x64, 0x44, 0x61, 0x74, 0x65, 0x18, 0x04, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x09, 0x62, 0x75, 0x69, 0x6c, 0x64, 0x44, 0x61, 0x74, 0x65, 0x12, 0x2c,
+	0x0a, 0x11, 0x44, 0x75, 0x62, 0x62, 0x6f, 0x43, 0x70, 0x43, 0x6f, 0x6d, 0x70, 0x61, 0x74, 0x69,
+	0x62, 0x6c, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x08, 0x52, 0x11, 0x44, 0x75, 0x62, 0x62, 0x6f,
+	0x43, 0x70, 0x43, 0x6f, 0x6d, 0x70, 0x61, 0x74, 0x69, 0x62, 0x6c, 0x65, 0x22, 0x6c, 0x0a, 0x0c,
+	0x45, 0x6e, 0x76, 0x6f, 0x79, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x18, 0x0a, 0x07,
+	0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x76,
+	0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x14, 0x0a, 0x05, 0x62, 0x75, 0x69, 0x6c, 0x64, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x62, 0x75, 0x69, 0x6c, 0x64, 0x12, 0x2c, 0x0a, 0x11,
+	0x44, 0x75, 0x62, 0x62, 0x6f, 0x44, 0x70, 0x43, 0x6f, 0x6d, 0x70, 0x61, 0x74, 0x69, 0x62, 0x6c,
+	0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x11, 0x44, 0x75, 0x62, 0x62, 0x6f, 0x44, 0x70,
+	0x43, 0x6f, 0x6d, 0x70, 0x61, 0x74, 0x69, 0x62, 0x6c, 0x65, 0x42, 0x36, 0x5a, 0x34, 0x67, 0x69,
+	0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x61, 0x70, 0x61, 0x63, 0x68, 0x65, 0x2f,
+	0x64, 0x75, 0x62, 0x62, 0x6f, 0x2d, 0x6b, 0x75, 0x62, 0x65, 0x72, 0x6e, 0x65, 0x74, 0x65, 0x73,
+	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6d, 0x65, 0x73, 0x68, 0x2f, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68,
+	0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -633,36 +835,42 @@ func file_api_mesh_v1alpha1_dataplane_insight_proto_rawDescGZIP() []byte {
 	return file_api_mesh_v1alpha1_dataplane_insight_proto_rawDescData
 }
 
-var file_api_mesh_v1alpha1_dataplane_insight_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_api_mesh_v1alpha1_dataplane_insight_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_api_mesh_v1alpha1_dataplane_insight_proto_goTypes = []interface{}{
 	(*DataplaneInsight)(nil),            // 0: dubbo.mesh.v1alpha1.DataplaneInsight
 	(*DiscoverySubscription)(nil),       // 1: dubbo.mesh.v1alpha1.DiscoverySubscription
 	(*DiscoverySubscriptionStatus)(nil), // 2: dubbo.mesh.v1alpha1.DiscoverySubscriptionStatus
 	(*DiscoveryServiceStats)(nil),       // 3: dubbo.mesh.v1alpha1.DiscoveryServiceStats
 	(*Version)(nil),                     // 4: dubbo.mesh.v1alpha1.Version
-	(*DataplaneInsight_MTLS)(nil),       // 5: dubbo.mesh.v1alpha1.DataplaneInsight.MTLS
-	(*timestamppb.Timestamp)(nil),       // 6: google.protobuf.Timestamp
+	(*DubboDpVersion)(nil),              // 5: dubbo.mesh.v1alpha1.DubboDpVersion
+	(*EnvoyVersion)(nil),                // 6: dubbo.mesh.v1alpha1.EnvoyVersion
+	(*DataplaneInsight_MTLS)(nil),       // 7: dubbo.mesh.v1alpha1.DataplaneInsight.MTLS
+	nil,                                 // 8: dubbo.mesh.v1alpha1.Version.DependenciesEntry
+	(*timestamppb.Timestamp)(nil),       // 9: google.protobuf.Timestamp
 }
 var file_api_mesh_v1alpha1_dataplane_insight_proto_depIdxs = []int32{
 	1,  // 0: dubbo.mesh.v1alpha1.DataplaneInsight.subscriptions:type_name -> dubbo.mesh.v1alpha1.DiscoverySubscription
-	5,  // 1: dubbo.mesh.v1alpha1.DataplaneInsight.mTLS:type_name -> dubbo.mesh.v1alpha1.DataplaneInsight.MTLS
-	6,  // 2: dubbo.mesh.v1alpha1.DiscoverySubscription.connect_time:type_name -> google.protobuf.Timestamp
-	6,  // 3: dubbo.mesh.v1alpha1.DiscoverySubscription.disconnect_time:type_name -> google.protobuf.Timestamp
+	7,  // 1: dubbo.mesh.v1alpha1.DataplaneInsight.mTLS:type_name -> dubbo.mesh.v1alpha1.DataplaneInsight.MTLS
+	9,  // 2: dubbo.mesh.v1alpha1.DiscoverySubscription.connect_time:type_name -> google.protobuf.Timestamp
+	9,  // 3: dubbo.mesh.v1alpha1.DiscoverySubscription.disconnect_time:type_name -> google.protobuf.Timestamp
 	2,  // 4: dubbo.mesh.v1alpha1.DiscoverySubscription.status:type_name -> dubbo.mesh.v1alpha1.DiscoverySubscriptionStatus
 	4,  // 5: dubbo.mesh.v1alpha1.DiscoverySubscription.version:type_name -> dubbo.mesh.v1alpha1.Version
-	6,  // 6: dubbo.mesh.v1alpha1.DiscoverySubscriptionStatus.last_update_time:type_name -> google.protobuf.Timestamp
+	9,  // 6: dubbo.mesh.v1alpha1.DiscoverySubscriptionStatus.last_update_time:type_name -> google.protobuf.Timestamp
 	3,  // 7: dubbo.mesh.v1alpha1.DiscoverySubscriptionStatus.total:type_name -> dubbo.mesh.v1alpha1.DiscoveryServiceStats
 	3,  // 8: dubbo.mesh.v1alpha1.DiscoverySubscriptionStatus.cds:type_name -> dubbo.mesh.v1alpha1.DiscoveryServiceStats
 	3,  // 9: dubbo.mesh.v1alpha1.DiscoverySubscriptionStatus.eds:type_name -> dubbo.mesh.v1alpha1.DiscoveryServiceStats
 	3,  // 10: dubbo.mesh.v1alpha1.DiscoverySubscriptionStatus.lds:type_name -> dubbo.mesh.v1alpha1.DiscoveryServiceStats
 	3,  // 11: dubbo.mesh.v1alpha1.DiscoverySubscriptionStatus.rds:type_name -> dubbo.mesh.v1alpha1.DiscoveryServiceStats
-	6,  // 12: dubbo.mesh.v1alpha1.DataplaneInsight.MTLS.certificate_expiration_time:type_name -> google.protobuf.Timestamp
-	6,  // 13: dubbo.mesh.v1alpha1.DataplaneInsight.MTLS.last_certificate_regeneration:type_name -> google.protobuf.Timestamp
-	14, // [14:14] is the sub-list for method output_type
-	14, // [14:14] is the sub-list for method input_type
-	14, // [14:14] is the sub-list for extension type_name
-	14, // [14:14] is the sub-list for extension extendee
-	0,  // [0:14] is the sub-list for field type_name
+	5,  // 12: dubbo.mesh.v1alpha1.Version.DubboDp:type_name -> dubbo.mesh.v1alpha1.DubboDpVersion
+	6,  // 13: dubbo.mesh.v1alpha1.Version.envoy:type_name -> dubbo.mesh.v1alpha1.EnvoyVersion
+	8,  // 14: dubbo.mesh.v1alpha1.Version.dependencies:type_name -> dubbo.mesh.v1alpha1.Version.DependenciesEntry
+	9,  // 15: dubbo.mesh.v1alpha1.DataplaneInsight.MTLS.certificate_expiration_time:type_name -> google.protobuf.Timestamp
+	9,  // 16: dubbo.mesh.v1alpha1.DataplaneInsight.MTLS.last_certificate_regeneration:type_name -> google.protobuf.Timestamp
+	17, // [17:17] is the sub-list for method output_type
+	17, // [17:17] is the sub-list for method input_type
+	17, // [17:17] is the sub-list for extension type_name
+	17, // [17:17] is the sub-list for extension extendee
+	0,  // [0:17] is the sub-list for field type_name
 }
 
 func init() { file_api_mesh_v1alpha1_dataplane_insight_proto_init() }
@@ -732,6 +940,30 @@ func file_api_mesh_v1alpha1_dataplane_insight_proto_init() {
 			}
 		}
 		file_api_mesh_v1alpha1_dataplane_insight_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DubboDpVersion); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_api_mesh_v1alpha1_dataplane_insight_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*EnvoyVersion); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_api_mesh_v1alpha1_dataplane_insight_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DataplaneInsight_MTLS); i {
 			case 0:
 				return &v.state
@@ -750,7 +982,7 @@ func file_api_mesh_v1alpha1_dataplane_insight_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_api_mesh_v1alpha1_dataplane_insight_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
