@@ -64,6 +64,10 @@ func HttpConnectionManager(statsName string, forwardClientCertDetails bool) Filt
 	})
 }
 
+func TripleConnectionManager() FilterChainBuilderOpt {
+	return AddFilterChainConfigurer(&v3.TripleConfigurer{})
+}
+
 type splitAdapter struct {
 	clusterName string
 	weight      uint32

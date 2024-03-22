@@ -63,11 +63,11 @@ func (g OutboundProxyGenerator) Generator(ctx context.Context, _ *model.Resource
 	outboundsMultipleIPs := buildOutboundsWithMultipleIPs(proxy.Dataplane, outbounds)
 	for _, outbound := range outboundsMultipleIPs {
 
-		// Determine the list of destination subsets
-		// For one outbound listener it may contain many subsets (ex. TrafficRoute to many destinations)
-		routes := g.determineRoutes(proxy, outbound.Addresses[0], outbound.Tags)
+		// Determine the list of destination subsets for the given outbound service
+		routes := g.determineRoutes(proxy, outbound.Tags)
 		clusters := routes.Clusters()
 
+		// Infer the compatible protocol for all the apps for the given service
 		protocol := inferProtocol(xdsCtx.Mesh, clusters)
 
 		servicesAcc.Add(clusters...)
@@ -111,6 +111,10 @@ func (OutboundProxyGenerator) generateLDS(ctx xds_context.Context, proxy *model.
 		switch protocol {
 		case core_mesh.ProtocolTriple:
 			// TODO: implement the logic of Triple
+			// currently, we use the tcp proxy for the triple protocol
+			filterChainBuilder.
+				Configure(envoy_listeners.TripleConnectionManager()).
+				Configure(envoy_listeners.TcpProxyDeprecated(serviceName, routes.Clusters()...))
 		case core_mesh.ProtocolGRPC:
 			filterChainBuilder.
 				Configure(envoy_listeners.HttpConnectionManager(serviceName, false)).
@@ -257,18 +261,17 @@ func inferProtocol(meshCtx xds_context.MeshContext, clusters []envoy_common.Clus
 
 func (OutboundProxyGenerator) determineRoutes(
 	proxy *model.Proxy,
-	oface mesh_proto.OutboundInterface,
-	otags map[string]string,
+	outboundTags map[string]string,
 ) envoy_common.Routes {
 	var routes envoy_common.Routes
 
-	retriveClusters := func(oface mesh_proto.OutboundInterface) []envoy_common.Cluster {
+	retriveClusters := func() []envoy_common.Cluster {
 		var clusters []envoy_common.Cluster
-		service := otags[mesh_proto.ServiceTag]
+		service := outboundTags[mesh_proto.ServiceTag]
 
-		name, _ := envoy_tags.Tags(otags).DestinationClusterName(nil)
+		name, _ := envoy_tags.Tags(outboundTags).DestinationClusterName(nil)
 
-		if mesh, ok := otags[mesh_proto.MeshTag]; ok {
+		if mesh, ok := outboundTags[mesh_proto.MeshTag]; ok {
 			// The name should be distinct to the service & mesh combination
 			name = fmt.Sprintf("%s_%s", name, mesh)
 		}
@@ -283,7 +286,7 @@ func (OutboundProxyGenerator) determineRoutes(
 			isExternalService = true
 		}
 
-		allTags := envoy_tags.Tags(otags)
+		allTags := envoy_tags.Tags(outboundTags)
 		cluster := envoy_common.NewCluster(
 			envoy_common.WithService(service),
 			envoy_common.WithName(name),
@@ -291,7 +294,7 @@ func (OutboundProxyGenerator) determineRoutes(
 			envoy_common.WithExternalService(isExternalService),
 		)
 
-		if mesh, ok := otags[mesh_proto.MeshTag]; ok {
+		if mesh, ok := outboundTags[mesh_proto.MeshTag]; ok {
 			cluster.SetMesh(mesh)
 		}
 
@@ -309,7 +312,7 @@ func (OutboundProxyGenerator) determineRoutes(
 		})
 	}
 
-	clusters := retriveClusters(oface)
+	clusters := retriveClusters()
 	routes = appendRoute(routes, clusters)
 
 	return routes

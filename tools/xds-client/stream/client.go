@@ -91,9 +91,7 @@ func (s *Stream) Request(clientId string, typ string, dp rest.Resource) error {
 	if err != nil {
 		return err
 	}
-	version := &mesh_proto.Version{
-		Version: "",
-	}
+	version := &mesh_proto.Version{}
 	md := &structpb.Struct{
 		Fields: map[string]*structpb.Value{
 			"dataplane.resource": {Kind: &structpb.Value_StringValue{StringValue: string(dpJSON)}},
