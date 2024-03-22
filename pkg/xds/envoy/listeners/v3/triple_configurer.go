@@ -15,32 +15,37 @@
  * limitations under the License.
  */
 
-package xds
+package v3
 
 import (
-	mesh_proto "github.com/apache/dubbo-kubernetes/api/mesh/v1alpha1"
-	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
+	envoy_listener "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
+
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-// TypedMatchingPolicies all policies of this type matching
-type TypedMatchingPolicies struct {
-	Type              core_model.ResourceType
-	InboundPolicies   map[mesh_proto.InboundInterface][]core_model.Resource
-	OutboundPolicies  map[mesh_proto.OutboundInterface][]core_model.Resource
-	ServicePolicies   map[ServiceName][]core_model.Resource
-	DataplanePolicies []core_model.Resource
-}
+import (
+	"github.com/apache/dubbo-kubernetes/pkg/util/proto"
+)
 
-type PluginOriginatedPolicies map[core_model.ResourceType]TypedMatchingPolicies
+type TripleConfigurer struct{}
 
-type MatchedPolicies struct {
-	// Inbound(Listener) -> Policy
+var _ FilterChainConfigurer = &TripleConfigurer{}
 
-	// Service(Cluster) -> Policy
+func (c *TripleConfigurer) Configure(filterChain *envoy_listener.FilterChain) error {
+	// use empty pbst for now
+	pbst, err := proto.MarshalAnyDeterministic(
+		&emptypb.Empty{})
+	if err != nil {
+		return err
+	}
 
-	// Outbound(Listener) -> Policy
-
-	// Dataplane -> Policy
-
-	Dynamic PluginOriginatedPolicies
+	filterChain.Filters = append([]*envoy_listener.Filter{
+		{
+			Name: "envoy.filters.network.triple_connection_manager",
+			ConfigType: &envoy_listener.Filter_TypedConfig{
+				TypedConfig: pbst,
+			},
+		},
+	}, filterChain.Filters...)
+	return nil
 }

@@ -95,6 +95,12 @@ func (g InboundProxyGenerator) Generator(ctx context.Context, _ *core_xds.Resour
 		filterChainBuilder := func(serverSideMTLS bool) *envoy_listeners.FilterChainBuilder {
 			filterChainBuilder := envoy_listeners.NewFilterChainBuilder(proxy.APIVersion, envoy_common.AnonymousResource)
 			switch protocol {
+			case core_mesh.ProtocolTriple:
+				// TODO: implement the logic of Triple
+				// currently, we use the tcp proxy for the triple protocol
+				filterChainBuilder.
+					Configure(envoy_listeners.TripleConnectionManager()).
+					Configure(envoy_listeners.TcpProxyDeprecated(localClusterName, envoy_common.NewCluster(envoy_common.WithService(localClusterName))))
 			// configuration for HTTP case
 			case core_mesh.ProtocolHTTP, core_mesh.ProtocolHTTP2:
 				filterChainBuilder.

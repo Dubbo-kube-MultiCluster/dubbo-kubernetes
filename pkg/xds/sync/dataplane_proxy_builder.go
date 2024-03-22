@@ -46,6 +46,8 @@ func (p *DataplaneProxyBuilder) Build(ctx context.Context, key core_model.Resour
 		return nil, core_store.ErrorResourceNotFound(core_mesh.DataplaneType, key.Name, key.Mesh)
 	}
 
+	routing := p.resolveRouting(ctx, meshContext, dp)
+
 	matchedPolicies, err := p.matchPolicies(meshContext, dp, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not match policies")
@@ -55,9 +57,26 @@ func (p *DataplaneProxyBuilder) Build(ctx context.Context, key core_model.Resour
 		APIVersion: p.APIVersion,
 		Policies:   *matchedPolicies,
 		Dataplane:  dp,
+		Routing:    *routing,
 		Zone:       p.Zone,
 	}
 	return proxy, nil
+}
+
+func (p *DataplaneProxyBuilder) resolveRouting(
+	ctx context.Context,
+	meshContext xds_context.MeshContext,
+	dataplane *core_mesh.DataplaneResource,
+) *core_xds.Routing {
+	// external services may not necessarily be in the same mesh
+	endpointMap := core_xds.EndpointMap{}
+
+	routing := &core_xds.Routing{
+		OutboundTargets:                meshContext.EndpointMap,
+		ExternalServiceOutboundTargets: endpointMap,
+	}
+
+	return routing
 }
 
 func (p *DataplaneProxyBuilder) matchPolicies(meshContext xds_context.MeshContext, dataplane *core_mesh.DataplaneResource, outboundSelectors core_xds.DestinationMap) (*core_xds.MatchedPolicies, error) {
