@@ -53,6 +53,8 @@ func ParseProtocol(tag string) Protocol {
 		return ProtocolGRPC
 	case ProtocolKafka:
 		return ProtocolKafka
+	case ProtocolTriple:
+		return ProtocolTriple
 	default:
 		return ProtocolUnknown
 	}
