@@ -194,7 +194,7 @@ func (m *MetadataServer) MetadataSync(stream mesh_proto.MetadataService_Metadata
 					return
 				}
 
-				log.Error(err, "send mapping sync response failed", "metadataList", metadataList, "revision", revision)
+				log.Error(err, "send metadata sync response failed", "metadataList", metadataList, "revision", revision)
 				errChan <- errors.Wrap(err, "DubboSyncClient send with an error")
 			}
 		},
