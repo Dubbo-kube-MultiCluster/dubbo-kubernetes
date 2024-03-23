@@ -18,9 +18,12 @@
 package dubboctl
 
 import (
+	"time"
+)
+
+import (
 	"github.com/apache/dubbo-kubernetes/pkg/config"
 	config_types "github.com/apache/dubbo-kubernetes/pkg/config/types"
-	"time"
 )
 
 var DefaultConfig = func() Config {

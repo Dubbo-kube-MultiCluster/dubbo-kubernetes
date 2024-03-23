@@ -18,20 +18,27 @@
 package cmd
 
 import (
+	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
+)
+
+import (
+	"github.com/asaskevich/govalidator"
+
+	"github.com/golang-jwt/jwt/v4"
+
+	"github.com/pkg/errors"
+)
+
+import (
 	"github.com/apache/dubbo-kubernetes/app/dubboctl/internal/envoy"
 	"github.com/apache/dubbo-kubernetes/pkg/config/app/dubboctl"
 	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
 	core_xds "github.com/apache/dubbo-kubernetes/pkg/core/xds"
 	leader_memory "github.com/apache/dubbo-kubernetes/pkg/plugins/leader/memory"
 	util_files "github.com/apache/dubbo-kubernetes/pkg/util/files"
-
-	"github.com/asaskevich/govalidator"
-	"github.com/golang-jwt/jwt/v4"
-	"github.com/pkg/errors"
-	"os"
-	"path/filepath"
-	"runtime"
-	"strings"
 )
 
 type ProxyConfig struct {
@@ -64,6 +71,7 @@ func defaultDataplaneTokenGenerator(cfg *dubboctl.Config) (component.Component, 
 		return nil
 	}), nil
 }
+
 func DefaultProxyConfig() *ProxyConfig {
 	config := dubboctl.DefaultConfig()
 	return &ProxyConfig{

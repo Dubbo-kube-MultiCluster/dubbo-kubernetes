@@ -18,13 +18,13 @@
 package xds
 
 import (
-	"github.com/apache/dubbo-kubernetes/pkg/xds/bootstrap"
 	"github.com/pkg/errors"
 )
 
 import (
 	config_core "github.com/apache/dubbo-kubernetes/pkg/config/core"
 	core_runtime "github.com/apache/dubbo-kubernetes/pkg/core/runtime"
+	"github.com/apache/dubbo-kubernetes/pkg/xds/bootstrap"
 	"github.com/apache/dubbo-kubernetes/pkg/xds/server"
 )
 

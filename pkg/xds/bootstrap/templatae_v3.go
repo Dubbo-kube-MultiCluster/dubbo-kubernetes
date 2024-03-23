@@ -18,10 +18,14 @@
 package bootstrap
 
 import (
-	core_xds "github.com/apache/dubbo-kubernetes/pkg/core/xds"
-	util_proto "github.com/apache/dubbo-kubernetes/pkg/util/proto"
-	clusters_v3 "github.com/apache/dubbo-kubernetes/pkg/xds/envoy/clusters/v3"
+	"net"
+	"strconv"
+	"time"
+)
+
+import (
 	"github.com/asaskevich/govalidator"
+
 	envoy_accesslog_v3 "github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v3"
 	envoy_bootstrap_v3 "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
 	envoy_cluster_v3 "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
@@ -37,15 +41,15 @@ import (
 	envoy_type_matcher_v3 "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 
 	"github.com/pkg/errors"
-	"google.golang.org/protobuf/types/known/structpb"
-	"strconv"
-	"time"
 
-	"net"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 import (
 	"github.com/apache/dubbo-kubernetes/pkg/config/xds"
+	core_xds "github.com/apache/dubbo-kubernetes/pkg/core/xds"
+	util_proto "github.com/apache/dubbo-kubernetes/pkg/util/proto"
+	clusters_v3 "github.com/apache/dubbo-kubernetes/pkg/xds/envoy/clusters/v3"
 )
 
 var (
@@ -365,12 +369,14 @@ func genConfig(parameters configParameters, proxyConfig xds.Proxy, enableReloada
 	}
 	return res, nil
 }
+
 func clusterTypeFromHost(host string) envoy_cluster_v3.Cluster_DiscoveryType {
 	if govalidator.IsIP(host) {
 		return envoy_cluster_v3.Cluster_STATIC
 	}
 	return envoy_cluster_v3.Cluster_STRICT_DNS
 }
+
 func dnsLookupFamilyFromXdsHost(host string, lookupFn func(host string) ([]net.IP, error)) envoy_cluster_v3.Cluster_DnsLookupFamily {
 	if govalidator.IsDNSName(host) && host != "localhost" {
 		ips, err := lookupFn(host)
@@ -480,6 +486,7 @@ func buildStaticClusters(parameters configParameters, enableReloadableTokens boo
 	}
 	return clusters, nil
 }
+
 func buildGrpcService(params configParameters, useTokenPath bool) *envoy_core_v3.GrpcService {
 	if useTokenPath && params.DataplaneTokenPath != "" {
 		googleGrpcService := &envoy_core_v3.GrpcService{

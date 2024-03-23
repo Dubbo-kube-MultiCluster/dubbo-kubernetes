@@ -18,10 +18,13 @@
 package envoy
 
 import (
-	"github.com/apache/dubbo-kubernetes/pkg/proxy/cgroups"
 	"os"
 	"strconv"
 	"strings"
+)
+
+import (
+	"github.com/apache/dubbo-kubernetes/pkg/proxy/cgroups"
 )
 
 type UIntOrString struct {

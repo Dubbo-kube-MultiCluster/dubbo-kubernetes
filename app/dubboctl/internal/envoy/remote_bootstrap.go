@@ -23,20 +23,28 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
-	"github.com/apache/dubbo-kubernetes/pkg/config/app/dubboctl"
-	"github.com/apache/dubbo-kubernetes/pkg/core"
-	util_proto "github.com/apache/dubbo-kubernetes/pkg/util/proto"
-	dubbo_version "github.com/apache/dubbo-kubernetes/pkg/version"
-	"github.com/apache/dubbo-kubernetes/pkg/xds/bootstrap/types"
-	envoy_bootstrap_v3 "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
-	"github.com/pkg/errors"
-	"github.com/sethvargo/go-retry"
 	"io"
 	"net/http"
 	net_url "net/url"
 	"os"
 	"strings"
 	"time"
+)
+
+import (
+	envoy_bootstrap_v3 "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
+
+	"github.com/pkg/errors"
+
+	"github.com/sethvargo/go-retry"
+)
+
+import (
+	"github.com/apache/dubbo-kubernetes/pkg/config/app/dubboctl"
+	"github.com/apache/dubbo-kubernetes/pkg/core"
+	util_proto "github.com/apache/dubbo-kubernetes/pkg/util/proto"
+	dubbo_version "github.com/apache/dubbo-kubernetes/pkg/version"
+	"github.com/apache/dubbo-kubernetes/pkg/xds/bootstrap/types"
 )
 
 var (
@@ -127,6 +135,7 @@ func (b *remoteBootstrap) Generate(ctx context.Context, url string, cfg dubboctl
 	}
 	return envoyBootstrap, &bootstrap.DubboSidecarConfiguration, nil
 }
+
 func (b *remoteBootstrap) resourceMetadata(cfg dubboctl.DataplaneResources) types.ProxyResources {
 	var maxMemory uint64
 

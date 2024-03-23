@@ -17,8 +17,6 @@ import (
 )
 
 import (
-	"github.com/apache/dubbo-kubernetes/pkg/xds/bootstrap/types"
-
 	mesh_proto "github.com/apache/dubbo-kubernetes/api/mesh/v1alpha1"
 	xds_config "github.com/apache/dubbo-kubernetes/pkg/config/xds"
 	bootstrap_config "github.com/apache/dubbo-kubernetes/pkg/config/xds/bootstrap"
@@ -27,6 +25,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model/rest"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
 	core_xds "github.com/apache/dubbo-kubernetes/pkg/core/xds"
+	"github.com/apache/dubbo-kubernetes/pkg/xds/bootstrap/types"
 )
 
 type BootstrapGenerator interface {
@@ -62,6 +61,7 @@ func NewDefaultBootstrapGenerator(
 		defaultAdminPort:        defaultAdminPort,
 	}, nil
 }
+
 func hostsAndIPs() (SANSet, error) {
 	hostsAndIps := map[string]bool{}
 	interfaces, err := net.Interfaces()
@@ -229,6 +229,7 @@ func (b *bootstrapGenerator) Generate(ctx context.Context, request types.Bootstr
 	}
 	return config, dubboDpBootstrap, nil
 }
+
 func (b *bootstrapGenerator) xdsHost(request types.BootstrapRequest) string {
 	if b.config.Params.XdsHost != "" { // XdsHost from config takes precedence over Host from request
 		return b.config.Params.XdsHost
@@ -284,6 +285,7 @@ func (b *bootstrapGenerator) validateRequest(request types.BootstrapRequest) err
 	}
 	return nil
 }
+
 func (b *bootstrapGenerator) zoneEgressFor(ctx context.Context, request types.BootstrapRequest, proxyId *core_xds.ProxyId) (*core_mesh.ZoneEgressResource, error) {
 	if request.DataplaneResource != "" {
 		res, err := rest.YAML.UnmarshalCore([]byte(request.DataplaneResource))

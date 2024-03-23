@@ -19,15 +19,21 @@ package bootstrap
 
 import (
 	"encoding/json"
+	"io"
+	"net"
+	"net/http"
+)
+
+import (
+	"github.com/go-logr/logr"
+)
+
+import (
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
 	"github.com/apache/dubbo-kubernetes/pkg/core/validators"
 	"github.com/apache/dubbo-kubernetes/pkg/util/proto"
 	"github.com/apache/dubbo-kubernetes/pkg/xds/bootstrap/types"
-	"github.com/go-logr/logr"
-	"io"
-	"net"
-	"net/http"
 )
 
 var log = core.Log.WithName("bootstrap")

@@ -20,7 +20,6 @@ package envoy
 import (
 	"context"
 	"fmt"
-	envoy_bootstrap_v3 "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
 	"io"
 	"os"
 	"os/exec"
@@ -35,6 +34,8 @@ import (
 
 import (
 	"github.com/Masterminds/semver/v3"
+
+	envoy_bootstrap_v3 "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
 
 	"github.com/pkg/errors"
 )

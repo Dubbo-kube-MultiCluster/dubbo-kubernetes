@@ -59,6 +59,7 @@ func NewVersion() *Version {
 		Dependencies: map[string]string{},
 	}
 }
+
 func (x *DataplaneInsight) IsOnline() bool {
 	for _, s := range x.GetSubscriptions() {
 		if s.GetConnectTime() != nil && s.GetDisconnectTime() == nil {

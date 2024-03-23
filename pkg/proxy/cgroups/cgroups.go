@@ -5,13 +5,14 @@ package cgroups
 import (
 	"path/filepath"
 	"sync"
+)
 
+import (
 	"golang.org/x/sys/unix"
 )
 
 // TAKEN FROM https://github.com/containerd/cgroups/blob/v1.1.0/utils.go
 // to get rid of dependency on containerd because of it's various CVEs
-
 // CGMode is the cgroups mode of the host system
 type CGMode int
 

@@ -19,8 +19,6 @@ package cmd
 
 import (
 	"context"
-	"github.com/apache/dubbo-kubernetes/app/dubboctl/internal/envoy"
-	core_xds "github.com/apache/dubbo-kubernetes/pkg/core/xds"
 	"io"
 	"os"
 	"path/filepath"
@@ -36,12 +34,14 @@ import (
 
 import (
 	mesh_proto "github.com/apache/dubbo-kubernetes/api/mesh/v1alpha1"
+	"github.com/apache/dubbo-kubernetes/app/dubboctl/internal/envoy"
 	"github.com/apache/dubbo-kubernetes/pkg/config/app/dubboctl"
 	dubbo_cmd "github.com/apache/dubbo-kubernetes/pkg/core/cmd"
 	"github.com/apache/dubbo-kubernetes/pkg/core/logger"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model/rest"
+	core_xds "github.com/apache/dubbo-kubernetes/pkg/core/xds"
 	"github.com/apache/dubbo-kubernetes/pkg/util/template"
 )
 
@@ -82,12 +82,14 @@ func readResource(cmd *cobra.Command, r *dubboctl.DataplaneRuntime) (model.Resou
 	}
 	return res, nil
 }
+
 func writeFile(filename string, data []byte, perm os.FileMode) error {
 	if err := os.MkdirAll(filepath.Dir(filename), perm); err != nil {
 		return err
 	}
 	return os.WriteFile(filename, data, perm)
 }
+
 func addProxy(opts dubbo_cmd.RunCmdOpts, cmd *cobra.Command) {
 	proxyArgs := DefaultProxyConfig()
 	cfg := proxyArgs.Config
