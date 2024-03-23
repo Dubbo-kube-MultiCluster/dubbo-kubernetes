@@ -44,6 +44,7 @@ func (p *plugin) Customize(rt core_runtime.Runtime) error {
 		rt.ResourceManager(),
 		rt.DataplaneCache(),
 		rt.ServiceDiscovery(),
+		rt.EventBus(),
 	); err != nil {
 		logger.Errorf("Failed to subscribe to registry, error msg is %s.", err.Error())
 		return err

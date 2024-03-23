@@ -34,6 +34,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/core/consts"
 	"github.com/apache/dubbo-kubernetes/pkg/core/logger"
 	core_manager "github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
+	"github.com/apache/dubbo-kubernetes/pkg/events"
 )
 
 type Registry struct {
@@ -61,6 +62,7 @@ func (r *Registry) Subscribe(
 	resourceManager core_manager.ResourceManager,
 	cache *sync.Map,
 	discovery dubboRegistry.ServiceDiscovery,
+	out events.Emitter,
 ) error {
 	queryParams := url.Values{
 		consts.InterfaceKey:  {consts.AnyValue},
@@ -77,7 +79,7 @@ func (r *Registry) Subscribe(
 	subscribeUrl, _ := common.NewURL(common.GetLocalIp()+":0",
 		common.WithProtocol(consts.AdminProtocol),
 		common.WithParams(queryParams))
-	listener := NewNotifyListener(resourceManager, cache, discovery)
+	listener := NewNotifyListener(resourceManager, cache, discovery, out)
 	go func() {
 		err := r.delegate.Subscribe(subscribeUrl, listener)
 		if err != nil {

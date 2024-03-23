@@ -29,6 +29,8 @@ import (
 
 import (
 	"github.com/apache/dubbo-kubernetes/pkg/config"
+	"github.com/apache/dubbo-kubernetes/pkg/config/admin"
+	"github.com/apache/dubbo-kubernetes/pkg/config/bufman"
 	"github.com/apache/dubbo-kubernetes/pkg/config/core"
 	"github.com/apache/dubbo-kubernetes/pkg/config/core/resources/store"
 	"github.com/apache/dubbo-kubernetes/pkg/config/diagnostics"
@@ -88,6 +90,8 @@ type Config struct {
 	Store *store.StoreConfig `json:"store,omitempty"`
 	// Envoy XDS server configuration
 	XdsServer *xds.XdsServerConfig `json:"xdsServer,omitempty"`
+	// admin console configuration
+	Admin *admin.Admin `json:"admin"`
 	// DeployMode-specific configuration
 	Runtime *runtime.RuntimeConfig `json:"runtime,omitempty"`
 	// Multizone Config
@@ -106,6 +110,7 @@ type Config struct {
 	InterCp intercp.InterCpConfig `json:"interCp"`
 	// SNP configuration
 	DubboConfig           dubbo.DubboConfig     `json:"dubbo_config"`
+	Bufman                bufman.Bufman         `json:"bufman"`
 	DDSEventBasedWatchdog DDSEventBasedWatchdog `json:"dds_event_based_watchdog"`
 }
 
@@ -152,11 +157,13 @@ var DefaultConfig = func() Config {
 		XdsServer:       xds.DefaultXdsServerConfig(),
 		Store:           store.DefaultStoreConfig(),
 		Runtime:         runtime.DefaultRuntimeConfig(),
+		Bufman:          bufman.DefaultBufmanConfig(),
 		General:         DefaultGeneralConfig(),
 		Defaults:        DefaultDefaultsConfig(),
 		Multizone:       multizone.DefaultMultizoneConfig(),
 		Diagnostics:     diagnostics.DefaultDiagnosticsConfig(),
 		DpServer:        dp_server.DefaultDpServerConfig(),
+		Admin:           admin.DefaultAdminConfig(),
 		InterCp:         intercp.DefaultInterCpConfig(),
 		DubboConfig:     dubbo.DefaultServiceNameMappingConfig(),
 		EventBus:        eventbus.Default(),

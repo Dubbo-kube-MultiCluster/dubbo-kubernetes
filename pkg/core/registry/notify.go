@@ -34,6 +34,8 @@ import (
 	mesh_proto "github.com/apache/dubbo-kubernetes/api/mesh/v1alpha1"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/manager"
+	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
+	"github.com/apache/dubbo-kubernetes/pkg/events"
 )
 
 const (
@@ -44,13 +46,20 @@ type NotifyListener struct {
 	manager.ResourceManager
 	dataplaneCache *sync.Map
 	discovery      dubboRegistry.ServiceDiscovery
+	eventWriter    events.Emitter
 }
 
-func NewNotifyListener(manager manager.ResourceManager, cache *sync.Map, discovery dubboRegistry.ServiceDiscovery) *NotifyListener {
+func NewNotifyListener(
+	manager manager.ResourceManager,
+	cache *sync.Map,
+	discovery dubboRegistry.ServiceDiscovery,
+	writer events.Emitter,
+) *NotifyListener {
 	return &NotifyListener{
 		manager,
 		cache,
 		discovery,
+		writer,
 	}
 }
 
@@ -86,6 +95,17 @@ func (l *NotifyListener) deleteDataplane(ctx context.Context, url *common.URL) e
 	key := getDataplaneKey(app, revision)
 
 	l.dataplaneCache.Delete(key)
+	if l.eventWriter != nil {
+		go func() {
+			l.eventWriter.Send(events.ResourceChangedEvent{
+				Operation: events.Delete,
+				Type:      mesh.DataplaneType,
+				Key: core_model.ResourceKey{
+					Name: key,
+				},
+			})
+		}()
+	}
 	return nil
 }
 
@@ -120,6 +140,16 @@ func (l *NotifyListener) createOrUpdateDataplane(ctx context.Context, url *commo
 	dataplaneResource.Spec.Networking.Inbound = ifaces
 	dataplaneResource.Spec.Networking.Outbound = ofaces
 	l.dataplaneCache.Store(key, dataplaneResource)
+
+	if l.eventWriter != nil {
+		go func() {
+			l.eventWriter.Send(events.ResourceChangedEvent{
+				Operation: events.Update,
+				Type:      mesh.DataplaneType,
+				Key:       core_model.MetaToResourceKey(dataplaneResource.GetMeta()),
+			})
+		}()
+	}
 	return nil
 }
 
