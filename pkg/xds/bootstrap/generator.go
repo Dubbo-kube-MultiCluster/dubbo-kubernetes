@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/x509"
 	"encoding/pem"
+	"net"
 	"os"
 	"sort"
 	"strings"
@@ -42,7 +43,7 @@ func NewDefaultBootstrapGenerator(
 	hdsEnabled bool,
 	defaultAdminPort uint32,
 ) (BootstrapGenerator, error) {
-	hostsAndIps, err := hostsAndIPsFromCertFile(dpServerCertFile)
+	hostsAndIps, err := hostsAndIPs()
 	if err != nil {
 		return nil, err
 	}
@@ -60,6 +61,32 @@ func NewDefaultBootstrapGenerator(
 		hdsEnabled:              hdsEnabled,
 		defaultAdminPort:        defaultAdminPort,
 	}, nil
+}
+func hostsAndIPs() (SANSet, error) {
+	hostsAndIps := map[string]bool{}
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		return nil, err
+	}
+	for _, iface := range interfaces {
+		addrs, err := iface.Addrs()
+		if err != nil {
+			return nil, err
+		}
+		for _, addr := range addrs {
+			ipNet, ok := addr.(*net.IPNet)
+			if ok {
+				hostsAndIps[ipNet.IP.String()] = true
+			}
+		}
+	}
+	hostname, err := os.Hostname()
+	if err != nil {
+		return nil, err
+	}
+	hostsAndIps[hostname] = true
+	hostsAndIps["localhost"] = true
+	return hostsAndIps, nil
 }
 
 type bootstrapGenerator struct {
@@ -114,9 +141,9 @@ func (b *bootstrapGenerator) Generate(ctx context.Context, request types.Bootstr
 		request.ProxyType = string(mesh_proto.DataplaneProxyType)
 	}
 	dubboDpBootstrap := DubboDpBootstrap{}
-	if err := b.validateRequest(request); err != nil {
-		return nil, dubboDpBootstrap, err
-	}
+	//if err := b.validateRequest(request); err != nil {
+	//	return nil, dubboDpBootstrap, err
+	//}
 	accessLogSocketPath := request.AccessLogSocketPath
 	if accessLogSocketPath == "" {
 		accessLogSocketPath = core_xds.AccessLogSocketName(os.TempDir(), request.Name, request.Mesh)

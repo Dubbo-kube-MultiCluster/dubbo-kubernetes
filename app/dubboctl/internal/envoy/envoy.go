@@ -20,6 +20,7 @@ package envoy
 import (
 	"context"
 	"fmt"
+	envoy_bootstrap_v3 "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
 	"io"
 	"os"
 	"os/exec"
@@ -44,9 +45,12 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model/rest"
 	command_utils "github.com/apache/dubbo-kubernetes/pkg/proxy/command"
 	"github.com/apache/dubbo-kubernetes/pkg/util/files"
+	"github.com/apache/dubbo-kubernetes/pkg/xds/bootstrap/types"
 )
 
 var runLog = core.Log.WithName("dubbo-proxy").WithName("run").WithName("envoy")
+
+type BootstrapConfigFactoryFunc func(ctx context.Context, url string, cfg dubboctl.Config, params BootstrapParams) (*envoy_bootstrap_v3.Bootstrap, *types.DubboSidecarConfiguration, error)
 
 type BootstrapParams struct {
 	Dataplane           rest.Resource
@@ -68,7 +72,7 @@ type EnvoyVersion struct {
 }
 
 type Opts struct {
-	Config          dubboctl.ProxyConfig
+	Config          dubboctl.Config
 	BootstrapConfig []byte
 	AdminPort       uint32
 	Dataplane       rest.Resource

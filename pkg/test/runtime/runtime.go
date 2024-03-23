@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/http"
 	"time"
 )
 
@@ -104,7 +105,9 @@ func BuilderFor(appCtx context.Context, cfg dubbo_cp.Config) (*core_runtime.Buil
 		return nil, err
 	}
 	builder.WithEventBus(eventBus)
-	builder.WithDpServer(server.NewDpServer(*cfg.DpServer))
+	builder.WithDpServer(server.NewDpServer(*cfg.DpServer, func(writer http.ResponseWriter, request *http.Request) bool {
+		return true
+	}))
 
 	err = initializeMeshCache(builder)
 	if err != nil {

@@ -62,7 +62,7 @@ type DpServer struct {
 
 var _ component.Component = &DpServer{}
 
-func NewDpServer(config dp_server.DpServerConfig) *DpServer {
+func NewDpServer(config dp_server.DpServerConfig, filter Filter) *DpServer {
 	grpcOptions := []grpc.ServerOption{
 		grpc.MaxConcurrentStreams(grpcMaxConcurrentStreams),
 		grpc.KeepaliveParams(keepalive.ServerParameters{
@@ -86,6 +86,7 @@ func NewDpServer(config dp_server.DpServerConfig) *DpServer {
 		config:         config,
 		httpMux:        http.NewServeMux(),
 		grpcServer:     grpcServer,
+		filter:         filter,
 		promMiddleware: promMiddleware,
 	}
 }

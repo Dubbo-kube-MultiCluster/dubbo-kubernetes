@@ -19,14 +19,14 @@ package cmd
 
 import (
 	"context"
-	"fmt"
+	"github.com/apache/dubbo-kubernetes/app/dubboctl/internal/envoy"
+	core_xds "github.com/apache/dubbo-kubernetes/pkg/core/xds"
 	"io"
 	"os"
+	"path/filepath"
 )
 
 import (
-	envoy_bootstrap_v3 "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
-
 	"github.com/pkg/errors"
 
 	"github.com/spf13/cobra"
@@ -42,8 +42,6 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/model/rest"
-	"github.com/apache/dubbo-kubernetes/pkg/proxy/envoy"
-	"github.com/apache/dubbo-kubernetes/pkg/util/proto"
 	"github.com/apache/dubbo-kubernetes/pkg/util/template"
 )
 
@@ -84,17 +82,21 @@ func readResource(cmd *cobra.Command, r *dubboctl.DataplaneRuntime) (model.Resou
 	}
 	return res, nil
 }
-
+func writeFile(filename string, data []byte, perm os.FileMode) error {
+	if err := os.MkdirAll(filepath.Dir(filename), perm); err != nil {
+		return err
+	}
+	return os.WriteFile(filename, data, perm)
+}
 func addProxy(opts dubbo_cmd.RunCmdOpts, cmd *cobra.Command) {
-	proxyArgs := &dubboctl.ProxyConfig{}
-	proxyArgs.SetDefault()
+	proxyArgs := DefaultProxyConfig()
+	cfg := proxyArgs.Config
 	var proxyResource model.Resource
 	proxyCmd := &cobra.Command{
 		Use:   "proxy",
 		Short: "Commands related to proxy",
 		Long:  "Commands help user to generate Ingress and Egress",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println("hello world")
 			logger.InitCmdSugar(zapcore.AddSync(cmd.OutOrStdout()))
 			return nil
 		},
@@ -103,25 +105,25 @@ func addProxy(opts dubbo_cmd.RunCmdOpts, cmd *cobra.Command) {
 				string(mesh_proto.IngressProxyType): mesh.ZoneIngressType,
 				string(mesh_proto.EgressProxyType):  mesh.ZoneEgressType,
 			}
-			if _, ok := proxyTypeMap[proxyArgs.Dataplane.ProxyType]; !ok {
-				return errors.Errorf("invalid proxy type %q", proxyArgs.Dataplane.ProxyType)
+			if _, ok := proxyTypeMap[cfg.Dataplane.ProxyType]; !ok {
+				return errors.Errorf("invalid proxy type %q", cfg.Dataplane.ProxyType)
 			}
-			proxyResource, err := readResource(cmd, &proxyArgs.DataplaneRuntime)
+			proxyResource, err := readResource(cmd, &cfg.DataplaneRuntime)
 			if err != nil {
-				runLog.Error(err, "failed to read policy", "proxyType", proxyArgs.Dataplane.ProxyType)
+				runLog.Error(err, "failed to read policy", "proxyType", cfg.Dataplane.ProxyType)
 				return err
 			}
 			if proxyResource != nil {
-				if resType := proxyTypeMap[proxyArgs.Dataplane.ProxyType]; resType != proxyResource.Descriptor().Name {
+				if resType := proxyTypeMap[cfg.Dataplane.ProxyType]; resType != proxyResource.Descriptor().Name {
 					return errors.Errorf("invalid proxy resource type %q, expected %s",
 						proxyResource.Descriptor().Name, resType)
 				}
-				if proxyArgs.Dataplane.Name != "" || proxyArgs.Dataplane.Mesh != "" {
+				if cfg.Dataplane.Name != "" || cfg.Dataplane.Mesh != "" {
 					return errors.New("--name and --mesh cannot be specified when a dataplane definition is provided, mesh and name will be read from the dataplane definition")
 				}
 
-				proxyArgs.Dataplane.Mesh = proxyResource.GetMeta().GetMesh()
-				proxyArgs.Dataplane.Name = proxyResource.GetMeta().GetName()
+				cfg.Dataplane.Mesh = proxyResource.GetMeta().GetMesh()
+				cfg.Dataplane.Name = proxyResource.GetMeta().GetName()
 			}
 			return nil
 		},
@@ -130,25 +132,41 @@ func addProxy(opts dubbo_cmd.RunCmdOpts, cmd *cobra.Command) {
 			gracefulCtx, _ := opts.SetupSignalHandler()
 			_, cancelComponents := context.WithCancel(gracefulCtx)
 			opts := envoy.Opts{
-				Config:    *proxyArgs,
+				Config:    *cfg,
 				Dataplane: rest.From.Resource(proxyResource),
 				Stdout:    cmd.OutOrStdout(),
 				Stderr:    cmd.OutOrStderr(),
 				OnFinish:  cancelComponents,
 			}
-			envoyVersion, err := envoy.GetEnvoyVersion(opts.Config.DataplaneRuntime.BinaryPath)
-			if err != nil {
-				return errors.Wrap(err, "failed to get Envoy version")
-			}
-			runLog.Info("fetched Envoy version", "version", envoyVersion)
+			//envoyVersion, err := envoy.GetEnvoyVersion(opts.Config.DataplaneRuntime.BinaryPath)
+			//if err != nil {
+			//	return errors.Wrap(err, "failed to get Envoy version")
+			//}
+			//runLog.Info("fetched Envoy version", "version", envoyVersion)
 			runLog.Info("generating bootstrap configuration")
-			bootstrap := envoy_bootstrap_v3.Bootstrap{}
 
-			runLog.Info("received bootstrap configuration", "adminPort", bootstrap.GetAdmin().GetAddress().GetSocketAddress().GetPortValue())
-			opts.BootstrapConfig, err = proto.ToYAML(&bootstrap)
+			bootstrap, _, err := proxyArgs.BootstrapGenerator(gracefulCtx, opts.Config.ControlPlane.URL, opts.Config, envoy.BootstrapParams{
+				Dataplane:           opts.Dataplane,
+				DNSPort:             cfg.DNS.EnvoyDNSPort,
+				EmptyDNSPort:        cfg.DNS.CoreDNSEmptyPort,
+				Workdir:             cfg.DataplaneRuntime.SocketDir,
+				AccessLogSocketPath: core_xds.AccessLogSocketName(cfg.DataplaneRuntime.SocketDir, cfg.Dataplane.Name, cfg.Dataplane.Mesh),
+				MetricsSocketPath:   core_xds.MetricsHijackerSocketName(cfg.DataplaneRuntime.SocketDir, cfg.Dataplane.Name, cfg.Dataplane.Mesh),
+				DynamicMetadata:     proxyArgs.BootstrapDynamicMetadata,
+				MetricsCertPath:     cfg.DataplaneRuntime.Metrics.CertPath,
+				MetricsKeyPath:      cfg.DataplaneRuntime.Metrics.KeyPath,
+			})
 			if err != nil {
-				return errors.Errorf("could not convert to yaml. %v", err)
+				return errors.Errorf("Failed to generate Envoy bootstrap config. %v", err)
 			}
+			runLog.Info("received bootstrap configuration", "adminPort", bootstrap.GetAdmin().GetAddress().GetSocketAddress().GetPortValue())
+
+			//runLog.Info("received bootstrap configuration", "adminPort", bootstrap.GetAdmin().GetAddress().GetSocketAddress().GetPortValue())
+			//
+			//opts.BootstrapConfig, err = proto.ToYAML(&bootstrap)
+			//if err != nil {
+			//	return errors.Errorf("could not convert to yaml. %v", err)
+			//}
 			stopComponents := make(chan struct{})
 			envoyComponent, err := envoy.New(opts)
 			err = envoyComponent.Start(stopComponents)
@@ -160,9 +178,9 @@ func addProxy(opts dubbo_cmd.RunCmdOpts, cmd *cobra.Command) {
 			return nil
 		},
 	}
-	cmd.PersistentFlags().StringVar(&proxyArgs.Dataplane.Name, "name", proxyArgs.Dataplane.Name, "Name of the Dataplane")
-	cmd.PersistentFlags().StringVar(&proxyArgs.Dataplane.Mesh, "mesh", proxyArgs.Dataplane.Mesh, "Mesh that Dataplane belongs to")
-	cmd.PersistentFlags().StringVar(&proxyArgs.Dataplane.ProxyType, "proxy-type", "dataplane", `type of the Dataplane ("dataplane", "ingress")`)
-	cmd.PersistentFlags().StringVarP(&proxyArgs.DataplaneRuntime.ResourcePath, "dataplane-file", "d", "", "Path to Ingress and Egress template to apply (YAML or JSON)")
+	cmd.PersistentFlags().StringVar(&cfg.Dataplane.Name, "name", cfg.Dataplane.Name, "Name of the Dataplane")
+	cmd.PersistentFlags().StringVar(&cfg.Dataplane.Mesh, "mesh", cfg.Dataplane.Mesh, "Mesh that Dataplane belongs to")
+	cmd.PersistentFlags().StringVar(&cfg.Dataplane.ProxyType, "proxy-type", "dataplane", `type of the Dataplane ("dataplane", "ingress")`)
+	cmd.PersistentFlags().StringVarP(&cfg.DataplaneRuntime.ResourcePath, "dataplane-file", "d", "", "Path to Ingress and Egress template to apply (YAML or JSON)")
 	cmd.AddCommand(proxyCmd)
 }

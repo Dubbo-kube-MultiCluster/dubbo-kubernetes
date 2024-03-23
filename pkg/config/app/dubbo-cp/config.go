@@ -146,19 +146,20 @@ func (c *Config) PostProcess() error {
 
 var DefaultConfig = func() Config {
 	return Config{
-		DeployMode:  core.UniversalMode,
-		Mode:        core.Zone,
-		XdsServer:   xds.DefaultXdsServerConfig(),
-		Store:       store.DefaultStoreConfig(),
-		Runtime:     runtime.DefaultRuntimeConfig(),
-		General:     DefaultGeneralConfig(),
-		Defaults:    DefaultDefaultsConfig(),
-		Multizone:   multizone.DefaultMultizoneConfig(),
-		Diagnostics: diagnostics.DefaultDiagnosticsConfig(),
-		DpServer:    dp_server.DefaultDpServerConfig(),
-		InterCp:     intercp.DefaultInterCpConfig(),
-		DubboConfig: dubbo.DefaultServiceNameMappingConfig(),
-		EventBus:    eventbus.Default(),
+		BootstrapServer: bootstrap.DefaultBootstrapServerConfig(),
+		DeployMode:      core.UniversalMode,
+		Mode:            core.Zone,
+		XdsServer:       xds.DefaultXdsServerConfig(),
+		Store:           store.DefaultStoreConfig(),
+		Runtime:         runtime.DefaultRuntimeConfig(),
+		General:         DefaultGeneralConfig(),
+		Defaults:        DefaultDefaultsConfig(),
+		Multizone:       multizone.DefaultMultizoneConfig(),
+		Diagnostics:     diagnostics.DefaultDiagnosticsConfig(),
+		DpServer:        dp_server.DefaultDpServerConfig(),
+		InterCp:         intercp.DefaultInterCpConfig(),
+		DubboConfig:     dubbo.DefaultServiceNameMappingConfig(),
+		EventBus:        eventbus.Default(),
 	}
 }
 
