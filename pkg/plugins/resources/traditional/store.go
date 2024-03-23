@@ -46,6 +46,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/apis/mesh"
 	core_model "github.com/apache/dubbo-kubernetes/pkg/core/resources/model"
 	"github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
+	"github.com/apache/dubbo-kubernetes/pkg/events"
 	"github.com/apache/dubbo-kubernetes/pkg/plugins/util/ccache"
 )
 
@@ -65,6 +66,8 @@ type traditionalStore struct {
 	governance     governance.GovernanceConfig
 	dCache         *sync.Map
 	regClient      reg_client.RegClient
+	eventWriter    events.Emitter
+	mu             sync.RWMutex
 }
 
 func NewStore(
@@ -83,6 +86,12 @@ func NewStore(
 		dCache:         dCache,
 		regClient:      regClient,
 	}
+}
+
+func (t *traditionalStore) SetEventWriter(writer events.Emitter) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.eventWriter = writer
 }
 
 func (t *traditionalStore) Create(_ context.Context, resource core_model.Resource, fs ...store.CreateOptionsFunc) error {
@@ -216,6 +225,16 @@ func (t *traditionalStore) Create(_ context.Context, resource core_model.Resourc
 		ModificationTime: opts.CreationTime,
 		Labels:           maps.Clone(opts.Labels),
 	})
+
+	if t.eventWriter != nil {
+		go func() {
+			t.eventWriter.Send(events.ResourceChangedEvent{
+				Operation: events.Create,
+				Type:      resource.Descriptor().Name,
+				Key:       core_model.MetaToResourceKey(resource.GetMeta()),
+			})
+		}()
+	}
 	return nil
 }
 
@@ -403,6 +422,16 @@ func (t *traditionalStore) Update(ctx context.Context, resource core_model.Resou
 		ModificationTime: opts.ModificationTime,
 		Labels:           maps.Clone(opts.Labels),
 	})
+
+	if t.eventWriter != nil {
+		go func() {
+			t.eventWriter.Send(events.ResourceChangedEvent{
+				Operation: events.Update,
+				Type:      resource.Descriptor().Name,
+				Key:       core_model.MetaToResourceKey(resource.GetMeta()),
+			})
+		}()
+	}
 	return nil
 }
 
@@ -501,6 +530,19 @@ func (t *traditionalStore) Delete(ctx context.Context, resource core_model.Resou
 		if err != nil {
 			return err
 		}
+	}
+
+	if t.eventWriter != nil {
+		go func() {
+			t.eventWriter.Send(events.ResourceChangedEvent{
+				Operation: events.Delete,
+				Type:      resource.Descriptor().Name,
+				Key: core_model.ResourceKey{
+					Mesh: opts.Mesh,
+					Name: opts.Name,
+				},
+			})
+		}()
 	}
 	return nil
 }

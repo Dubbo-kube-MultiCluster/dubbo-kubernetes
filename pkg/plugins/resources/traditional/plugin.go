@@ -25,9 +25,7 @@ import (
 	"github.com/apache/dubbo-kubernetes/pkg/core"
 	core_plugins "github.com/apache/dubbo-kubernetes/pkg/core/plugins"
 	core_store "github.com/apache/dubbo-kubernetes/pkg/core/resources/store"
-	"github.com/apache/dubbo-kubernetes/pkg/core/runtime/component"
 	"github.com/apache/dubbo-kubernetes/pkg/events"
-	trditional_events "github.com/apache/dubbo-kubernetes/pkg/plugins/resources/traditional/events"
 )
 
 var (
@@ -59,6 +57,6 @@ func (p *plugin) Migrate(pc core_plugins.PluginContext, config core_plugins.Plug
 }
 
 func (p *plugin) EventListener(pc core_plugins.PluginContext, out events.Emitter) error {
-	traListener := trditional_events.NewListener(out)
-	return pc.ComponentManager().Add(component.NewResilientComponent(core.Log.WithName("traditional-event-listener-component"), traListener))
+	pc.ResourceStore().DefaultResourceStore().(*traditionalStore).SetEventWriter(out)
+	return nil
 }
